@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
+import '../dashboard/dashboard_screen.dart';
 import 'signup_screen.dart';
 
 /// 로그인 화면 / Login Screen
@@ -49,9 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         if (success) {
-          // TODO: 대시보드로 이동
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('로그인 성공!')),
+          // 대시보드로 이동
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DashboardScreen(),
+            ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

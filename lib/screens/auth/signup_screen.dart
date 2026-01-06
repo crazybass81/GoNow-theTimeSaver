@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
+import '../dashboard/dashboard_screen.dart';
 
 /// 회원가입 화면 / Signup Screen
 ///
@@ -109,10 +110,27 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('회원가입 성공!')),
-          );
-          Navigator.pop(context); // 로그인 화면으로 돌아가기
+          // 이메일 확인 필요한 경우와 즉시 로그인된 경우 구분
+          final authProvider = context.read<AuthProvider>();
+          if (authProvider.isAuthenticated) {
+            // 즉시 로그인됨 - 대시보드로 이동
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DashboardScreen(),
+              ),
+            );
+          } else {
+            // 이메일 확인 필요 - 로그인 화면으로 돌아가기
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  authProvider.errorMessage ?? '회원가입 성공! 이메일을 확인해주세요.',
+                ),
+              ),
+            );
+            Navigator.pop(context);
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
