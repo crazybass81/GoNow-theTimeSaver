@@ -228,9 +228,8 @@ void scheduleNotification(Trip trip) {
 | **Frontend** | Flutter 3.x (Dart) | 크로스 플랫폼 개발 효율성, 빠른 UI 렌더링 |
 | **iOS Widget** | SwiftUI + WidgetKit | 홈 화면 위젯 (iOS 14+) |
 | **Android Widget** | Jetpack Glance | 홈 화면 위젯 (Flutter 호환성 우수) |
-| **Maps (자차)** | Naver Directions API | 한국 시장 정확도 최우선 |
+| **Maps (자차)** | Naver Directions API | 한국 시장 정확도 최우선, 실시간 교통 |
 | **Maps (대중교통)** | Naver Transit API | 버스/지하철 실시간 경로 |
-| **실시간 버스** | 서울시 공공데이터 | 버스 도착 정보 |
 | **Database** | Supabase (PostgreSQL) | 실시간 동기화, 확장성, Row Level Security |
 | **Notifications** | flutter_local_notifications | 로컬 푸시 알림 |
 | **State Management** | Provider / Riverpod | 반응형 상태 관리 |
@@ -336,36 +335,6 @@ class TransitService {
         distance: leg['distance'],
       );
     }).toList();
-  }
-}
-```
-
-#### 서울시 버스 API - 실시간 도착 정보
-
-```dart
-// lib/services/seoul_bus_service.dart
-class SeoulBusService {
-  static const String _baseUrl = 'http://ws.bus.go.kr/api/rest/arrive';
-
-  /// 실시간 버스 도착 정보 조회
-  ///
-  /// **비즈니스 규칙**: 1분마다 자동 갱신
-  static Future<List<BusArrival>> getBusArrival(String stationId) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/getArrInfoByStId?serviceKey=$apiKey&stId=$stationId'),
-    );
-
-    // XML 파싱
-    final document = XmlDocument.parse(response.body);
-    final arrivals = document.findAllElements('itemList').map((item) {
-      return BusArrival(
-        busNumber: item.findElements('rtNm').first.text,
-        remainingTime: int.parse(item.findElements('arrmsg1').first.text.replaceAll(RegExp(r'[^0-9]'), '')),
-        remainingStops: int.parse(item.findElements('stationCount1').first.text),
-      );
-    }).toList();
-
-    return arrivals;
   }
 }
 ```
@@ -1360,15 +1329,12 @@ class SupabaseService {
 **소요**: 1일
 
 #### SubTask 1.1.1: API 키 발급 (Critical Path)
-- [ ] Naver Cloud Platform 회원가입
-- [ ] Naver Maps API 키 발급
-- [ ] Naver Transit API 키 발급
-- [ ] 서울시 공공데이터 포털 회원가입
-- [ ] 버스 도착 정보 API 키 발급
+- [x] Naver Cloud Platform 회원가입
+- [x] Naver API 키 발급 (Maps + Transit 공통)
 - **담당**: PM
-- **소요**: 2시간
-- **산출물**: API 키 문서 (Notion/Google Docs)
-- **완료 기준**: 모든 API 키가 정상 작동 확인
+- **소요**: 1시간
+- **산출물**: API 키 문서 (.env 파일)
+- **완료 기준**: Naver API 키 정상 작동 확인
 
 #### SubTask 1.1.2: 스토어 계정 생성
 - [ ] Apple Developer Program 가입 (99$/년)
@@ -1652,24 +1618,13 @@ class SupabaseService {
 - **산출물**: `lib/services/transit_service.dart`
 - **완료 기준**: 대중교통 경로 데이터 반환
 
-#### SubTask 2.2.2: 서울시 버스 API 연동
-- [ ] `SeoulBusService` 클래스 생성
-- [ ] `getBusArrival()` 메서드 구현
-- [ ] XML 파싱 (버스 도착 정보)
-- [ ] 실시간 업데이트 로직
-- **담당**: 개발자 1
-- **소요**: 3시간
-- **의존성**: SubTask 2.2.1
-- **산출물**: `lib/services/seoul_bus_service.dart`
-- **완료 기준**: 실시간 버스 도착 시간 표시
-
-#### SubTask 2.2.3: 환승 버퍼 시간 자동 계산
+#### SubTask 2.2.2: 환승 버퍼 시간 자동 계산
 - [ ] 도보 환승: 5분 자동 추가
 - [ ] 버스 환승: 3분 자동 추가
 - [ ] 환승역 거리 기반 조정 로직
 - **담당**: 개발자 1
 - **소요**: 1시간
-- **의존성**: SubTask 2.2.2
+- **의존성**: SubTask 2.2.1
 - **산출물**: `lib/utils/transfer_buffer.dart`
 - **완료 기준**: 환승 시간 자동 계산 테스트 통과
 

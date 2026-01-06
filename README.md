@@ -21,9 +21,8 @@
      - 일정 마무리 시간 (5분)
 
 2. **실시간 교통 정보**
-   - Naver Maps API: 자동차 경로 탐색
+   - Naver Maps API: 자동차 경로 탐색 (실시간 교통 반영)
    - Naver Transit API: 대중교통 경로 (버스/지하철)
-   - 서울시 버스 API: 실시간 버스 도착 정보
 
 3. **스마트 알림**
    - 시간대별 색상 시스템 (초록→주황→빨강)
@@ -48,9 +47,8 @@
 - **Security**: Row Level Security (RLS)
 
 ### External APIs
-- Naver Maps API (자동차)
-- Naver Transit API (대중교통)
-- 서울시 공공데이터 버스 API
+- **Naver Maps API**: 자동차 경로 탐색 (실시간 교통)
+- **Naver Transit API**: 대중교통 경로 (버스/지하철)
 
 ## 🚀 빠른 시작
 
