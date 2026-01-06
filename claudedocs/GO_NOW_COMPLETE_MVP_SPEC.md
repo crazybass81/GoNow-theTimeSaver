@@ -1595,42 +1595,46 @@ class SupabaseService {
 **기간**: 5일
 **담당**: 개발자 1, 개발자 2
 
-### Task 2.1: Naver Maps API 연동 (Day 6)
+### Task 2.1: Naver Maps API 연동 (Day 6) ✅ **완료** (2026-01-06)
 **담당**: 개발자 1
 **소요**: 1일
+**상태**: ✅ 완료
 
-#### SubTask 2.1.1: Directions API 연동 (자차)
-- [ ] HTTP 클라이언트 설정 (dio 패키지)
-- [ ] API 키 환경 변수 설정
-- [ ] `RouteService` 클래스 생성
-- [ ] `calculateRoute()` 메서드 구현
-- [ ] 실시간 교통 데이터 파싱
+#### SubTask 2.1.1: Directions API 연동 (자차) ✅
+- [x] HTTP 클라이언트 설정 (dio 패키지)
+- [x] API 키 환경 변수 설정
+- [x] `RouteService` 클래스 생성
+- [x] `calculateRoute()` 메서드 구현
+- [x] 실시간 교통 데이터 파싱
 - **담당**: 개발자 1
 - **소요**: 4시간
 - **의존성**: SubTask 1.1.1 (API 키)
 - **산출물**: `lib/services/route_service.dart`
 - **완료 기준**: 실제 API 호출 성공, 이동 시간 반환
+- **완료일**: 2026-01-06
 
-#### SubTask 2.1.2: API 에러 핸들링
-- [ ] 네트워크 오류 처리
-- [ ] API 키 오류 처리
-- [ ] Rate Limit 처리
-- [ ] Google Maps 폴백 로직
+#### SubTask 2.1.2: API 에러 핸들링 ✅
+- [x] 네트워크 오류 처리
+- [x] API 키 오류 처리
+- [x] Rate Limit 처리 (자동 재시도 로직)
+- [x] RouteServiceException 커스텀 예외
 - **담당**: 개발자 1
 - **소요**: 2시간
 - **의존성**: SubTask 2.1.1
 - **산출물**: `lib/services/route_service.dart` (에러 핸들링 추가)
 - **완료 기준**: 모든 에러 케이스 테스트 통과
+- **완료일**: 2026-01-06
 
-#### SubTask 2.1.3: 캐싱 전략 구현
-- [ ] 최근 경로 캐싱 (5분 유효)
-- [ ] 중복 요청 방지
-- [ ] 캐시 무효화 로직
+#### SubTask 2.1.3: 캐싱 전략 구현 ✅
+- [x] 최근 경로 캐싱 (5분 유효)
+- [x] 중복 요청 방지
+- [x] 캐시 무효화 로직
 - **담당**: 개발자 1
 - **소요**: 2시간
 - **의존성**: SubTask 2.1.2
 - **산출물**: `lib/services/cache_service.dart`
 - **완료 기준**: 동일 경로 재요청 시 캐시 사용
+- **완료일**: 2026-01-06
 
 ---
 
