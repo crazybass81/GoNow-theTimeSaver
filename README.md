@@ -1,0 +1,185 @@
+# Go Now: The Time Saver ⏰
+
+> ADHD 사용자를 위한 역산 스케줄링 기반 시간 관리 앱
+
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)](https://supabase.com)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+## 📖 프로젝트 개요
+
+**Go Now**는 ADHD 사용자의 "계획 오류(Planning Fallacy)"와 "시간 맹목(Time Blindness)"를 해결하기 위한 모바일 앱입니다.
+
+### 🎯 핵심 기능
+
+1. **역산 스케줄링 (Backward Planning)**
+   - 도착 시간에서 역으로 계산하여 출발 시간 자동 산출
+   - 4가지 독립 버퍼 시간 설정:
+     - 외출 준비 시간 (15분)
+     - 일찍 도착 버퍼 (10분)
+     - 이동 오차율 (20%)
+     - 일정 마무리 시간 (5분)
+
+2. **실시간 교통 정보**
+   - Naver Maps API: 자동차 경로 탐색
+   - Naver Transit API: 대중교통 경로 (버스/지하철)
+   - 서울시 버스 API: 실시간 버스 도착 정보
+
+3. **스마트 알림**
+   - 시간대별 색상 시스템 (초록→주황→빨강)
+   - 적응형 알림 (15분/5분/3분 전)
+
+4. **홈 위젯**
+   - Android: Jetpack Glance
+   - iOS: WidgetKit
+   - 15분 주기 자동 업데이트
+
+## 🏗️ 기술 스택
+
+### Frontend
+- **Framework**: Flutter 3.x (Dart)
+- **State Management**: Provider
+- **UI**: Material Design 3
+
+### Backend
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Storage**: Supabase Storage
+- **Security**: Row Level Security (RLS)
+
+### External APIs
+- Naver Maps API (자동차)
+- Naver Transit API (대중교통)
+- 서울시 공공데이터 버스 API
+
+## 🚀 빠른 시작
+
+### 필수 요구사항
+
+- Flutter SDK 3.0 이상
+- Dart SDK 3.0 이상
+- Xcode (iOS 개발용)
+- Android Studio (Android 개발용)
+
+### 설치 방법
+
+1. **저장소 클론**
+```bash
+git clone https://github.com/crazybass81/GoNow-theTimeSaver.git
+cd GoNow-theTimeSaver
+```
+
+2. **의존성 설치**
+```bash
+flutter pub get
+```
+
+3. **환경 변수 설정**
+```bash
+cp .env.example .env
+# .env 파일을 열어서 실제 API 키로 수정
+```
+
+4. **Supabase 설정**
+```bash
+# supabase/README.md 참조
+# Supabase Dashboard에서 SQL 마이그레이션 실행
+```
+
+5. **앱 실행**
+```bash
+# iOS
+flutter run -d ios
+
+# Android
+flutter run -d android
+```
+
+## 📁 프로젝트 구조
+
+```
+GoNow-theTimeSaver/
+├── lib/
+│   ├── main.dart                 # 앱 진입점
+│   ├── screens/                  # 화면 위젯
+│   │   ├── auth/                 # 인증 (로그인, 회원가입)
+│   │   ├── dashboard/            # 대시보드 (메인)
+│   │   ├── schedule/             # 일정 추가/수정
+│   │   └── settings/             # 설정
+│   ├── services/                 # 비즈니스 로직
+│   │   ├── supabase_service.dart # Supabase 연동
+│   │   ├── route_service.dart    # 경로 탐색 (Naver API)
+│   │   └── notification_service.dart # 로컬 알림
+│   ├── models/                   # 데이터 모델
+│   ├── providers/                # 상태 관리 (Provider)
+│   ├── widgets/                  # 재사용 가능한 위젯
+│   └── utils/                    # 유틸리티 함수
+├── supabase/
+│   ├── migrations/               # SQL 마이그레이션 파일
+│   └── README.md                 # Supabase 설정 가이드
+├── android/                      # Android 네이티브 코드
+├── ios/                          # iOS 네이티브 코드
+├── assets/                       # 이미지, 아이콘, 폰트
+├── claudedocs/                   # 프로젝트 문서
+│   └── GO_NOW_COMPLETE_MVP_SPEC.md  # 완전한 MVP 명세서
+├── pubspec.yaml                  # Flutter 의존성
+├── .env.example                  # 환경 변수 템플릿
+└── README.md                     # 이 파일
+```
+
+## 📋 개발 계획
+
+**MVP 출시 목표일**: 2026년 1월 31일 (25일)
+
+### Phase 1: Foundation & UI (Day 1~5)
+- ✅ Git 저장소 설정
+- ✅ Supabase 프로젝트 설정
+- ✅ Flutter 프로젝트 기본 구조
+- ⏳ 6개 핵심 화면 UI
+
+### Phase 2: Core Logic & API (Day 6~10)
+- Naver Maps/Transit API 연동
+- 역산 스케줄링 알고리즘
+- Supabase CRUD 작업
+
+### Phase 3: Widgets & Notifications (Day 11~15)
+- Android/iOS 홈 위젯
+- 로컬 알림 시스템
+
+### Phase 4: Integration & QA (Day 16~20)
+- 전체 기능 통합 테스트
+- 버그 수정
+
+### Phase 5: Launch (Day 21~25)
+- 스토어 제출 준비
+- 앱스토어/플레이스토어 출시
+
+자세한 개발 계획은 [GO_NOW_COMPLETE_MVP_SPEC.md](claudedocs/GO_NOW_COMPLETE_MVP_SPEC.md)를 참조하세요.
+
+## 🔐 보안
+
+- **Row Level Security (RLS)**: 사용자는 본인 데이터만 접근 가능
+- **환경 변수**: API 키는 `.env` 파일로 관리 (Git에 커밋되지 않음)
+- **Supabase Auth**: 이메일/비밀번호 + 소셜 로그인 (Google, Apple, Kakao)
+
+## 📄 문서
+
+- [완전한 MVP 명세서](claudedocs/GO_NOW_COMPLETE_MVP_SPEC.md)
+- [Supabase 설정 가이드](supabase/README.md)
+- [아카이브 문서](claudedocs/archive/)
+
+## 🤝 기여
+
+현재 MVP 개발 중이므로 외부 기여는 받지 않습니다.
+
+## 📝 라이선스
+
+MIT License
+
+## 📧 문의
+
+프로젝트 관련 문의: [이슈 생성](https://github.com/crazybass81/GoNow-theTimeSaver/issues)
+
+---
+
+**Made with 🤖 [Claude Code](https://claude.com/claude-code)**

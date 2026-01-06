@@ -1,0 +1,68 @@
+name: go_now
+description: ADHD-focused time management app with reverse scheduling
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Supabase (Database & Auth)
+  supabase_flutter: ^2.0.0
+
+  # State Management
+  provider: ^6.1.0
+  # riverpod: ^2.4.0  # Alternative state management (선택적)
+
+  # Local Notifications
+  flutter_local_notifications: ^16.0.0
+
+  # HTTP & Network
+  http: ^1.1.0
+
+  # Location & Maps
+  geolocator: ^11.0.0
+  geocoding: ^2.1.1
+
+  # UI Components
+  cupertino_icons: ^1.0.6
+  intl: ^0.18.1  # Date/Time formatting
+
+  # Storage & Cache
+  shared_preferences: ^2.2.2
+
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+
+  # JSON Serialization
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Linting
+  flutter_lints: ^3.0.0
+
+  # Code Generation
+  build_runner: ^2.4.0
+  json_serializable: ^6.7.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+  #   - .env
+
+  # Fonts
+  # fonts:
+  #   - family: Pretendard
+  #     fonts:
+  #       - asset: assets/fonts/Pretendard-Regular.ttf
+  #       - asset: assets/fonts/Pretendard-Bold.ttf
+  #         weight: 700
