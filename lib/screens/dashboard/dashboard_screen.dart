@@ -5,6 +5,7 @@ import '../../widgets/countdown_widget.dart';
 import '../../widgets/route_display_widget.dart';
 import '../../models/route_step.dart';
 import '../schedule/add_schedule_screen.dart';
+import '../settings/settings_screen.dart';
 
 /// 대시보드 메인 화면 / Dashboard Main Screen
 ///
@@ -33,9 +34,11 @@ class DashboardScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              // TODO: 설정 화면으로 이동
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('설정 화면 (구현 예정)')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
               );
             },
           ),
