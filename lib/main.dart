@@ -3,11 +3,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Theme
+import 'utils/app_theme.dart';
+
 // Providers
-// import 'providers/auth_provider.dart';
+import 'providers/auth_provider.dart';
 // import 'providers/schedule_provider.dart';
 
 // Screens
+import 'screens/auth/login_screen.dart';
 // import 'screens/splash_screen.dart';
 
 void main() async {
@@ -32,22 +36,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         // ChangeNotifierProvider(create: (_) => ScheduleProvider()),
       ],
       child: MaterialApp(
         title: 'GoNow',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          fontFamily: 'Pretendard', // TODO: 폰트 추가 후 활성화
-        ),
+        theme: AppTheme.lightTheme,
         // home: const SplashScreen(),
-        home: const Placeholder(), // TODO: SplashScreen으로 교체
+        home: const LoginScreen(),
       ),
     );
   }
