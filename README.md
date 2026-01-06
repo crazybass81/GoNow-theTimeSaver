@@ -133,9 +133,16 @@ GoNow-theTimeSaver/
 
 ### Phase 1: Foundation & UI (Day 1~5)
 - ✅ Git 저장소 설정
-- ✅ Supabase 프로젝트 설정
+- ✅ Supabase 프로젝트 설정 (로컬 개발 환경)
 - ✅ Flutter 프로젝트 기본 구조
+- ✅ 디자인 시스템 정의 (색상/타이포그래피)
 - ⏳ 6개 핵심 화면 UI
+  - ✅ 로그인 화면
+  - ✅ 회원가입 화면 (3단계 플로우)
+  - ✅ 인증 상태 관리 (AuthProvider)
+  - ⏳ 대시보드 화면
+  - ⏳ 일정 추가/수정 화면
+  - ⏳ 설정 화면
 
 ### Phase 2: Core Logic & API (Day 6~10)
 - Naver Maps/Transit API 연동
