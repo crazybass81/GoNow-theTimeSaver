@@ -29,6 +29,7 @@ dependencies:
   # UI Components
   cupertino_icons: ^1.0.6
   intl: ^0.18.1  # Date/Time formatting
+  table_calendar: ^3.0.9  # Calendar widget
 
   # Storage & Cache
   shared_preferences: ^2.2.2

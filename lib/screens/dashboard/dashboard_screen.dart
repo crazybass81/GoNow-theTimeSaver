@@ -6,6 +6,7 @@ import '../../widgets/route_display_widget.dart';
 import '../../models/route_step.dart';
 import '../schedule/add_schedule_screen.dart';
 import '../settings/settings_screen.dart';
+import '../calendar/calendar_screen.dart';
 
 /// 대시보드 메인 화면 / Dashboard Main Screen
 ///
@@ -30,9 +31,23 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('GoNow'),
         actions: [
+          // 캘린더 버튼
+          IconButton(
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: '캘린더',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CalendarScreen(),
+                ),
+              );
+            },
+          ),
           // 프로필/설정 버튼
           IconButton(
             icon: const Icon(Icons.settings_outlined),
+            tooltip: '설정',
             onPressed: () {
               Navigator.push(
                 context,
