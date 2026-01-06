@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/countdown_widget.dart';
 import '../../widgets/route_display_widget.dart';
 import '../../models/route_step.dart';
+import '../schedule/add_schedule_screen.dart';
 
 /// 대시보드 메인 화면 / Dashboard Main Screen
 ///
@@ -76,9 +77,11 @@ class DashboardScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // TODO: 일정 추가 화면으로 이동
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('일정 추가 화면 (구현 예정)')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddScheduleScreen(),
+            ),
           );
         },
         icon: const Icon(Icons.add),

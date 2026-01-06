@@ -1499,39 +1499,39 @@ class SupabaseService {
 **소요**: 1일
 
 #### SubTask 1.4.1: Step 1 - 목적지 입력
-- [ ] 검색 입력창
-- [ ] 최근 장소 리스트
-- [ ] 즐겨찾기 리스트
-- [ ] 다음 단계 버튼
+- [x] 검색 입력창
+- [x] 최근 장소 리스트
+- [x] 즐겨찾기 리스트
+- [x] 다음 단계 버튼
 - **담당**: 개발자 2
 - **소요**: 2시간
 - **의존성**: Task 1.1.5
-- **산출물**: `lib/screens/schedule/add_schedule_step1.dart`
+- **산출물**: `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
 - **완료 기준**: 장소 선택 시 다음 단계 이동
 
 #### SubTask 1.4.2: Step 2 - 시간 및 이동 수단 설정
-- [ ] 날짜/시간 선택 위젯
-- [ ] 이동 수단 선택 (자차/대중교통)
-- [ ] 이동 시간 자동 계산 표시 (정적)
-- [ ] 다음 단계 버튼
+- [x] 날짜/시간 선택 위젯
+- [x] 이동 수단 선택 (자차/대중교통)
+- [x] 이동 시간 자동 계산 표시 (정적)
+- [x] 다음 단계 버튼
 - **담당**: 개발자 2
 - **소요**: 3시간
 - **의존성**: SubTask 1.4.1
-- **산출물**: `lib/screens/schedule/add_schedule_step2.dart`
+- **산출물**: `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
 - **완료 기준**: 시간 선택 및 화면 전환
 
 #### SubTask 1.4.3: Step 3 - 4가지 버퍼 시간 설정
-- [ ] 외출 준비 시간 슬라이더
-- [ ] 이동 오차율 슬라이더
-- [ ] 일찍 도착 버퍼 슬라이더
-- [ ] 일정 마무리 시간 슬라이더
-- [ ] 최종 계산 요약 표시
-- [ ] 저장 버튼
+- [x] 외출 준비 시간 슬라이더
+- [x] 이동 오차율 슬라이더
+- [x] 일찍 도착 버퍼 슬라이더
+- [x] 일정 마무리 시간 슬라이더
+- [x] 최종 계산 요약 표시 (Step 4)
+- [x] 저장 버튼 (Step 4)
 - **담당**: 개발자 2
 - **소요**: 3시간
 - **의존성**: SubTask 1.4.2
-- **산출물**: `lib/screens/schedule/add_schedule_step3.dart`
-- **완료 기준**: 모든 슬라이더 작동, 계산 요약 표시
+- **산출물**: `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
+- **완료 기준**: 모든 슬라이더 작동, 계산 요약 표시, 저장 버튼 구현
 
 ---
 
