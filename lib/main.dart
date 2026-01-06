@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         // ChangeNotifierProvider(create: (_) => ScheduleProvider()),
       ],
       child: MaterialApp(
-        title: 'Go Now',
+        title: 'GoNow',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(

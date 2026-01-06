@@ -1,4 +1,4 @@
-# Go Now: The Time Saver ⏰
+# GoNow: The Time Saver ⏰
 
 > ADHD 사용자를 위한 역산 스케줄링 기반 시간 관리 앱
 
@@ -8,7 +8,7 @@
 
 ## 📖 프로젝트 개요
 
-**Go Now**는 ADHD 사용자의 "계획 오류(Planning Fallacy)"와 "시간 맹목(Time Blindness)"를 해결하기 위한 모바일 앱입니다.
+**GoNow**는 ADHD 사용자의 "계획 오류(Planning Fallacy)"와 "시간 맹목(Time Blindness)"를 해결하기 위한 모바일 앱입니다.
 
 ### 🎯 핵심 기능
 

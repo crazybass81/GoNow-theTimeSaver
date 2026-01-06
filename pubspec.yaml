@@ -1,5 +1,5 @@
 name: go_now
-description: "Go Now: The Time Saver - ADHD-focused time management app with reverse scheduling"
+description: "GoNow: The Time Saver - ADHD-focused time management app with reverse scheduling"
 version: 1.0.0+1
 
 environment:
