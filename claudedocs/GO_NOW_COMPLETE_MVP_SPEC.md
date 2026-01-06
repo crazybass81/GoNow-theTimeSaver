@@ -1336,15 +1336,7 @@ class SupabaseService {
 - **산출물**: API 키 문서 (.env 파일)
 - **완료 기준**: Naver API 키 정상 작동 확인
 
-#### SubTask 1.1.2: 스토어 계정 생성
-- [ ] Apple Developer Program 가입 (99$/년)
-- [ ] Google Play Console 가입 (25$ 일회성)
-- **담당**: PM
-- **소요**: 1시간
-- **산출물**: 스토어 계정 정보
-- **완료 기준**: 두 스토어 모두 로그인 가능
-
-#### SubTask 1.1.3: Supabase 프로젝트 설정 (Critical Path)
+#### SubTask 1.1.2: Supabase 프로젝트 설정 (Critical Path)
 - [ ] Supabase 계정 생성 (https://supabase.com)
 - [ ] 새 프로젝트 생성 ("GoNow-Production")
 - [ ] 데이터베이스 스키마 생성 (Section 2.6 참조)
@@ -1366,7 +1358,7 @@ class SupabaseService {
   - RLS 정책 활성화
   - Supabase Studio에서 데이터 삽입/조회 테스트 성공
 
-#### SubTask 1.1.4: Flutter 프로젝트 생성
+#### SubTask 1.1.3: Flutter 프로젝트 생성
 - [ ] Flutter SDK 3.x 설치 확인
 - [ ] `flutter create go_now` 실행
 - [ ] 프로젝트 구조 설정 (lib/screens, lib/services, lib/models)
@@ -1381,18 +1373,18 @@ class SupabaseService {
 - **산출물**: 기본 Flutter 프로젝트
 - **완료 기준**: `flutter run` 성공
 
-#### SubTask 1.1.5: Git 저장소 설정
+#### SubTask 1.1.4: Git 저장소 설정
 - [ ] GitHub 저장소 생성
 - [ ] .gitignore 설정 (Flutter 템플릿 + .env)
 - [ ] README.md 작성
 - [ ] 첫 커밋 및 푸시
 - **담당**: 개발자 1
 - **소요**: 30분
-- **의존성**: SubTask 1.1.4
+- **의존성**: SubTask 1.1.3
 - **산출물**: Git 저장소
 - **완료 기준**: 원격 저장소에 코드 푸시 완료
 
-#### SubTask 1.1.6: 디자인 시스템 정의
+#### SubTask 1.1.5: 디자인 시스템 정의
 - [ ] Figma 프로젝트 생성
 - [ ] 색상 팔레트 정의 (초록/주황/빨강 시스템)
 - [ ] 타이포그래피 설정
@@ -1415,7 +1407,7 @@ class SupabaseService {
 - [ ] "회원가입" 링크
 - **담당**: 개발자 1
 - **소요**: 3시간
-- **의존성**: Task 1.1.6 (디자인 시스템)
+- **의존성**: Task 1.1.5 (디자인 시스템)
 - **산출물**: `lib/screens/auth/login_screen.dart`
 - **완료 기준**: Figma 디자인과 100% 일치
 
@@ -1453,7 +1445,7 @@ class SupabaseService {
 - [ ] 애니메이션 효과
 - **담당**: 개발자 2
 - **소요**: 4시간
-- **의존성**: Task 1.1.6 (디자인 시스템)
+- **의존성**: Task 1.1.5 (디자인 시스템)
 - **산출물**: `lib/widgets/countdown_widget.dart`
 - **완료 기준**: 색상 전환 애니메이션 작동
 
