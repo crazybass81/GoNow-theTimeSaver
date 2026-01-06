@@ -1638,30 +1638,40 @@ class SupabaseService {
 
 ---
 
-### Task 2.2: Naver Transit API 연동 (Day 7)
+### Task 2.2: Naver Transit API 연동 (Day 7) ✅ **완료** (2026-01-06)
 **담당**: 개발자 1
 **소요**: 1일
+**상태**: ✅ 완료
 
-#### SubTask 2.2.1: Transit API 연동
-- [ ] `TransitService` 클래스 생성
-- [ ] `getTransitRoute()` 메서드 구현
-- [ ] 버스/지하철 경로 파싱
-- [ ] 환승 정보 파싱
+#### SubTask 2.2.1: Transit API 연동 ✅
+- [x] `TransitService` 클래스 리팩토링 (http → dio)
+- [x] Singleton 패턴 추가
+- [x] `calculateTransitRoute()` 메서드 구현
+- [x] 버스/지하철 경로 파싱 (traoptimal)
+- [x] 환승 정보 파싱 (subPath)
+- [x] 에러 핸들링 (8가지 에러 타입)
+- [x] 캐싱 전략 구현 (5분 유효)
+- [x] 재시도 로직 추가
 - **담당**: 개발자 1
 - **소요**: 4시간
 - **의존성**: SubTask 2.1.3
 - **산출물**: `lib/services/transit_service.dart`
 - **완료 기준**: 대중교통 경로 데이터 반환
+- **완료일**: 2026-01-06
 
-#### SubTask 2.2.2: 환승 버퍼 시간 자동 계산
-- [ ] 도보 환승: 5분 자동 추가
-- [ ] 버스 환승: 3분 자동 추가
-- [ ] 환승역 거리 기반 조정 로직
+#### SubTask 2.2.2: 환승 버퍼 시간 자동 계산 ✅
+- [x] 도보 환승: 5분 + 거리 기반 추가 시간
+- [x] 버스 환승: 3분 자동 추가
+- [x] 지하철 환승: 5분 자동 추가
+- [x] 환승역 거리 기반 조정 로직 (100m/500m 임계값)
+- [x] 총 소요 시간 계산 로직
+- [x] 환승 정보 요약 생성
 - **담당**: 개발자 1
 - **소요**: 1시간
 - **의존성**: SubTask 2.2.1
 - **산출물**: `lib/utils/transfer_buffer.dart`
 - **완료 기준**: 환승 시간 자동 계산 테스트 통과
+- **완료일**: 2026-01-06
 
 ---
 
