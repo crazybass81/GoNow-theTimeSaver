@@ -78,10 +78,12 @@ cp .env.example .env
 # .env 파일을 열어서 실제 API 키로 수정
 ```
 
-4. **Supabase 설정**
+4. **Supabase 로컬 개발 환경 시작**
 ```bash
-# supabase/README.md 참조
-# Supabase Dashboard에서 SQL 마이그레이션 실행
+supabase start
+# 마이그레이션이 자동으로 적용됩니다
+# API URL: http://127.0.0.1:54321
+# Studio URL: http://127.0.0.1:54323
 ```
 
 5. **앱 실행**
