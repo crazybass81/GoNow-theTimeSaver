@@ -112,23 +112,122 @@ class RouteService {
       }
     } on DioException catch (e) {
       // Dio 에러 처리 / Handle Dio errors
-      print('RouteService.calculateRoute DioException: ${e.type}, ${e.message}');
-
-      if (e.type == DioExceptionType.connectionTimeout) {
-        print('Connection timeout - check your network');
-      } else if (e.type == DioExceptionType.receiveTimeout) {
-        print('Receive timeout - server is slow');
-      } else if (e.response?.statusCode == 401) {
-        print('Invalid API keys - check .env file');
-      } else if (e.response?.statusCode == 429) {
-        print('Rate limit exceeded - try again later');
-      }
-
-      return null; // SubTask 2.1.2에서 에러 핸들링 개선 예정
+      final errorType = _handleDioError(e);
+      throw RouteServiceException(
+        message: errorType.message,
+        type: errorType.type,
+        originalError: e,
+      );
     } catch (e) {
-      print('RouteService.calculateRoute error: $e');
-      return null;
+      throw RouteServiceException(
+        message: '예상치 못한 오류가 발생했습니다: $e',
+        type: RouteErrorType.unknown,
+        originalError: e,
+      );
     }
+  }
+
+  /// Dio 에러 핸들링 / Handle Dio errors
+  ///
+  /// **Context**: 네트워크, API 키, Rate Limit 에러 처리
+  _ErrorInfo _handleDioError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return _ErrorInfo(
+          type: RouteErrorType.networkTimeout,
+          message: '연결 시간이 초과되었습니다. 네트워크 상태를 확인하세요.',
+        );
+      case DioExceptionType.receiveTimeout:
+        return _ErrorInfo(
+          type: RouteErrorType.networkTimeout,
+          message: '응답 시간이 초과되었습니다. 잠시 후 다시 시도하세요.',
+        );
+      case DioExceptionType.sendTimeout:
+        return _ErrorInfo(
+          type: RouteErrorType.networkTimeout,
+          message: '요청 전송 시간이 초과되었습니다.',
+        );
+      case DioExceptionType.cancel:
+        return _ErrorInfo(
+          type: RouteErrorType.cancelled,
+          message: '요청이 취소되었습니다.',
+        );
+      case DioExceptionType.badResponse:
+        // HTTP 상태 코드 기반 에러 처리
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 401 || statusCode == 403) {
+          return _ErrorInfo(
+            type: RouteErrorType.invalidApiKey,
+            message: 'API 인증에 실패했습니다. .env 파일의 API 키를 확인하세요.',
+          );
+        } else if (statusCode == 429) {
+          return _ErrorInfo(
+            type: RouteErrorType.rateLimitExceeded,
+            message: 'API 호출 한도를 초과했습니다. 잠시 후 다시 시도하세요.',
+          );
+        } else if (statusCode == 400) {
+          return _ErrorInfo(
+            type: RouteErrorType.invalidRequest,
+            message: '잘못된 요청입니다. 출발지와 도착지를 확인하세요.',
+          );
+        } else {
+          return _ErrorInfo(
+            type: RouteErrorType.apiError,
+            message: 'API 오류가 발생했습니다 (HTTP $statusCode).',
+          );
+        }
+      case DioExceptionType.connectionError:
+        return _ErrorInfo(
+          type: RouteErrorType.networkError,
+          message: '네트워크 연결에 실패했습니다. 인터넷 연결을 확인하세요.',
+        );
+      default:
+        return _ErrorInfo(
+          type: RouteErrorType.unknown,
+          message: '알 수 없는 오류가 발생했습니다: ${e.message}',
+        );
+    }
+  }
+
+  /// 재시도 로직을 포함한 경로 조회 / Calculate route with retry
+  ///
+  /// **비즈니스 규칙 / Business Rule**: Rate Limit 시 3초 대기 후 재시도
+  ///
+  /// @param maxRetries 최대 재시도 횟수 (default: 2)
+  Future<RouteResult?> calculateRouteWithRetry({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+    String option = 'trafast',
+    int maxRetries = 2,
+  }) async {
+    int retryCount = 0;
+
+    while (retryCount <= maxRetries) {
+      try {
+        return await calculateRoute(
+          originLat: originLat,
+          originLng: originLng,
+          destLat: destLat,
+          destLng: destLng,
+          option: option,
+        );
+      } on RouteServiceException catch (e) {
+        // Rate Limit 에러 시 재시도
+        if (e.type == RouteErrorType.rateLimitExceeded && retryCount < maxRetries) {
+          retryCount++;
+          print('Rate limit hit, retrying in 3 seconds... (attempt $retryCount/$maxRetries)');
+          await Future.delayed(const Duration(seconds: 3));
+          continue;
+        }
+
+        // 다른 에러는 즉시 throw
+        rethrow;
+      }
+    }
+
+    return null;
   }
 
   /// 교통 상황 코드를 TrafficLevel enum으로 변환
@@ -181,4 +280,80 @@ enum TrafficLevel {
   slow, // 지체 (주황)
   congested, // 정체 (빨강)
   unknown, // 알 수 없음
+}
+
+/// 경로 서비스 에러 타입 / Route service error types
+enum RouteErrorType {
+  networkError, // 네트워크 연결 실패
+  networkTimeout, // 네트워크 타임아웃
+  invalidApiKey, // API 키 오류 (401, 403)
+  rateLimitExceeded, // API 호출 한도 초과 (429)
+  invalidRequest, // 잘못된 요청 (400)
+  apiError, // 기타 API 오류
+  cancelled, // 요청 취소
+  unknown, // 알 수 없는 오류
+}
+
+/// 경로 서비스 예외 / Route service exception
+///
+/// **Context**: RouteService에서 발생하는 모든 에러를 래핑
+class RouteServiceException implements Exception {
+  /// 에러 메시지 / Error message
+  final String message;
+
+  /// 에러 타입 / Error type
+  final RouteErrorType type;
+
+  /// 원본 에러 / Original error
+  final Object? originalError;
+
+  RouteServiceException({
+    required this.message,
+    required this.type,
+    this.originalError,
+  });
+
+  /// 사용자 친화적인 에러 메시지 / User-friendly error message
+  String get userMessage {
+    switch (type) {
+      case RouteErrorType.networkError:
+      case RouteErrorType.networkTimeout:
+        return '네트워크 연결이 불안정합니다.\n인터넷 연결을 확인해주세요.';
+      case RouteErrorType.invalidApiKey:
+        return '서비스 인증에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+      case RouteErrorType.rateLimitExceeded:
+        return 'API 호출 한도를 초과했습니다.\n잠시 후 다시 시도해주세요.';
+      case RouteErrorType.invalidRequest:
+        return '잘못된 요청입니다.\n출발지와 도착지를 확인해주세요.';
+      case RouteErrorType.apiError:
+        return '경로 탐색 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+      case RouteErrorType.cancelled:
+        return '요청이 취소되었습니다.';
+      case RouteErrorType.unknown:
+        return '예상치 못한 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+    }
+  }
+
+  /// 재시도 가능 여부 / Can retry
+  bool get canRetry {
+    return type == RouteErrorType.networkError ||
+        type == RouteErrorType.networkTimeout ||
+        type == RouteErrorType.rateLimitExceeded;
+  }
+
+  @override
+  String toString() {
+    return 'RouteServiceException: $message (type: $type)';
+  }
+}
+
+/// 에러 정보 내부 클래스 / Internal error info class
+class _ErrorInfo {
+  final RouteErrorType type;
+  final String message;
+
+  _ErrorInfo({
+    required this.type,
+    required this.message,
+  });
 }
