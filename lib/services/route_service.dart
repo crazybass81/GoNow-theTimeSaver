@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'cache_service.dart';
 
 /// Naver Maps API를 사용한 경로 탐색 서비스 / Route Service
 ///
@@ -7,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// - Naver Directions API 5.0 연동 (자차 경로)
 /// - 실시간 교통 정보 반영
 /// - 에러 핸들링 및 폴백 로직
+/// - 경로 캐싱 (5분 유효)
 ///
 /// **Context**: 일정 추가 시 이동 시간 계산
 /// **Business Rule**: 실시간 교통 정보 반영 필수
@@ -18,6 +20,9 @@ class RouteService {
 
   /// Dio HTTP 클라이언트 / HTTP client
   late final Dio _dio;
+
+  /// 캐시 서비스 / Cache service
+  final CacheService<RouteResult> _cache = CacheService<RouteResult>();
 
   /// 초기화 메서드 / Initialize Dio client
   ///
@@ -68,7 +73,26 @@ class RouteService {
     required double destLat,
     required double destLng,
     String option = 'trafast', // trafast (빠른 길), tracomfort (편한 길), traoptimal (최적)
+    bool useCache = true, // 캐시 사용 여부
   }) async {
+    // 캐시 키 생성 / Generate cache key
+    final cacheKey = CacheService.generateRouteKey(
+      originLat: originLat,
+      originLng: originLng,
+      destLat: destLat,
+      destLng: destLng,
+      option: option,
+    );
+
+    // 캐시 조회 / Check cache
+    if (useCache) {
+      final cachedResult = _cache.get(cacheKey);
+      if (cachedResult != null) {
+        print('RouteService: Using cached route (key: $cacheKey)');
+        return cachedResult;
+      }
+    }
+
     try {
       // Naver Directions API 호출
       // https://api.ncloud-docs.com/docs/ai-naver-mapsdirections-driving
@@ -98,7 +122,7 @@ class RouteService {
         final route = data['route'][option][0];
         final summary = route['summary'];
 
-        return RouteResult(
+        final result = RouteResult(
           durationMinutes: (summary['duration'] / 1000 / 60).ceil(), // 밀리초 → 분
           distanceKm: (summary['distance'] / 1000).toDouble(), // 미터 → km
           trafficLevel: _parseTrafficLevel(summary['trafficColor'] ?? 0),
@@ -107,6 +131,14 @@ class RouteService {
           taxiFare: summary['taxiFare'] ?? 0,
           fuelPrice: summary['fuelPrice'] ?? 0,
         );
+
+        // 캐시에 저장 / Save to cache (5분 유효)
+        if (useCache) {
+          _cache.set(cacheKey, result);
+          print('RouteService: Cached route (key: $cacheKey)');
+        }
+
+        return result;
       } else {
         throw Exception('경로 탐색 실패: HTTP ${response.statusCode}');
       }
@@ -228,6 +260,50 @@ class RouteService {
     }
 
     return null;
+  }
+
+  /// 캐시 무효화 / Invalidate cache
+  ///
+  /// **Context**: 사용자가 강제 새로고침하거나 설정 변경 시
+  void invalidateCache({
+    double? originLat,
+    double? originLng,
+    double? destLat,
+    double? destLng,
+    String? option,
+  }) {
+    if (originLat != null &&
+        originLng != null &&
+        destLat != null &&
+        destLng != null &&
+        option != null) {
+      // 특정 경로 캐시 무효화 / Invalidate specific route
+      final cacheKey = CacheService.generateRouteKey(
+        originLat: originLat,
+        originLng: originLng,
+        destLat: destLat,
+        destLng: destLng,
+        option: option,
+      );
+      _cache.invalidate(cacheKey);
+    } else {
+      // 모든 캐시 무효화 / Invalidate all cache
+      _cache.invalidateAll();
+    }
+  }
+
+  /// 만료된 캐시 정리 / Clean up expired cache
+  ///
+  /// **Context**: 주기적으로 호출하여 메모리 관리
+  void cleanExpiredCache() {
+    _cache.cleanExpired();
+  }
+
+  /// 캐시 통계 조회 / Get cache statistics
+  ///
+  /// **Context**: 디버깅 및 모니터링
+  CacheStats getCacheStats() {
+    return _cache.getStats();
   }
 
   /// 교통 상황 코드를 TrafficLevel enum으로 변환
