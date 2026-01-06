@@ -10,6 +10,9 @@ import 'utils/app_theme.dart';
 import 'providers/auth_provider.dart';
 // import 'providers/schedule_provider.dart';
 
+// Services
+import 'services/route_service.dart';
+
 // Screens
 import 'screens/auth/login_screen.dart';
 // import 'screens/splash_screen.dart';
@@ -25,6 +28,9 @@ void main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  // Initialize RouteService (Naver Maps API)
+  RouteService().initialize();
 
   runApp(const MyApp());
 }

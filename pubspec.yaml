@@ -21,6 +21,7 @@ dependencies:
 
   # HTTP & Network
   http: ^1.1.0
+  dio: ^5.4.0  # Advanced HTTP client for Naver API
 
   # Location & Maps
   geolocator: ^11.0.0
@@ -55,10 +56,10 @@ flutter:
   uses-material-design: true
 
   # Assets
-  # assets:
+  assets:
+    - .env
   #   - assets/images/
   #   - assets/icons/
-  #   - .env
 
   # Fonts
   # fonts:
