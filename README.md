@@ -72,6 +72,8 @@ cd GoNow-theTimeSaver
 flutter pub get
 ```
 
+**⚠️ 중요**: Phase 1 완료 후 `table_calendar` 패키지가 추가되었습니다. 반드시 `flutter pub get`을 실행하세요!
+
 3. **환경 변수 설정**
 ```bash
 cp .env.example .env
@@ -131,7 +133,7 @@ GoNow-theTimeSaver/
 
 **MVP 출시 목표일**: 2026년 1월 31일 (25일)
 
-### Phase 1: Foundation & UI (Day 1~5)
+### ✅ Phase 1: Foundation & UI (Day 1~5) - **완료!** (2026-01-06)
 - ✅ Git 저장소 설정
 - ✅ Supabase 프로젝트 설정 (로컬 개발 환경)
 - ✅ Flutter 프로젝트 기본 구조
@@ -142,7 +144,7 @@ GoNow-theTimeSaver/
   - ✅ 인증 상태 관리 (AuthProvider)
   - ✅ 대시보드 화면 (카운트다운 + 경로 표시)
   - ✅ 일정 추가/수정 화면 (4단계 플로우)
-  - ✅ 월간 캘린더 화면 (날짜별 일정 표시)
+  - ✅ 월간 캘린더 화면 (table_calendar 패키지)
   - ✅ 설정 화면 (버퍼 시간, 알림, 계정 관리)
 
 ### Phase 2: Core Logic & API (Day 6~10)
