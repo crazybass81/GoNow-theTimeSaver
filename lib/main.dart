@@ -12,6 +12,7 @@ import 'providers/auth_provider.dart';
 
 // Services
 import 'services/route_service.dart';
+import 'services/transit_service.dart';
 
 // Screens
 import 'screens/auth/login_screen.dart';
@@ -31,6 +32,9 @@ void main() async {
 
   // Initialize RouteService (Naver Maps API)
   RouteService().initialize();
+
+  // Initialize TransitService (Naver Transit API)
+  TransitService().initialize();
 
   runApp(const MyApp());
 }
