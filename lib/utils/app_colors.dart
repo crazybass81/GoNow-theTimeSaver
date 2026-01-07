@@ -12,6 +12,22 @@ class AppColors {
   AppColors._(); // Private constructor to prevent instantiation
 
   // ========================================
+  // 참조 저장소 기본 색상 / Reference repository base colors
+  // ========================================
+
+  /// 배경 색상 / Background color (reference: Colors.grey[50])
+  static const Color background = Color(0xFFFAFAFA); // grey[50]
+
+  /// 카드 배경 / Card background
+  static const Color cardBackground = Colors.white;
+
+  /// 주 색상 / Primary color (reference: Colors.blue[600])
+  static const Color primary = Color(0xFF1E88E5); // blue[600]
+
+  /// 보조 텍스트 색상 / Secondary text color (reference: Colors.grey[600])
+  static const Color secondaryText = Color(0xFF757575); // grey[600]
+
+  // ========================================
   // 일정 카테고리 색상 / Schedule category colors
   // ========================================
 
@@ -54,39 +70,39 @@ class AppColors {
   ];
 
   // ========================================
-  // Material Design 그림자 / Material shadows
+  // Material Design 그림자 / Material shadows (Reference pattern)
   // ========================================
 
-  /// 카드 기본 그림자 / Default card shadow
-  static List<BoxShadow> cardShadow(Color baseColor) => [
+  /// 기본 그림자 / Default shadow (reference: blurRadius 10, opacity 0.1)
+  static List<BoxShadow> get referenceShadow => [
         BoxShadow(
-          color: baseColor.withOpacity(0.1),
+          color: Colors.black.withOpacity(0.1),
           blurRadius: 10,
-          offset: const Offset(0, 4),
+          offset: const Offset(0, 2),
         ),
       ];
 
-  /// 카드 강조 그림자 / Elevated card shadow
+  /// 카드 기본 그림자 / Default card shadow
+  /// **참조 저장소 패턴 적용 / Reference repository pattern**
+  static List<BoxShadow> cardShadow(Color baseColor) => [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ];
+
+  /// 카드 강조 그림자 / Elevated card shadow (for special elements)
   static List<BoxShadow> elevatedCardShadow(Color baseColor) => [
         BoxShadow(
-          color: baseColor.withOpacity(0.15),
-          blurRadius: 15,
-          offset: const Offset(0, 4),
-        ),
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 10,
           offset: const Offset(0, 2),
         ),
       ];
 
   /// 원형 타이머 그림자 / Circular timer shadow
   static List<BoxShadow> timerShadow(Color progressColor) => [
-        BoxShadow(
-          color: progressColor.withOpacity(0.15),
-          blurRadius: 20,
-          offset: const Offset(0, 4),
-        ),
         BoxShadow(
           color: Colors.black.withOpacity(0.1),
           blurRadius: 10,

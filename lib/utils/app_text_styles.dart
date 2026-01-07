@@ -12,6 +12,42 @@ class AppTextStyles {
   AppTextStyles._(); // Private constructor to prevent instantiation
 
   // ========================================
+  // 참조 저장소 기본 타이포그래피 / Reference repository typography
+  // ========================================
+
+  /// 날짜 헤더 / Date header (reference: 32px, bold)
+  /// 예: "2024년 1월 15일 (월)"
+  static const TextStyle dateHeader = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+  );
+
+  /// 제목 / Title (reference: 28px, bold)
+  /// 예: "회사 미팅", 일정 제목
+  static const TextStyle referenceTitle = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+  );
+
+  /// 본문 / Body (reference: 16px, medium)
+  /// 예: 일반 텍스트, 설명
+  static const TextStyle referenceBody = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+  );
+
+  /// 라벨 / Label (reference: 12px, bold)
+  /// 예: "N분 남음", 시간 표시
+  static const TextStyle referenceLabel = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+  );
+
+  // ========================================
   // 원형 타이머 텍스트 / Circular timer text
   // ========================================
 
@@ -42,9 +78,9 @@ class AppTextStyles {
   // 일정 카드 텍스트 / Schedule card text
   // ========================================
 
-  /// 일정 제목 / Schedule title
+  /// 일정 제목 / Schedule title (updated to match reference: 28px)
   static const TextStyle scheduleTitle = TextStyle(
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: FontWeight.bold,
     height: 1.3,
   );
