@@ -21,13 +21,23 @@ class RouteService {
   /// Dio HTTP 클라이언트 / HTTP client
   late final Dio _dio;
 
+  /// 초기화 상태 플래그 / Initialization flag
+  bool _isInitialized = false;
+
   /// 캐시 서비스 / Cache service
   final CacheService<RouteResult> _cache = CacheService<RouteResult>();
 
   /// 초기화 메서드 / Initialize Dio client
   ///
   /// **Context**: 앱 시작 시 호출 (main.dart)
+  /// **Note**: 중복 호출 시 무시 (테스트 환경 고려)
   void initialize() {
+    // 이미 초기화된 경우 스킵 / Skip if already initialized
+    if (_isInitialized) {
+      print('RouteService: Already initialized, skipping');
+      return;
+    }
+
     final clientId = dotenv.env['NAVER_CLIENT_ID'];
     final clientSecret = dotenv.env['NAVER_CLIENT_SECRET'];
 
@@ -46,6 +56,9 @@ class RouteService {
         },
       ),
     );
+
+    _isInitialized = true;
+    print('RouteService: Initialized successfully');
   }
 
   /// 자차 경로 탐색 및 소요 시간 계산 / Calculate driving route
