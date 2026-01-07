@@ -226,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '하단의 + 버튼을 눌러\n새로운 일정을 추가해보세요',
+            '하단의 + 버튼을 눌러\n새 일정을 추가해보세요',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
