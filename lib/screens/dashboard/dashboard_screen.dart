@@ -555,7 +555,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         decoration: BoxDecoration(
                           color: scheduleColor,
                           borderRadius: BorderRadius.circular(8),
-                          boxShadow: AppColors.colorSwatchShadow(scheduleColor),
+                          boxShadow: AppColors.referenceShadow,
                         ),
                         child: Column(
                           children: [

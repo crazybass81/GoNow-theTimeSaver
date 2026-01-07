@@ -110,15 +110,6 @@ class AppColors {
         ),
       ];
 
-  /// 색상 피커 그림자 / Color picker shadow
-  static List<BoxShadow> colorSwatchShadow(Color color) => [
-        BoxShadow(
-          color: color.withOpacity(0.3),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ];
-
   // ========================================
   // 상태 색상 / Status colors
   // ========================================
