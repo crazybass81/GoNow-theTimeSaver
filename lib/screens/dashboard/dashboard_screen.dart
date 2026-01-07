@@ -219,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            '예정된 일정이 없습니다',
+            '일정이 없습니다',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
