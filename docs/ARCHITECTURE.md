@@ -216,7 +216,7 @@ ios/
 
 **Note**:
 - 2025-01-07: Naver Maps Directions API → TMAP Routes API 전환 완료
-- 계획: Naver Transit API → TMAP Public Transit API 전환 예정
+- 2025-01-07: Naver Transit API → TMAP Public Transit API 전환 완료
 - 자세한 내용: [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)
 
 ### 3.4 네이티브
