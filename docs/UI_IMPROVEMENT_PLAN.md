@@ -1,9 +1,9 @@
 # UI Improvement Plan - 기준 저장소 패턴 적용
 
 **작성일**: 2025-01-07
-**최종 업데이트**: 2025-01-07 16:30
+**최종 업데이트**: 2025-01-07 17:45
 **기준 저장소**: https://github.com/khyapple/go_now (master 브랜치)
-**상태**: Phase 2 진행 중 (~70% 완료)
+**상태**: Phase 2 완료 (100%)
 
 ## 📈 진행 상황
 
@@ -13,10 +13,11 @@
 - [x] DashboardScreen BoxShadow 적용
 - [x] LoginScreen 네비게이션 업데이트
 
-### ✅ Phase 2 진행 중 (~70%)
+### ✅ Phase 2 완료 (100%)
 - [x] 색상 피커 위젯 구현 (`ColorPickerWidget`)
 - [x] 이모지 피커 위젯 구현 (`EmojiPickerWidget`)
-- [ ] **진행 중**: AddScheduleScreen 리팩토링 (4단계 PageView → 단일 스크롤)
+- [x] AddScheduleScreen 리팩토링 완료 (4단계 PageView → 단일 스크롤)
+- [x] DashboardScreen FAB 네비게이션 업데이트 (`AddScheduleScreenNew` 사용)
 
 ### ⏳ Phase 3 대기 중
 - [ ] 추가 디자인 시스템 개선
@@ -473,13 +474,13 @@ Widget _buildTimeItemSelector({
    - [ ] 커스텀 페이지 인디케이터
    - [ ] 애니메이션 전환
 
-### Phase 2: 일정 관리 개선 (우선순위: 중간)
+### Phase 2: 일정 관리 개선 (우선순위: 중간) ✅ 완료
 3. **AddScheduleScreen → ScheduleEditScreen 패턴**
-   - [ ] 단일 스크롤 레이아웃 전환
-   - [ ] 색상 피커 구현
-   - [ ] 이모지 선택기 구현
-   - [ ] 준비/마무리 시간 커스터마이징
-   - [ ] DropdownButton 이동 수단
+   - [x] 단일 스크롤 레이아웃 전환
+   - [x] 색상 피커 구현 (`ColorPickerWidget`)
+   - [x] 이모지 선택기 구현 (`EmojiPickerWidget`)
+   - [x] 버퍼 시간 슬라이더 구현 (준비/도착버퍼/오차율/마무리)
+   - [x] DropdownButton 이동 수단
 
 ### Phase 3: 추가 화면 구현 (우선순위: 낮음)
 4. **새 화면 추가**
@@ -580,11 +581,11 @@ dependencies:
 - [ ] `lib/utils/app_colors.dart` 생성 (색상 시스템)
 - [ ] `lib/utils/app_text_styles.dart` 생성 (타이포그래피)
 
-### Phase 2: AddScheduleScreen 개선
-- [ ] `lib/widgets/color_picker_widget.dart` 생성
-- [ ] `lib/widgets/emoji_picker_widget.dart` 생성
-- [ ] `lib/widgets/time_item_selector_widget.dart` 생성
-- [ ] `lib/screens/schedule/add_schedule_screen.dart` → `schedule_edit_screen.dart` 리팩토링
+### Phase 2: AddScheduleScreen 개선 ✅ 완료
+- [x] `lib/widgets/color_picker_widget.dart` 생성
+- [x] `lib/widgets/emoji_picker_widget.dart` 생성
+- [x] `lib/screens/schedule/add_schedule_screen_new.dart` 생성 (단일 스크롤 레이아웃)
+- [x] `lib/screens/dashboard/dashboard_screen.dart` FAB 업데이트
 
 ### Phase 3: 추가 화면
 - [ ] `lib/screens/splash_screen.dart` 생성
