@@ -1,8 +1,26 @@
 # UI Improvement Plan - 기준 저장소 패턴 적용
 
 **작성일**: 2025-01-07
+**최종 업데이트**: 2025-01-07 16:30
 **기준 저장소**: https://github.com/khyapple/go_now (master 브랜치)
-**상태**: 계획 수립 완료
+**상태**: Phase 2 진행 중 (~70% 완료)
+
+## 📈 진행 상황
+
+### ✅ Phase 1 완료 (100%)
+- [x] 원형 타이머 위젯 구현 (`CircularTimerWidget`)
+- [x] MainWrapper 네비게이션 구현 (PageView + SharedPreferences)
+- [x] DashboardScreen BoxShadow 적용
+- [x] LoginScreen 네비게이션 업데이트
+
+### ✅ Phase 2 진행 중 (~70%)
+- [x] 색상 피커 위젯 구현 (`ColorPickerWidget`)
+- [x] 이모지 피커 위젯 구현 (`EmojiPickerWidget`)
+- [ ] **진행 중**: AddScheduleScreen 리팩토링 (4단계 PageView → 단일 스크롤)
+
+### ⏳ Phase 3 대기 중
+- [ ] 추가 디자인 시스템 개선
+- [ ] 애니메이션 최적화
 
 ---
 
@@ -18,7 +36,7 @@
 | SettingsScreen | SettingsScreen | ✅ 존재 |
 | LoginScreen | LoginScreen | ✅ 존재 |
 | SignupScreen | SignupScreen | ✅ 존재 |
-| - | MainWrapper | ❌ 미구현 (네비게이션 래퍼) |
+| MainWrapper | MainWrapper | ✅ 구현 완료 (PageView 네비게이션) |
 | - | SplashScreen | ❌ 미구현 |
 | - | ScheduleDetailScreen | ❌ 미구현 |
 | - | PrivacyPolicyScreen | ❌ 미구현 |
