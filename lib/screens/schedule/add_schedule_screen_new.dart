@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../widgets/color_picker_widget.dart';
 import '../../widgets/emoji_picker_widget.dart';
 import '../../utils/app_colors.dart';
 import '../../models/trip.dart';
 import '../../services/trip_service.dart';
+import '../../services/poi_search_service.dart';
+import '../../services/route_service.dart';
+import '../../services/transit_service.dart';
 import '../../providers/auth_provider.dart';
 
 /// 일정 추가 화면 (단일 스크롤 레이아웃) / Add Schedule Screen (Single Scroll Layout)
@@ -45,6 +49,20 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
   bool _showColorPicker = false;
   bool _showEmojiPicker = false;
 
+  // 장소 검색 관련
+  List<POIResult> _searchResults = [];
+  POIResult? _selectedPOI;
+  bool _isSearching = false;
+
+  // 사용자 현재 위치
+  Position? _currentPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -52,13 +70,102 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
     super.dispose();
   }
 
+  /// 현재 위치 가져오기 / Get current location
+  Future<void> _getCurrentLocation() async {
+    try {
+      // 위치 서비스 활성화 확인
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        debugPrint('⚠️ Location services are disabled');
+        return;
+      }
+
+      // 위치 권한 확인
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          debugPrint('⚠️ Location permissions are denied');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        debugPrint('⚠️ Location permissions are permanently denied');
+        return;
+      }
+
+      // 현재 위치 가져오기
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        _currentPosition = position;
+      });
+
+      debugPrint('✅ Current location: ${position.latitude}, ${position.longitude}');
+    } catch (e) {
+      debugPrint('❌ Error getting current location: $e');
+    }
+  }
+
+  /// 장소 검색 / Search POI
+  Future<void> _searchPOI(String keyword) async {
+    if (keyword.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final results = await POISearchService().searchPOI(
+        keyword: keyword,
+        count: 10,
+      );
+
+      setState(() {
+        _searchResults = results;
+        _isSearching = false;
+      });
+    } catch (e) {
+      debugPrint('❌ POI search error: $e');
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('장소 검색 실패: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// POI 선택 / Select POI
+  void _selectPOI(POIResult poi) {
+    setState(() {
+      _selectedPOI = poi;
+      _destinationController.text = poi.name;
+      _searchResults = [];
+    });
+  }
+
   /// 일정 저장 / Save schedule
   ///
-  /// **MVP 구현 / MVP Implementation**:
-  /// - Supabase에 기본 일정 정보 저장
-  /// - TODO: Geocoding API 연동 (주소 → 좌표 변환)
-  /// - TODO: RouteService 호출 (실제 이동 시간 계산)
-  /// - TODO: SchedulerService 역산 (정확한 출발 시간 계산)
+  /// **실제 구현 / Real Implementation**:
+  /// - 사용자 현재 위치 및 선택된 목적지 사용
+  /// - RouteService 또는 TransitService로 실제 이동 시간 계산
+  /// - Supabase에 일정 정보 저장
   Future<void> _saveSchedule() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,6 +177,13 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
     if (_arrivalDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('도착 시간을 선택해주세요')),
+      );
+      return;
+    }
+
+    if (_selectedPOI == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('목적지를 검색하여 선택해주세요')),
       );
       return;
     }
@@ -86,70 +200,128 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
       return;
     }
 
+    // 로딩 표시
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
     try {
-      // TODO: 향후 개선 사항
-      // 1. Geocoding API로 주소 → 좌표 변환 (destinationLat/Lng)
-      // 2. RouteService로 실제 이동 시간 계산 (travelDurationMinutes)
-      // 3. SchedulerService로 정확한 출발 시간 역산 (departureTime)
+      // 1. 출발지 좌표 (현재 위치 또는 기본값)
+      double originLat;
+      double originLng;
 
-      // MVP: 임시 값 사용
-      const double tempLat = 37.5665; // 서울 시청 좌표
-      const double tempLng = 126.9780;
-      const int tempTravelMinutes = 30; // 기본 30분
+      if (_currentPosition != null) {
+        originLat = _currentPosition!.latitude;
+        originLng = _currentPosition!.longitude;
+      } else {
+        // 현재 위치를 가져오지 못한 경우 서울 시청을 기본값으로 사용
+        originLat = 37.5665;
+        originLng = 126.9780;
+      }
 
-      // 임시 출발 시간 계산: 도착시간 - (이동시간 + 모든 버퍼)
+      // 2. 목적지 좌표 (선택된 POI)
+      final destLat = _selectedPOI!.lat;
+      final destLng = _selectedPOI!.lng;
+
+      // 3. 경로 API 호출하여 실제 이동 시간 계산
+      int travelDurationMinutes;
+
+      if (_transportMode == 'transit') {
+        // 대중교통 경로
+        final transitResults = await TransitService().calculateTransitRoute(
+          originLat: originLat,
+          originLng: originLng,
+          destLat: destLat,
+          destLng: destLng,
+        );
+
+        if (transitResults.isEmpty) {
+          throw Exception('대중교통 경로를 찾을 수 없습니다');
+        }
+
+        travelDurationMinutes = transitResults.first.durationMinutes;
+      } else {
+        // 자동차 경로
+        final routeResult = await RouteService().calculateRoute(
+          originLat: originLat,
+          originLng: originLng,
+          destLat: destLat,
+          destLng: destLng,
+        );
+
+        if (routeResult == null) {
+          throw Exception('자동차 경로를 찾을 수 없습니다');
+        }
+
+        travelDurationMinutes = routeResult.durationMinutes;
+      }
+
+      // 4. 출발 시간 계산: 도착시간 - (이동시간 + 모든 버퍼)
       final totalBufferMinutes = _preparationTime +
           _earlyArrivalBuffer +
           _finishUpTime +
-          (tempTravelMinutes * _travelErrorRate).round();
+          (travelDurationMinutes * _travelErrorRate).round();
       final departureDatetime = _arrivalDateTime!.subtract(
-        Duration(minutes: tempTravelMinutes + totalBufferMinutes),
+        Duration(minutes: travelDurationMinutes + totalBufferMinutes),
       );
 
-      // Trip 객체 생성
+      // 5. Trip 객체 생성 (실제 데이터 사용)
       final trip = Trip(
         userId: currentUser.id,
         title: _titleController.text.trim(),
         color: AppColors.getColorName(_selectedColor) ?? 'blue',
         emoji: _selectedEmoji,
-        destinationAddress: _destinationController.text.trim(),
-        destinationLat: tempLat,
-        destinationLng: tempLng,
+        destinationAddress: _selectedPOI!.displayAddress,
+        destinationLat: destLat,
+        destinationLng: destLng,
         arrivalTime: _arrivalDateTime!,
         departureTime: departureDatetime,
         transportMode: _transportMode,
-        travelDurationMinutes: tempTravelMinutes,
+        travelDurationMinutes: travelDurationMinutes,
         preparationMinutes: _preparationTime,
         earlyArrivalBufferMinutes: _earlyArrivalBuffer,
         travelUncertaintyRate: _travelErrorRate,
         previousTaskWrapupMinutes: _finishUpTime,
       );
 
-      // Supabase에 저장
+      // 6. Supabase에 저장
       final tripService = TripService();
       await tripService.createTrip(trip);
 
+      // 로딩 다이얼로그 닫기
       if (!mounted) return;
+      Navigator.pop(context); // 로딩 다이얼로그 닫기
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             '✅ 일정이 저장되었습니다\n'
-            '제목: ${trip.title}\n'
-            '색상: ${trip.color}, 이모지: ${trip.emoji}',
+            '목적지: ${trip.destinationAddress}\n'
+            '이동 시간: ${trip.travelDurationMinutes}분\n'
+            '출발: ${trip.departureTime.hour}:${trip.departureTime.minute.toString().padLeft(2, '0')}',
           ),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
-      Navigator.pop(context, true); // true를 반환하여 새로고침 트리거
+      Navigator.pop(context, true); // 화면 닫기 + 새로고침 트리거
     } catch (e) {
       debugPrint('❌ Error saving schedule: $e');
+
+      // 로딩 다이얼로그 닫기
       if (!mounted) return;
+      Navigator.pop(context); // 로딩 다이얼로그 닫기
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('일정 저장 실패: ${e.toString()}'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -238,21 +410,89 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
               _buildColorEmojiSection(theme),
               const SizedBox(height: 24),
 
-              // 목적지 입력
+              // 목적지 검색
               TextFormField(
                 controller: _destinationController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: '목적지',
-                  hintText: '장소를 입력하세요',
-                  prefixIcon: Icon(Icons.place),
+                  hintText: '장소를 검색하세요 (예: 강남역)',
+                  prefixIcon: const Icon(Icons.place),
+                  suffixIcon: _isSearching
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : _selectedPOI != null
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : null,
                 ),
+                onChanged: (value) {
+                  // 검색어 입력 시 POI 검색
+                  _searchPOI(value);
+                  // 선택 초기화
+                  if (_selectedPOI != null) {
+                    setState(() => _selectedPOI = null);
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return '목적지를 입력해주세요';
                   }
+                  if (_selectedPOI == null) {
+                    return '검색 결과에서 목적지를 선택해주세요';
+                  }
                   return null;
                 },
               ),
+
+              // 검색 결과 목록
+              if (_searchResults.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withOpacity(0.3),
+                    ),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _searchResults.length,
+                    itemBuilder: (context, index) {
+                      final poi = _searchResults[index];
+                      return ListTile(
+                        leading: const Icon(Icons.location_on, size: 20),
+                        title: Text(
+                          poi.name,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        subtitle: Text(
+                          poi.displayAddress,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Text(
+                          poi.category,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        onTap: () => _selectPOI(poi),
+                      );
+                    },
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 24),
 
               // 도착 시간 선택

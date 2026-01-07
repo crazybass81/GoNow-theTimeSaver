@@ -159,6 +159,158 @@ List<dynamic>? _extractPath(List<dynamic> features) {
 }
 ```
 
+## TMAP POI Search Service Integration
+
+### Overview
+**Date**: 2025-01-07
+**New Service**: POI (Point of Interest) Search API
+**Purpose**: Real-time place search for schedule destination selection
+
+### Service Implementation
+
+**File**: `lib/services/poi_search_service.dart`
+
+```dart
+class POISearchService {
+  /// Singleton pattern
+  static final POISearchService _instance = POISearchService._internal();
+  factory POISearchService() => _instance;
+
+  /// 장소 검색 / Search places
+  Future<List<POIResult>> searchPOI({
+    required String keyword,
+    int count = 10,
+  }) async {
+    final response = await _dio.get(
+      '/tmap/pois',
+      queryParameters: {
+        'version': '1',
+        'searchKeyword': keyword,
+        'resCoordType': 'WGS84GEO',
+        'reqCoordType': 'WGS84GEO',
+        'count': count.toString(),
+      },
+    );
+    // Returns POIResult objects
+  }
+}
+```
+
+### POI Search Configuration
+
+**API Configuration**:
+```dart
+_dio = Dio(
+  BaseOptions(
+    baseUrl: 'https://apis.openapi.sk.com',
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+    headers: {
+      'appKey': appKey,
+    },
+  ),
+);
+```
+
+### Response Model
+
+```dart
+class POIResult {
+  final String id;           // POI ID
+  final String name;         // 장소 이름
+  final String address;      // 전체 주소
+  final double lat;          // 위도 (WGS84)
+  final double lng;          // 경도 (WGS84)
+  final String category;     // 카테고리 (예: "음식점", "지하철")
+  final String? telNo;       // 전화번호
+  final String? roadAddress; // 도로명 주소
+
+  /// 표시용 주소 (도로명 우선) / Display address
+  String get displayAddress => roadAddress ?? address;
+}
+```
+
+### Error Handling
+
+```dart
+enum POIErrorType {
+  networkError,
+  networkTimeout,
+  invalidApiKey,
+  rateLimitExceeded,
+  apiError,
+  cancelled,
+  unknown,
+}
+
+class POISearchException implements Exception {
+  final String message;
+  final POIErrorType type;
+  final Object? originalError;
+
+  String get userMessage {
+    // User-friendly error messages in Korean
+  }
+}
+```
+
+### Integration Points
+
+#### 1. Service Initialization (main.dart)
+```dart
+void main() async {
+  // ... other initializations
+  POISearchService().initialize();  // ✅ NEW
+  runApp(const MyApp());
+}
+```
+
+#### 2. UI Integration (add_schedule_screen_new.dart)
+```dart
+// Real-time POI search
+Future<void> _searchPOI(String keyword) async {
+  final results = await POISearchService().searchPOI(
+    keyword: keyword,
+    count: 10,
+  );
+  setState(() {
+    _searchResults = results;
+  });
+}
+
+// Use POI coordinates for route calculation
+Future<void> _saveSchedule() async {
+  final destLat = _selectedPOI!.lat;
+  final destLng = _selectedPOI!.lng;
+
+  // Calculate route with actual coordinates
+  final routeResult = await RouteService().calculateRoute(
+    originLat: originLat,
+    originLng: originLng,
+    destLat: destLat,
+    destLng: destLng,
+  );
+}
+```
+
+### Business Rules
+
+- **최대 검색 결과**: 20개 (TMAP API 정책)
+- **좌표계**: WGS84GEO (GPS 표준)
+- **주소 표시 우선순위**: 도로명 주소 > 지번 주소
+- **빈 키워드 처리**: 빈 검색어는 빈 배열 반환
+
+### POI Search vs Routes API
+
+| Feature | POI Search API | Routes API |
+|---------|----------------|------------|
+| Base URL | `https://apis.openapi.sk.com` | `https://apis.openapi.sk.com` |
+| Endpoint | `/tmap/pois` | `/tmap/routes?version=1` |
+| 요청 방식 | GET | POST |
+| 주요 기능 | 장소 검색 | 경로 계산 |
+| 반환 데이터 | 장소 정보, 좌표, 주소 | 소요시간, 거리, 경로 |
+| 최대 결과 | 20개 | 1개 (최적 경로) |
+
 ## API Comparison
 
 | Feature | Naver API | TMAP API |
@@ -173,6 +325,7 @@ List<dynamic>? _extractPath(List<dynamic> features) {
 | 통행료 | ✅ | ✅ |
 | 택시비 | ❌ | ✅ |
 | 유류비 | ✅ | ❌ |
+| POI 검색 | ❌ | ✅ |
 
 ## Test Results
 
@@ -215,9 +368,18 @@ TMAP_APP_KEY=BAztkfvzM03JakoXbANyf36kqmvrRQXJaPbP6J9Y
 
 ## Files Modified
 
+### Routes API Migration
 1. **`.env`**: Added TMAP_APP_KEY
 2. **`lib/services/route_service.dart`**: Complete rewrite for TMAP API
 3. **`test/integration/route_service_integration_test.dart`**: Updated tests for TMAP
+
+### POI Search Service Integration (2025-01-07)
+4. **`lib/services/poi_search_service.dart`**: ✅ NEW - TMAP POI Search API service
+5. **`lib/main.dart`**: Added POISearchService().initialize()
+6. **`lib/screens/schedule/add_schedule_screen_new.dart`**: Real API integration
+   - Real-time POI search with _searchPOI()
+   - Current location service integration
+   - Actual route calculation in _saveSchedule()
 
 ## Deployment Status
 
@@ -226,11 +388,19 @@ TMAP_APP_KEY=BAztkfvzM03JakoXbANyf36kqmvrRQXJaPbP6J9Y
 - ✅ Device installation: SM A136S (Android 14)
 - ✅ App launch: Successful
 - ✅ Services initialized:
-  - RouteService (TMAP API)
-  - TransitService
+  - RouteService (TMAP Routes API)
+  - TransitService (Naver Transit API)
+  - POISearchService (TMAP POI API) ✅ NEW
   - SchedulerService
   - PollingService
   - RealTimeUpdater
+
+### Latest Deployment (2025-01-07)
+- ✅ Hot reload successful with POI Search integration
+- ✅ Real-time place search working
+- ✅ Current location service active
+- ✅ Route calculation with real API data
+- ✅ All services operational
 
 ## Known Limitations
 
@@ -291,4 +461,8 @@ TMAP API에 문제가 발생할 경우:
 ---
 
 **Last Updated**: 2025-01-07
-**Status**: ✅ Migration Complete - All Tests Passing
+**Status**: ✅ Migration Complete - All Services Operational
+- ✅ TMAP Routes API: Fully integrated and tested
+- ✅ TMAP POI Search API: Integrated with real-time search
+- ✅ Location Services: GPS integration complete
+- ✅ All integration tests passing (4/4)

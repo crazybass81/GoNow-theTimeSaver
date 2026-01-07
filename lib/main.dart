@@ -13,6 +13,7 @@ import 'providers/trip_provider.dart';
 // Services
 import 'services/route_service.dart';
 import 'services/transit_service.dart';
+import 'services/poi_search_service.dart';
 import 'services/scheduler_service.dart';
 import 'services/polling_service.dart';
 import 'services/real_time_updater.dart';
@@ -33,11 +34,14 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  // Initialize RouteService (Naver Maps API)
+  // Initialize RouteService (TMAP Routes API)
   RouteService().initialize();
 
   // Initialize TransitService (Naver Transit API)
   TransitService().initialize();
+
+  // Initialize POISearchService (TMAP POI Search API)
+  POISearchService().initialize();
 
   // Initialize SchedulerService (Backward Scheduling Algorithm)
   SchedulerService().initialize();

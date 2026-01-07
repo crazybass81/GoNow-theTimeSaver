@@ -3,8 +3,8 @@
 > **MVP 개발 Phase 1~5 상세 구현 가이드**
 
 **최종 업데이트**: 2025-01-07
-**문서 버전**: 1.2
-**프로젝트 상태**: Phase 4 진행 중 (~65% 완료)
+**문서 버전**: 1.3
+**프로젝트 상태**: Phase 4 진행 중 (~90% 완료)
 
 ---
 
@@ -28,10 +28,10 @@
 | **Phase 1** | Foundation & UI | Day 1~5 | ✅ 완료 | 2026-01-06 |
 | **Phase 2** | Core Logic & API | Day 6~10 | ✅ 완료 | 2026-01-07 |
 | **Phase 3** | Widgets & Notifications | Day 11~15 | ✅ Flutter 완료 | 2026-01-07 |
-| **Phase 4** | Integration & QA | Day 16~20 | 🚧 진행 중 | - |
+| **Phase 4** | Integration & QA | Day 16~20 | 🚧 진행 중 (90%) | - |
 | **Phase 5** | Launch Preparation | Day 21~25 | ⏳ 대기 | - |
 
-**전체 MVP 진행률**: ~82%
+**전체 MVP 진행률**: ~92%
 
 ---
 
@@ -536,19 +536,25 @@ flutter create --org com.gonow .
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| Unit Tests | ✅ 완료 | 301개 테스트 (100% 통과) |
+| Unit Tests | ✅ 완료 | 305개 테스트 (100% 통과) |
 | Integration Tests (TMAP) | ✅ 완료 | 4개 테스트 (100% 통과) |
 | Widget Tests | ✅ 완료 | 66개 테스트 통과 |
 | E2E Tests 작성 | ✅ 완료 | 23개 테스트 작성 |
 | E2E Tests 실행 | ✅ 완료 | 23개 테스트 (100% 통과) |
 | Device Testing | ✅ 완료 | SM A136S (Android 14) 배포 성공 |
+| POI Search API 통합 | ✅ 완료 | TMAP POI Search Service |
+| 실시간 장소 검색 | ✅ 완료 | add_schedule_screen 실제 API 연동 |
+| 현재 위치 서비스 | ✅ 완료 | GPS 통합 완료 |
+| 실제 경로 계산 저장 | ✅ 완료 | 하드코딩 → 실제 API 데이터 |
 | Performance Tests | ⏳ 대기 | 배터리, 메모리 최적화 |
 | Alpha Testing | ⏳ 대기 | 사용자 피드백 |
 
 **전체 테스트 현황**: 328개 테스트 100% 통과
 - 📄 [테스트 결과 문서](../docs/TEST_RESULTS_2025_01_07.md)
+- 📄 [TMAP API 마이그레이션 문서](../docs/TMAP_API_MIGRATION.md)
+- 📄 [API 통합 세션 문서](../claudedocs/SESSION_2025_01_07_API_Integration.md)
 
-**전체 Phase 4 진행률**: ~70%
+**전체 Phase 4 진행률**: ~90%
 
 ### 주요 목표
 
@@ -600,6 +606,77 @@ flutter create --org com.gonow .
 - Updated `test/screens/dashboard_screen_test.dart`
 
 **완료 기준**: ✅ DB 스키마 + Trip 모델 + UI 표시 완료, 전체 테스트 통과
+
+---
+
+### Task 4.7: API 통합 완료 (Day 16 - 2025-01-07) ✅
+
+**목표**: 장소 검색, 현재 위치, 실제 경로 계산을 실제 API로 통합
+
+**배경**: add_schedule_screen_new.dart가 하드코딩된 mock 데이터를 사용하고 있어, 실제 API 호출로 전환 필요.
+
+#### 주요 작업
+- ✅ **SubTask 4.7.1**: TMAP POI Search Service 구현
+  - `lib/services/poi_search_service.dart` 신규 생성 (310 lines)
+  - Singleton 패턴으로 TMAP POI Search API 연동
+  - `searchPOI()` 메서드: 키워드로 장소 검색
+  - POIResult 모델: id, name, address, coordinates, category
+  - POISearchException: 8가지 에러 타입 핸들링
+  - 사용자 친화적 한글 에러 메시지
+  - 최대 20개 결과 반환 (TMAP API 정책)
+- ✅ **SubTask 4.7.2**: main.dart 서비스 초기화
+  - `POISearchService().initialize()` 추가
+  - 앱 시작 시 자동 초기화
+  - 로그: "POISearchService: Initialized successfully"
+- ✅ **SubTask 4.7.3**: add_schedule_screen 실시간 검색 구현
+  - `_searchPOI()` 메서드: 실시간 POI 검색
+  - POI 검색 결과 UI 표시
+  - 로딩 상태 및 에러 핸들링
+  - 검색 결과 선택 기능
+- ✅ **SubTask 4.7.4**: 현재 위치 서비스 통합
+  - Geolocator 패키지 사용
+  - `_getCurrentLocation()` 메서드
+  - 위치 권한 요청 및 처리
+  - GPS 좌표 획득 (WGS84)
+  - Fallback: Seoul City Hall (37.5665, 126.9780)
+- ✅ **SubTask 4.7.5**: 실제 경로 계산 저장
+  - `_saveSchedule()` 완전 재작성
+  - 현재 위치 → 목적지 경로 계산
+  - 교통 수단별 API 호출 (자차: RouteService, 대중교통: TransitService)
+  - **실제 이동 시간**으로 출발 시간 계산
+  - Mock 30분 → 실제 API 응답값 사용
+  - 데이터베이스에 실제 계산 결과 저장
+
+**산출물**:
+- ✅ `lib/services/poi_search_service.dart` (NEW - 310 lines)
+- ✅ Updated `lib/main.dart` (POI Service 초기화)
+- ✅ Updated `lib/screens/schedule/add_schedule_screen_new.dart` (실제 API 통합)
+
+**완료 기준**: ✅ POI 검색 작동, 현재 위치 획득, 실제 경로 계산 저장 완료
+
+**Before (Mock Data)**:
+```dart
+// ❌ Hardcoded
+final mockResults = [
+  {'name': '강남역', 'address': '서울시 강남구'},
+];
+final travelDurationMinutes = 30; // ❌ Fixed value
+```
+
+**After (Real API)**:
+```dart
+// ✅ Real POI Search
+final results = await POISearchService().searchPOI(keyword: keyword);
+
+// ✅ Real Route Calculation
+final routeResult = await RouteService().calculateRoute(
+  originLat: currentLat, originLng: currentLng,
+  destLat: poi.lat, destLng: poi.lng,
+);
+final travelDurationMinutes = routeResult.durationMinutes; // ✅ Actual data
+```
+
+**Impact**: 사용자는 이제 실제 위치를 검색하고, GPS 기반 현재 위치에서 출발하여, 실시간 교통 정보를 반영한 정확한 출발 시간을 받을 수 있습니다.
 
 ---
 
