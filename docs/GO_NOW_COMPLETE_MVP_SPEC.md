@@ -86,7 +86,16 @@
   - **산출물**: `docs/PHASE_3_IMPLEMENTATION_GUIDE.md` ✅
   - **완료일**: 2026-01-07
 
+✅ **완료된 선행 작업**:
+- **DB-UI 정합성 수정 완료** (2026-01-07)
+  - ✅ `schedules` 테이블에 `color`, `emoji` 컬럼 추가
+  - ✅ Trip 모델에 `color`, `emoji` 필드 추가
+  - ✅ DashboardScreen 동적 색상 및 이모지 표시
+  - ✅ 전체 테스트 통과 (Trip: 29/29, Dashboard: 16/16)
+  - 📄 상세 내용: `docs/archive/DB_UI_ALIGNMENT_REPORT_COMPLETED_2025_01_07.md` 참조
+
 ⚠️ **선행 작업 필요**:
+
 - **flutter create 명령 실행 필요**
   - 현재 프로젝트에 `android/`와 `ios/` 플랫폼 폴더가 없음
   - 명령어: `cd /Users/t/021_DEV/GoNow-theTimeSaver && flutter create .`
@@ -737,6 +746,8 @@ CREATE TABLE schedules (
   destination_address TEXT NOT NULL,
   destination_lat DOUBLE PRECISION NOT NULL,
   destination_lng DOUBLE PRECISION NOT NULL,
+  color TEXT DEFAULT 'blue' CHECK (color IN ('red', 'blue', 'green', 'orange', 'purple', 'teal')),
+  emoji TEXT DEFAULT '🚗',
 
   -- 시간 정보
   arrival_time TIMESTAMPTZ NOT NULL, -- 도착 목표 시간
@@ -1609,10 +1620,12 @@ class SupabaseService {
 **담당**: 개발자 2
 **소요**: 1일
 
-#### SubTask 1.4.1: Step 1 - 목적지 입력
+#### SubTask 1.4.1: Step 0 - 목적지 및 디자인 설정
 - [x] 검색 입력창
 - [x] 최근 장소 리스트
 - [x] 즐겨찾기 리스트
+- [x] 색상 선택 위젯 (6가지 스케줄 카테고리 색상: red, blue, green, orange, purple, teal)
+- [x] 이모지 선택 위젯 (36개 이모지 팔레트)
 - [x] 다음 단계 버튼
 - **담당**: 개발자 2
 - **소요**: 2시간
@@ -1620,7 +1633,7 @@ class SupabaseService {
 - **산출물**: `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
 - **완료 기준**: 장소 선택 시 다음 단계 이동
 
-#### SubTask 1.4.2: Step 2 - 시간 및 이동 수단 설정
+#### SubTask 1.4.2: Step 1 - 시간 및 이동 수단 설정
 - [x] 날짜/시간 선택 위젯
 - [x] 이동 수단 선택 (자차/대중교통)
 - [x] 이동 시간 자동 계산 표시 (정적)
@@ -1631,13 +1644,13 @@ class SupabaseService {
 - **산출물**: `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
 - **완료 기준**: 시간 선택 및 화면 전환
 
-#### SubTask 1.4.3: Step 3 - 4가지 버퍼 시간 설정
-- [x] 외출 준비 시간 슬라이더
-- [x] 이동 오차율 슬라이더
-- [x] 일찍 도착 버퍼 슬라이더
-- [x] 일정 마무리 시간 슬라이더
-- [x] 최종 계산 요약 표시 (Step 4)
-- [x] 저장 버튼 (Step 4)
+#### SubTask 1.4.3: Step 2-3 - 버퍼 시간 설정 및 확인
+- [x] Step 2: 외출 준비 시간 슬라이더
+- [x] Step 2: 이동 오차율 슬라이더
+- [x] Step 2: 일찍 도착 버퍼 슬라이더
+- [x] Step 2: 일정 마무리 시간 슬라이더
+- [x] Step 3: 최종 계산 요약 표시 (일정 제목, 선택된 색상/이모지, 시간 정보)
+- [x] Step 3: 저장 버튼
 - **담당**: 개발자 2
 - **소요**: 3시간
 - **의존성**: SubTask 1.4.2
@@ -1818,9 +1831,10 @@ class SupabaseService {
 **완료일**: 2026-01-07
 
 #### SubTask 2.4.1: Trip 모델 및 Service ✅
-- [x] Trip 모델 클래스 (title, destination, arrivalTime 등)
+- [x] Trip 모델 클래스 (title, destination, arrivalTime, color, emoji 등)
 - [x] TripService 클래스 (Supabase CRUD)
 - [x] 4가지 버퍼 시간 필드 저장
+- [x] UI 디자인 필드 (color, emoji) 저장
 - [x] RLS 정책 준수
 - [x] Realtime 구독 지원
 - **담당**: 개발자 2

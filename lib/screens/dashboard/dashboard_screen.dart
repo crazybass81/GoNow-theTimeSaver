@@ -321,7 +321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      trip.title,
+                      '${trip.emoji} ${trip.title}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -596,8 +596,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 12),
 
         ...upcomingTrips.map((trip) {
-          // 일정 색상 (기본값: 파랑)
-          final scheduleColor = AppColors.scheduleBlue;
+          // 일정 색상 (Trip 모델의 color 필드 사용)
+          final scheduleColor = AppColors.getColorByName(
+            trip.color,
+            fallback: AppColors.scheduleBlue,
+          );
 
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
@@ -643,7 +646,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        trip.title,
+                        '${trip.emoji} ${trip.title}',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),

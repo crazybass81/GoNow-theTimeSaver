@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/color_picker_widget.dart';
 import '../../widgets/emoji_picker_widget.dart';
+import '../../utils/app_colors.dart';
+import '../../models/trip.dart';
+import '../../services/trip_service.dart';
+import '../../providers/auth_provider.dart';
 
 /// 일정 추가 화면 (단일 스크롤 레이아웃) / Add Schedule Screen (Single Scroll Layout)
 ///
@@ -48,7 +53,13 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
   }
 
   /// 일정 저장 / Save schedule
-  void _saveSchedule() {
+  ///
+  /// **MVP 구현 / MVP Implementation**:
+  /// - Supabase에 기본 일정 정보 저장
+  /// - TODO: Geocoding API 연동 (주소 → 좌표 변환)
+  /// - TODO: RouteService 호출 (실제 이동 시간 계산)
+  /// - TODO: SchedulerService 역산 (정확한 출발 시간 계산)
+  Future<void> _saveSchedule() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('필수 항목을 입력해주세요')),
@@ -63,11 +74,85 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
       return;
     }
 
-    // TODO: Supabase에 일정 저장
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('일정이 저장되었습니다 (구현 예정)')),
-    );
-    Navigator.pop(context);
+    // 사용자 인증 확인
+    final authProvider = context.read<AuthProvider>();
+    final currentUser = authProvider.currentUser;
+
+    if (currentUser == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('로그인이 필요합니다')),
+      );
+      return;
+    }
+
+    try {
+      // TODO: 향후 개선 사항
+      // 1. Geocoding API로 주소 → 좌표 변환 (destinationLat/Lng)
+      // 2. RouteService로 실제 이동 시간 계산 (travelDurationMinutes)
+      // 3. SchedulerService로 정확한 출발 시간 역산 (departureTime)
+
+      // MVP: 임시 값 사용
+      const double tempLat = 37.5665; // 서울 시청 좌표
+      const double tempLng = 126.9780;
+      const int tempTravelMinutes = 30; // 기본 30분
+
+      // 임시 출발 시간 계산: 도착시간 - (이동시간 + 모든 버퍼)
+      final totalBufferMinutes = _preparationTime +
+          _earlyArrivalBuffer +
+          _finishUpTime +
+          (tempTravelMinutes * _travelErrorRate).round();
+      final departureDatetime = _arrivalDateTime!.subtract(
+        Duration(minutes: tempTravelMinutes + totalBufferMinutes),
+      );
+
+      // Trip 객체 생성
+      final trip = Trip(
+        userId: currentUser.id,
+        title: _titleController.text.trim(),
+        color: AppColors.getColorName(_selectedColor) ?? 'blue',
+        emoji: _selectedEmoji,
+        destinationAddress: _destinationController.text.trim(),
+        destinationLat: tempLat,
+        destinationLng: tempLng,
+        arrivalTime: _arrivalDateTime!,
+        departureTime: departureDatetime,
+        transportMode: _transportMode,
+        travelDurationMinutes: tempTravelMinutes,
+        preparationMinutes: _preparationTime,
+        earlyArrivalBufferMinutes: _earlyArrivalBuffer,
+        travelUncertaintyRate: _travelErrorRate,
+        previousTaskWrapupMinutes: _finishUpTime,
+      );
+
+      // Supabase에 저장
+      final tripService = TripService();
+      await tripService.createTrip(trip);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '✅ 일정이 저장되었습니다\n'
+            '제목: ${trip.title}\n'
+            '색상: ${trip.color}, 이모지: ${trip.emoji}',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context, true); // true를 반환하여 새로고침 트리거
+    } catch (e) {
+      debugPrint('❌ Error saving schedule: $e');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('일정 저장 실패: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   /// 도착 시간 선택 다이얼로그 / Select arrival date time dialog

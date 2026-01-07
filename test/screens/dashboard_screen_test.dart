@@ -110,7 +110,7 @@ void main() {
 
       // Then: Should show trip information
       expect(find.text('다음 일정'), findsOneWidget);
-      expect(find.text('회의 참석'), findsOneWidget);
+      expect(find.text('🚗 회의 참석'), findsOneWidget);
       expect(find.text('강남역'), findsOneWidget);
       expect(find.text('이동 정보'), findsOneWidget);
       expect(find.text('출발했어요'), findsOneWidget);
@@ -315,7 +315,7 @@ void main() {
 
       // Then: Should show "이후 일정" section with 2nd trip
       expect(find.text('이후 일정'), findsOneWidget);
-      expect(find.text('회의 2'), findsOneWidget);
+      expect(find.text('🚗 회의 2'), findsOneWidget);
       expect(find.text('홍대입구'), findsOneWidget);
     });
 
@@ -353,11 +353,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Then: Should show only trips 2, 3, 4 (skip first, take 3)
-      expect(find.text('회의 1'), findsOneWidget); // Current trip
-      expect(find.text('회의 2'), findsOneWidget); // Upcoming 1
-      expect(find.text('회의 3'), findsOneWidget); // Upcoming 2
-      expect(find.text('회의 4'), findsOneWidget); // Upcoming 3
-      expect(find.text('회의 5'), findsNothing); // Not shown (max 3)
+      expect(find.text('🚗 회의 1'), findsOneWidget); // Current trip
+      expect(find.text('🚗 회의 2'), findsOneWidget); // Upcoming 1
+      expect(find.text('🚗 회의 3'), findsOneWidget); // Upcoming 2
+      expect(find.text('🚗 회의 4'), findsOneWidget); // Upcoming 3
+      expect(find.text('🚗 회의 5'), findsNothing); // Not shown (max 3)
     });
   });
 

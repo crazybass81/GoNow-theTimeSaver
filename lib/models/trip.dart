@@ -23,6 +23,13 @@ class Trip {
   /// 일정 제목 / Title
   final String title;
 
+  /// 스케줄 카테고리 색상 / Schedule category color
+  /// (red, blue, green, orange, purple, teal)
+  final String color;
+
+  /// 일정 아이콘 이모지 / Schedule icon emoji
+  final String emoji;
+
   /// 목적지 주소 / Destination address
   final String destinationAddress;
 
@@ -84,6 +91,8 @@ class Trip {
     this.id,
     required this.userId,
     required this.title,
+    this.color = 'blue',
+    this.emoji = '🚗',
     required this.destinationAddress,
     required this.destinationLat,
     required this.destinationLng,
@@ -111,6 +120,8 @@ class Trip {
       id: json['id'] as String?,
       userId: json['user_id'] as String,
       title: json['title'] as String,
+      color: json['color'] as String? ?? 'blue',
+      emoji: json['emoji'] as String? ?? '🚗',
       destinationAddress: json['destination_address'] as String,
       destinationLat: (json['destination_lat'] as num).toDouble(),
       destinationLng: (json['destination_lng'] as num).toDouble(),
@@ -154,6 +165,8 @@ class Trip {
       if (id != null) 'id': id,
       'user_id': userId,
       'title': title,
+      'color': color,
+      'emoji': emoji,
       'destination_address': destinationAddress,
       'destination_lat': destinationLat,
       'destination_lng': destinationLng,
@@ -180,6 +193,8 @@ class Trip {
     String? id,
     String? userId,
     String? title,
+    String? color,
+    String? emoji,
     String? destinationAddress,
     double? destinationLat,
     double? destinationLng,
@@ -204,6 +219,8 @@ class Trip {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,
+      color: color ?? this.color,
+      emoji: emoji ?? this.emoji,
       destinationAddress: destinationAddress ?? this.destinationAddress,
       destinationLat: destinationLat ?? this.destinationLat,
       destinationLng: destinationLng ?? this.destinationLng,

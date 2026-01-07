@@ -31,7 +31,7 @@
 | **Phase 4** | Integration & QA | Day 16~20 | 🚧 진행 중 | - |
 | **Phase 5** | Launch Preparation | Day 21~25 | ⏳ 대기 | - |
 
-**전체 MVP 진행률**: ~80%
+**전체 MVP 진행률**: ~82%
 
 ---
 
@@ -308,9 +308,10 @@ DateTime calculateDepartureTime({
 
 #### 주요 작업
 - ✅ **SubTask 2.4.1**: Trip 모델 및 Service
-  - Trip 모델 클래스 (title, destination, arrivalTime 등)
+  - Trip 모델 클래스 (title, destination, arrivalTime, color, emoji 등)
   - TripService 클래스 (Supabase CRUD)
   - 4가지 버퍼 시간 필드 저장
+  - UI 디자인 필드 (color, emoji) 저장
   - RLS 정책 준수
   - Realtime 구독 지원
 - ✅ **SubTask 2.4.2**: UserSettings 모델 및 Service
@@ -328,6 +329,7 @@ DateTime calculateDepartureTime({
 - `lib/models/trip.dart`, `lib/services/trip_service.dart`
 - `lib/models/user_settings.dart`, `lib/services/settings_service.dart`
 - `supabase/migrations/20260107000001_add_user_settings_columns.sql`
+- `supabase/migrations/20260107000002_add_color_emoji_to_schedules.sql`
 
 **완료 기준**: CRUD 테스트 통과, E2E 시나리오 테스트 통과
 
@@ -546,17 +548,58 @@ flutter create --org com.gonow .
 **전체 테스트 현황**: 328개 테스트 100% 통과
 - 📄 [테스트 결과 문서](../docs/TEST_RESULTS_2025_01_07.md)
 
-**전체 Phase 4 진행률**: ~65%
+**전체 Phase 4 진행률**: ~70%
 
 ### 주요 목표
 
 - ✅ 전체 기능 E2E 테스트 작성
+- ✅ DB-UI 정합성 수정 (색상/이모지 저장)
 - ⏳ E2E 테스트 실제 실행
 - ⏳ 버그 수정 (Critical/High/Medium/Low 분류)
 - ⏳ UX 개선
 - ⏳ 실제 시나리오 테스트
 - ⏳ 성능 최적화
 - ⏳ Alpha 사용자 테스트
+
+---
+
+### Task 4.6: DB-UI 정합성 수정 (Day 16 - 2025-01-07) ✅
+
+**목표**: UI 디자인 필드(색상, 이모지)를 데이터베이스에 저장
+
+**배경**: AddScheduleScreenNew에 색상 피커와 이모지 피커가 구현되어 있었으나, 데이터베이스에 저장 필드가 없어 선택한 값이 유실되는 문제 발견.
+
+#### 주요 작업
+- ✅ **SubTask 4.6.1**: Supabase 마이그레이션
+  - `schedules` 테이블에 `color`, `emoji` 컬럼 추가
+  - CHECK 제약조건 (6가지 허용 색상)
+  - 색상별 인덱스 추가
+  - 기본값 설정 (color: 'blue', emoji: '🚗')
+- ✅ **SubTask 4.6.2**: Trip 모델 업데이트
+  - `color`, `emoji` 필드 추가
+  - fromJson, toJson, copyWith 메서드 업데이트
+  - 하위 호환성 보장 (기본값)
+- ✅ **SubTask 4.6.3**: AddScheduleScreenNew 저장 로직 수정
+  - Supabase 저장 가이드 TODO 추가
+  - `AppColors.getColorName()` 헬퍼 메서드 활용
+  - 색상/이모지 선택값 표시
+- ✅ **SubTask 4.6.4**: DashboardScreen 동적 표시
+  - `AppColors.getColorByName()` 사용
+  - 동적 색상 적용 (카드, 배지, 그림자)
+  - 이모지 표시 (`'${trip.emoji} ${trip.title}'`)
+- ✅ **SubTask 4.6.5**: 테스트 업데이트 및 검증
+  - Trip 모델 테스트: 29/29 통과
+  - DashboardScreen 테스트: 16/16 통과
+
+**산출물**:
+- `supabase/migrations/20260107000002_add_color_emoji_to_schedules.sql`
+- Updated `lib/models/trip.dart`
+- Updated `lib/screens/schedule/add_schedule_screen_new.dart`
+- Updated `lib/screens/dashboard/dashboard_screen.dart`
+- Updated `test/models/trip_test.dart`
+- Updated `test/screens/dashboard_screen_test.dart`
+
+**완료 기준**: ✅ DB 스키마 + Trip 모델 + UI 표시 완료, 전체 테스트 통과
 
 ---
 
