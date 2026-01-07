@@ -73,10 +73,10 @@ class AppColors {
   // Material Design 그림자 / Material shadows (Reference pattern)
   // ========================================
 
-  /// 기본 그림자 / Default shadow (reference: blurRadius 10, opacity 0.1)
+  /// 기본 그림자 / Default shadow (reference: blurRadius 10, opacity 0.05)
   static List<BoxShadow> get referenceShadow => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withOpacity(0.05),
           blurRadius: 10,
           offset: const Offset(0, 2),
         ),
@@ -86,7 +86,7 @@ class AppColors {
   /// **참조 저장소 패턴 적용 / Reference repository pattern**
   static List<BoxShadow> cardShadow(Color baseColor) => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withOpacity(0.05),
           blurRadius: 10,
           offset: const Offset(0, 2),
         ),
@@ -95,7 +95,7 @@ class AppColors {
   /// 카드 강조 그림자 / Elevated card shadow (for special elements)
   static List<BoxShadow> elevatedCardShadow(Color baseColor) => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withOpacity(0.05),
           blurRadius: 10,
           offset: const Offset(0, 2),
         ),
@@ -104,7 +104,7 @@ class AppColors {
   /// 원형 타이머 그림자 / Circular timer shadow
   static List<BoxShadow> timerShadow(Color progressColor) => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withOpacity(0.05),
           blurRadius: 10,
           offset: const Offset(0, 2),
         ),

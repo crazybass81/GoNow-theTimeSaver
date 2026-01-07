@@ -108,8 +108,8 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // 참조 저장소 패턴: 단순 색상 (grey[300] 배경, blue[600] 진행)
-    final backgroundColor = Colors.grey[300]!;
+    // 참조 저장소 패턴: 단순 색상 (grey[200] 배경, blue[600] 진행)
+    final backgroundColor = Colors.grey[200]!;
     final progressColor = Colors.blue[600]!;
 
     return Container(
@@ -119,7 +119,7 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
