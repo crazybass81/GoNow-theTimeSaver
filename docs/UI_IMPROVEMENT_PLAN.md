@@ -23,6 +23,29 @@
 - [ ] 추가 디자인 시스템 개선
 - [ ] 애니메이션 최적화
 
+## 📦 빌드 및 테스트 상태
+
+### ✅ Profile APK 빌드 완료
+- **파일**: `build/app/outputs/flutter-apk/app-profile.apk`
+- **크기**: 81.7MB
+- **빌드 시간**: 189.7초
+- **상태**: 성공
+- **날짜**: 2025-01-07
+
+### ⚠️ Integration Test 상태
+- **RouteService Integration Tests**: 실패 (3/4 테스트)
+- **문제**: TMAP API 인증 실패
+- **원인**: `.env` 파일의 API 키 설정 필요
+- **통과 테스트**: 1개 (API 에러 처리)
+- **실패 테스트**: 3개 (API 키 인증 필요)
+
+### 📋 다음 테스트 필요
+- [ ] AddScheduleScreenNew 위젯 테스트
+- [ ] ColorPickerWidget 단위 테스트
+- [ ] EmojiPickerWidget 단위 테스트
+- [ ] MainWrapper 네비게이션 테스트
+- [ ] Integration test API 키 수정
+
 ---
 
 ## 📊 비교 분석
