@@ -98,6 +98,14 @@ class MockUser implements supabase.User {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  setUpAll(() async {
+    // Initialize Supabase for E2E tests
+    await supabase.Supabase.initialize(
+      url: 'https://test.supabase.co',
+      anonKey: 'test-anon-key',
+    );
+  });
+
   group('E2E Test 2: Dashboard Rendering (Logged In)', () {
     testWidgets('should show DashboardScreen when user is authenticated',
         (WidgetTester tester) async {

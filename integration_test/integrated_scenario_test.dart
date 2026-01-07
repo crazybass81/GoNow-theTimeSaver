@@ -114,6 +114,14 @@ class MockUser implements supabase.User {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  setUpAll(() async {
+    // Initialize Supabase for E2E tests
+    await supabase.Supabase.initialize(
+      url: 'https://test.supabase.co',
+      anonKey: 'test-anon-key',
+    );
+  });
+
   group('E2E Test 4: Integrated Scenario', () {
     testWidgets('Complete user journey: Login -> Dashboard -> Add Schedule',
         (WidgetTester tester) async {
