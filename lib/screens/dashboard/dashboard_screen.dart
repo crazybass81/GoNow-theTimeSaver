@@ -70,7 +70,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text('GoNow'),
+        title: Text(
+          _getFormattedDate(),
+          style: AppTextStyles.dateHeader.copyWith(
+            fontSize: 20, // AppBar에 맞게 크기 조정
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         actions: [
           // 캘린더 버튼
           IconButton(
@@ -117,10 +123,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 환영 메시지
-                        _buildWelcomeSection(theme, authProvider),
-                        const SizedBox(height: 24),
-
                         // 다음 일정 카운트다운 또는 빈 상태
                         tripProvider.upcomingTrip != null
                             ? _buildNextScheduleSection(
@@ -239,116 +241,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// 환영 섹션 / Welcome section
-  /// 환영 메시지 섹션 / Welcome message section
-  /// authProvider: AuthProvider 또는 테스트용 Mock / AuthProvider or Mock for testing
-  Widget _buildWelcomeSection(ThemeData theme, dynamic authProvider) {
-    final userName = authProvider.currentUser?.userMetadata?['name'] as String?;
-    final displayName = userName ?? '사용자';
+  /// 날짜 헤더 포맷 / Date header format
+  /// 예: "2024년 1월 15일 (월)"
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+    final weekday = weekdays[now.weekday - 1];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '안녕하세요, $displayName님',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '다음 일정까지 남은 시간을 확인하세요',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-      ],
-    );
+    return '${now.year}년 ${now.month}월 ${now.day}일 ($weekday)';
   }
 
-  /// 다음 일정 섹션 / Next schedule section (실제 데이터)
+  /// 다음 일정 섹션 / Next schedule section (참조 저장소 패턴)
+  /// **변경 사항**: Container 카드 제거, 단순 텍스트로 변경
   Widget _buildNextScheduleSection(ThemeData theme, Trip trip) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            Icon(
-              Icons.event,
-              size: 20,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '다음 일정',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+        // 일정 제목 (emoji + title)
+        Text(
+          '${trip.emoji} ${trip.title}',
+          style: AppTextStyles.referenceTitle.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-        // 일정 정보 카드 (BoxShadow 깊이 효과 적용)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        // 도착 예정 시간
+        Text(
+          '${trip.arrivalTime.hour}:${trip.arrivalTime.minute.toString().padLeft(2, '0')} 도착 예정',
+          style: AppTextStyles.referenceBody.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.place,
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${trip.emoji} ${trip.title}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${trip.arrivalTime.hour}:${trip.arrivalTime.minute.toString().padLeft(2, '0')} 도착 예정',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      trip.destinationAddress,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
 
         // 원형 타이머 위젯
         CircularTimerWidget(
