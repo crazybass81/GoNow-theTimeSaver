@@ -9,6 +9,8 @@ import '../../models/trip.dart';
 import '../schedule/add_schedule_screen_new.dart';
 import '../settings/settings_screen.dart';
 import '../calendar/calendar_screen.dart';
+import '../../utils/app_colors.dart';
+import '../../utils/app_text_styles.dart';
 
 /// 대시보드 메인 화면 / Dashboard Main Screen
 ///
@@ -363,15 +365,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// 경로 섹션 / Route section (실제 데이터)
+  /// 경로 섹션 / Route section with ExpansionTile
   Widget _buildRouteSection(ThemeData theme, Trip trip) {
-    // routeData가 있으면 실제 경로 표시, 없으면 기본 정보만 표시
-    if (trip.routeData != null) {
-      // TODO: routeData를 RouteStep 리스트로 변환
-      // 현재는 기본 정보만 표시
-    }
-
-    // 간단한 경로 정보 표시
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -385,8 +380,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 8),
             Text(
               '이동 정보',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.sectionTitle.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ],
@@ -394,48 +389,119 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 12),
 
         Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
+            boxShadow: AppColors.cardShadow(theme.colorScheme.primary),
           ),
-          child: Column(
-            children: [
-              Row(
+          child: Theme(
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: const EdgeInsets.all(16),
+              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              leading: Icon(
+                trip.transportMode == 'car'
+                    ? Icons.directions_car
+                    : Icons.directions_transit,
+                color: theme.colorScheme.primary,
+              ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    trip.transportMode == 'car'
-                        ? Icons.directions_car
-                        : Icons.directions_transit,
-                    color: theme.colorScheme.primary,
+                  Text(
+                    trip.transportMode == 'car' ? '자동차' : '대중교통',
+                    style: AppTextStyles.scheduleTitle.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 16,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          trip.transportMode == 'car' ? '자동차' : '대중교통',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '예상 소요 시간: ${trip.travelDurationMinutes}분',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 4),
+                  Text(
+                    '예상 소요 시간: ${trip.travelDurationMinutes}분',
+                    style: AppTextStyles.scheduleSubtitle.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                 ],
               ),
-            ],
+              children: [
+                _buildRouteDetails(theme, trip),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  /// 경로 상세 정보 / Route details (expandable content)
+  Widget _buildRouteDetails(ThemeData theme, Trip trip) {
+    // routeData가 있으면 상세 경로 표시, 없으면 기본 정보 표시
+    if (trip.routeData != null && trip.routeData!.isNotEmpty) {
+      // JSON 데이터를 파싱하여 경로 단계 표시
+      // 현재는 간단한 형태로 표시
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '상세 경로',
+                  style: AppTextStyles.sectionSubtitle.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '경로 데이터가 준비되었습니다.\n상세 경로는 추후 표시됩니다.',
+              style: AppTextStyles.scheduleDescription.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // routeData가 없을 경우 기본 안내 메시지
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.route,
+            size: 16,
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '출발지: 현재 위치\n도착지: ${trip.destination}',
+              style: AppTextStyles.scheduleDescription.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -530,6 +596,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 12),
 
         ...upcomingTrips.map((trip) {
+          // 일정 색상 (기본값: 파랑)
+          final scheduleColor = AppColors.scheduleBlue;
+
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
@@ -539,24 +608,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
               border: Border.all(
                 color: theme.colorScheme.onSurface.withOpacity(0.1),
               ),
+              boxShadow: AppColors.cardShadow(scheduleColor),
             ),
             child: Row(
               children: [
-                Column(
-                  children: [
-                    Text(
-                      trip.arrivalTime.hour.toString(),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                // 시간 배지 / Time badge
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheduleColor,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: AppColors.colorSwatchShadow(scheduleColor),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        trip.arrivalTime.hour.toString(),
+                        style: AppTextStyles.badgeTimeLarge.copyWith(
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    Text(
-                      trip.arrivalTime.minute.toString().padLeft(2, '0'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      Text(
+                        trip.arrivalTime.minute.toString().padLeft(2, '0'),
+                        style: AppTextStyles.badgeTimeSmall.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

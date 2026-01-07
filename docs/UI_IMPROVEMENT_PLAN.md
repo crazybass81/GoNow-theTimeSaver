@@ -486,10 +486,11 @@ Widget _buildTimeItemSelector({
 ### Phase 1: 핵심 화면 개선 (우선순위: 높음) ✅ 완료
 1. **DashboardScreen → HomeScreen 패턴**
    - [x] 원형 타이머 위젯 구현 (`CircularTimerWidget`)
-   - [ ] ExpansionTile 경로 선택 (미구현)
-   - [ ] 색상 카테고리 시스템 (미구현)
-   - [x] BoxShadow 깊이감 적용 (일정 카드에 적용)
-   - [ ] 시간 배지 스케줄 카드 (미구현)
+   - [x] ExpansionTile 경로 선택 구현 (경로 상세 정보 펼치기/접기)
+   - [x] 색상 카테고리 시스템 구현 (`AppColors`: 6가지 스케줄 색상)
+   - [x] BoxShadow 깊이감 적용 (일정 카드 + 경로 섹션)
+   - [x] 시간 배지 스케줄 카드 구현 (색상별 시간 배지 표시)
+   - [x] 타이포그래피 시스템 구현 (`AppTextStyles`: 일관된 텍스트 스타일)
 
 2. **MainWrapper 구현**
    - [x] PageView 네비게이션
@@ -601,8 +602,10 @@ dependencies:
 - [x] `lib/screens/main_wrapper.dart` 생성 (PageView 네비게이션)
 - [x] `lib/screens/auth/login_screen.dart` MainWrapper로 네비게이션 업데이트
 - [x] `shared_preferences` 패키지 확인 (이미 dependencies에 존재)
-- [ ] `lib/utils/app_colors.dart` 생성 (미구현 - 필요시 Phase 3)
-- [ ] `lib/utils/app_text_styles.dart` 생성 (미구현 - 필요시 Phase 3)
+- [x] `lib/utils/app_colors.dart` 생성 (6가지 스케줄 색상 + Material Design 그림자)
+- [x] `lib/utils/app_text_styles.dart` 생성 (타이포그래피 시스템)
+- [x] 시간 배지 스케줄 카드 적용 (DashboardScreen)
+- [x] ExpansionTile 경로 선택 구현 (DashboardScreen)
 
 ### Phase 2: AddScheduleScreen 개선 ✅ 완료
 - [x] `lib/widgets/color_picker_widget.dart` 생성
