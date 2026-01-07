@@ -315,47 +315,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 12),
 
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: AppColors.cardShadow(theme.colorScheme.primary),
+        // 참조 저장소 패턴: 기본 Material ExpansionTile 스타일 사용
+        ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          leading: Icon(
+            trip.transportMode == 'car'
+                ? Icons.directions_car
+                : Icons.directions_transit,
+            color: Colors.blue[600],
           ),
-          child: Theme(
-            data: theme.copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              tilePadding: const EdgeInsets.all(16),
-              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              leading: Icon(
-                trip.transportMode == 'car'
-                    ? Icons.directions_car
-                    : Icons.directions_transit,
-                color: theme.colorScheme.primary,
+          iconColor: Colors.blue[600],
+          collapsedIconColor: Colors.blue[600],
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                trip.transportMode == 'car' ? '자동차' : '대중교통',
+                style: AppTextStyles.scheduleTitle.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 16,
+                ),
               ),
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    trip.transportMode == 'car' ? '자동차' : '대중교통',
-                    style: AppTextStyles.scheduleTitle.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '예상 소요 시간: ${trip.travelDurationMinutes}분',
-                    style: AppTextStyles.scheduleSubtitle.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 4),
+              Text(
+                '예상 소요 시간: ${trip.travelDurationMinutes}분',
+                style: AppTextStyles.scheduleSubtitle.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
-              children: [
-                _buildRouteDetails(theme, trip),
-              ],
-            ),
+            ],
           ),
+          children: [
+            _buildRouteDetails(theme, trip),
+          ],
         ),
       ],
     );
@@ -531,83 +524,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            child: Material(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.onSurface.withOpacity(0.1),
-              ),
-              boxShadow: AppColors.cardShadow(scheduleColor),
-            ),
-            child: Row(
-              children: [
-                // 시간 배지 / Time badge
-                Container(
-                  padding: const EdgeInsets.all(12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  // TODO: 일정 상세 화면으로 이동
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${trip.emoji} ${trip.title} 상세 화면'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: scheduleColor,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: AppColors.colorSwatchShadow(scheduleColor),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface.withOpacity(0.1),
+                    ),
+                    boxShadow: AppColors.cardShadow(scheduleColor),
                   ),
-                  child: Column(
+                  child: Row(
                     children: [
-                      Text(
-                        trip.arrivalTime.hour.toString(),
-                        style: AppTextStyles.badgeTimeLarge.copyWith(
-                          color: Colors.white,
+                      // 시간 배지 / Time badge
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: scheduleColor,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: AppColors.colorSwatchShadow(scheduleColor),
                         ),
-                      ),
-                      Text(
-                        trip.arrivalTime.minute.toString().padLeft(2, '0'),
-                        style: AppTextStyles.badgeTimeSmall.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${trip.emoji} ${trip.title}',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.place,
-                            size: 14,
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              trip.destinationAddress,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color:
-                                    theme.colorScheme.onSurface.withOpacity(0.6),
+                        child: Column(
+                          children: [
+                            Text(
+                              trip.arrivalTime.hour.toString(),
+                              style: AppTextStyles.badgeTimeLarge.copyWith(
+                                color: Colors.white,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            Text(
+                              trip.arrivalTime.minute.toString().padLeft(2, '0'),
+                              style: AppTextStyles.badgeTimeSmall.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${trip.emoji} ${trip.title}',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.place,
+                                  size: 14,
+                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    trip.destinationAddress,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color:
+                                          theme.colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: theme.colorScheme.onSurface.withOpacity(0.3),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: theme.colorScheme.onSurface.withOpacity(0.3),
-                ),
-              ],
+              ),
             ),
           );
         }).toList(),
