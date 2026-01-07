@@ -483,19 +483,19 @@ Widget _buildTimeItemSelector({
 
 ## 📋 구현 우선순위
 
-### Phase 1: 핵심 화면 개선 (우선순위: 높음)
+### Phase 1: 핵심 화면 개선 (우선순위: 높음) ✅ 완료
 1. **DashboardScreen → HomeScreen 패턴**
-   - [ ] 원형 타이머 위젯 구현
-   - [ ] ExpansionTile 경로 선택
-   - [ ] 색상 카테고리 시스템
-   - [ ] BoxShadow 깊이감 적용
-   - [ ] 시간 배지 스케줄 카드
+   - [x] 원형 타이머 위젯 구현 (`CircularTimerWidget`)
+   - [ ] ExpansionTile 경로 선택 (미구현)
+   - [ ] 색상 카테고리 시스템 (미구현)
+   - [x] BoxShadow 깊이감 적용 (일정 카드에 적용)
+   - [ ] 시간 배지 스케줄 카드 (미구현)
 
 2. **MainWrapper 구현**
-   - [ ] PageView 네비게이션
-   - [ ] SharedPreferences 상태 저장
-   - [ ] 커스텀 페이지 인디케이터
-   - [ ] 애니메이션 전환
+   - [x] PageView 네비게이션
+   - [x] SharedPreferences 상태 저장
+   - [x] 커스텀 페이지 인디케이터 (원형 인디케이터 + 라벨)
+   - [x] 애니메이션 전환 (300ms easeInOut)
 
 ### Phase 2: 일정 관리 개선 (우선순위: 중간) ✅ 완료
 3. **AddScheduleScreen → ScheduleEditScreen 패턴**
@@ -595,14 +595,14 @@ dependencies:
 
 ## 📝 구현 체크리스트
 
-### Phase 1: DashboardScreen + MainWrapper
-- [ ] `lib/widgets/circular_timer_widget.dart` 생성
-- [ ] `lib/widgets/schedule_card_widget.dart` 개선 (색상 배지 추가)
-- [ ] `lib/screens/dashboard/dashboard_screen.dart` → `home_screen.dart` 리팩토링
-- [ ] `lib/screens/main_wrapper.dart` 생성
-- [ ] `lib/main.dart` 진입점을 `MainWrapper`로 변경
-- [ ] `lib/utils/app_colors.dart` 생성 (색상 시스템)
-- [ ] `lib/utils/app_text_styles.dart` 생성 (타이포그래피)
+### Phase 1: DashboardScreen + MainWrapper ✅ 완료
+- [x] `lib/widgets/circular_timer_widget.dart` 생성
+- [x] `lib/screens/dashboard/dashboard_screen.dart` BoxShadow 깊이 효과 적용
+- [x] `lib/screens/main_wrapper.dart` 생성 (PageView 네비게이션)
+- [x] `lib/screens/auth/login_screen.dart` MainWrapper로 네비게이션 업데이트
+- [x] `shared_preferences` 패키지 확인 (이미 dependencies에 존재)
+- [ ] `lib/utils/app_colors.dart` 생성 (미구현 - 필요시 Phase 3)
+- [ ] `lib/utils/app_text_styles.dart` 생성 (미구현 - 필요시 Phase 3)
 
 ### Phase 2: AddScheduleScreen 개선 ✅ 완료
 - [x] `lib/widgets/color_picker_widget.dart` 생성
