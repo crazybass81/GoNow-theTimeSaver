@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/trip_provider.dart';
-import '../../widgets/countdown_widget.dart';
+import '../../widgets/circular_timer_widget.dart';
 import '../../widgets/route_display_widget.dart';
 import '../../models/route_step.dart';
 import '../../models/trip.dart';
@@ -287,12 +287,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 12),
 
-        // 일정 정보 카드
+        // 일정 정보 카드 (BoxShadow 깊이 효과 적용)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: theme.colorScheme.primaryContainer.withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -336,12 +348,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // 카운트다운 위젯
-        CountdownWidget(
+        // 원형 타이머 위젯
+        CircularTimerWidget(
           targetTime: trip.arrivalTime,
           departureTime: trip.departureTime,
           onCountdownComplete: () {
-            // TODO: 카운트다운 완료 시 알림
+            // 카운트다운 완료 시 알림
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('출발 시간입니다!')),
             );
