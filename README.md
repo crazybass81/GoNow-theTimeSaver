@@ -21,8 +21,8 @@
      - 일정 마무리 시간 (5분)
 
 2. **실시간 교통 정보**
-   - Naver Maps API: 자동차 경로 탐색 (실시간 교통 반영)
-   - Naver Transit API: 대중교통 경로 (버스/지하철)
+   - TMAP Routes API: 자동차 경로 탐색 (실시간 교통 반영)
+   - TMAP Public Transit API: 대중교통 경로 (버스/지하철)
 
 3. **스마트 알림**
    - 시간대별 색상 시스템 (초록→주황→빨강)
@@ -47,8 +47,9 @@
 - **Security**: Row Level Security (RLS)
 
 ### External APIs
-- **TMAP Routes API**: 자동차 경로 탐색 (실시간 교통) - *2025-01-07 마이그레이션*
-- **Naver Transit API**: 대중교통 경로 (버스/지하철)
+- **TMAP Routes API**: 자동차 경로 탐색 (실시간 교통) - *2026-01-07 마이그레이션*
+- **TMAP Public Transit API**: 대중교통 경로 (버스/지하철)
+- **TMAP POI Search API**: 장소 검색 - *2026-01-07 통합*
 
 ## 🚀 빠른 시작
 
@@ -123,9 +124,11 @@ GoNow-theTimeSaver/
 ├── ios/                          # iOS 네이티브 코드
 ├── assets/                       # 이미지, 아이콘, 폰트
 ├── docs/                         # 프로젝트 문서
-│   ├── GO_NOW_COMPLETE_MVP_SPEC.md  # 완전한 MVP 명세서
+│   ├── GO_NOW_COMPLETE_MVP_SPEC.md  # 완전한 MVP 명세서 v3.4
+│   ├── IMPLEMENTATION_PHASES.md     # 구현 가이드 v2.0
+│   ├── ARCHITECTURE.md              # 시스템 아키텍처 v2.0
+│   ├── DEVELOPMENT_GUIDE.md         # 개발 환경 설정 v2.0
 │   ├── TMAP_API_MIGRATION.md        # TMAP API 마이그레이션
-│   ├── TEST_RESULTS_2025_01_07.md   # 테스트 결과
 │   └── archive/                     # 문서 아카이브
 ├── pubspec.yaml                  # Flutter 의존성
 ├── .env.example                  # 환경 변수 템플릿
@@ -135,6 +138,14 @@ GoNow-theTimeSaver/
 ## 📋 개발 계획
 
 **MVP 출시 목표일**: 2026년 1월 31일 (25일)
+
+**전체 MVP 진행률**: ~65%
+- Phase 1-2: 100% 완료
+- Phase 3: 60% 완료 (Flutter 레이어 완료, 네이티브 통합 대기)
+- Phase 4: 90% 진행 중
+- Phase 5: 대기 중
+
+📄 상세 진행 상황: [IMPLEMENTATION_PHASES.md v2.0](docs/IMPLEMENTATION_PHASES.md)
 
 ### ✅ Phase 1: Foundation & UI (Day 1~5) - **완료!** (2026-01-06)
 - ✅ Git 저장소 설정
@@ -152,12 +163,12 @@ GoNow-theTimeSaver/
 
 ### ✅ Phase 2: Core Logic & API (Day 6~10) - **완료!** (2026-01-07)
 - ✅ **Task 2.1: 경로 API 연동** (완료 - 2026-01-07)
-  - ✅ ~~Naver Directions API~~ → **TMAP Routes API 마이그레이션** (2025-01-07)
+  - ✅ ~~Naver Directions API~~ → **TMAP Routes API 마이그레이션** (2026-01-07)
   - ✅ TMAP API 연동 (자차 경로, 실시간 교통, GeoJSON 경로)
   - ✅ API 에러 핸들링 (8가지 에러 타입, 자동 재시도)
   - ✅ 캐싱 전략 구현 (5분 유효, 중복 요청 방지)
   - 📄 마이그레이션 문서: [TMAP_API_MIGRATION.md](docs/TMAP_API_MIGRATION.md)
-- ✅ **Task 2.2: Naver Transit API 연동** (완료 - 2026-01-06)
+- ✅ **Task 2.2: TMAP Public Transit API 연동** (완료 - 2026-01-06)
   - ✅ Transit API 연동 (버스/지하철 통합, dio 패키지)
   - ✅ Singleton 패턴 및 에러 핸들링 (8가지 에러 타입)
   - ✅ 캐싱 전략 구현 (5분 유효, 재시도 로직)
@@ -186,30 +197,30 @@ GoNow-theTimeSaver/
   - ✅ 실제 데이터 표시 (Trip, 카운트다운, 경로)
   - ✅ 에러 처리 및 빈 상태 UI
 
-### ✅ Phase 3: Widgets & Notifications (Day 11~15) - **완료** (2026-01-07)
+### 🚧 Phase 3: Widgets & Notifications (Day 11~15) - **60% 완료** (2026-01-07)
+
+**상태**: Flutter 레이어 100% 완료, 네이티브 통합 대기
+
 - ✅ **Flutter 레이어 구현** (완료 - 2026-01-07)
-  - ✅ WidgetService 생성 (Android/iOS 공통 위젯 인터페이스)
-  - ✅ NotificationService 생성 (알림 스케줄링, 권한 관리)
-  - ✅ pubspec.yaml 업데이트 (timezone, flutter_local_notifications ^17.0.0)
+  - ✅ WidgetService 생성 (22개 테스트 통과)
+  - ✅ NotificationService 생성 (17개 테스트 통과)
+  - ✅ pubspec.yaml 업데이트 (timezone, flutter_local_notifications)
   - ✅ RealTimeUpdater 서비스 생성 (적응형 폴링, 변화율 5% 스킵)
-- ✅ **Android 위젯 구현** (완료 - 2026-01-07)
-  - ✅ Jetpack Glance 위젯 구조 (GoNowWidget.kt, WidgetUpdateWorker.kt)
-  - ✅ MainActivity MethodChannel 구현
-  - ✅ 위젯 UI 구현 (시간대별 색상 시스템)
-  - ✅ WorkManager 자동 업데이트 (15분 주기)
-  - ✅ build.gradle.kts 설정 (Compose Plugin, minSdk 23, Glance 1.0.0)
-  - ⚠️ **빌드 이슈**: Gradle 캐시 손상 (코드는 완료, 빌드 환경 재설정 필요)
-- ✅ **iOS 위젯 구현 (자동화 가능 부분)** (완료 - 2026-01-07)
-  - ✅ AppDelegate MethodChannel 구현 (Swift)
-  - ✅ Info.plist 설정 (App Groups, Background Modes)
-  - ⏳ **수동 작업 필요**: Xcode에서 Widget Extension 생성 (20-25분 소요)
-- ⏳ **통합 테스트** (대기 - 실제 기기 필요)
-  - Android 위젯 동작 확인
-  - iOS 위젯 동작 확인 (Xcode 작업 후)
-  - 배터리 소모 테스트
+
+- ✅ **네이티브 코드 템플릿 준비** (완료 - 2026-01-07)
+  - ✅ Android: Jetpack Glance 위젯 구조 (templates/phase3/android/)
+  - ✅ iOS: WidgetKit 구조 (templates/phase3/ios/)
+  - 📄 가이드: [templates/phase3/android/README.md](templates/phase3/android/README.md)
+  - 📄 가이드: [templates/phase3/ios/README.md](templates/phase3/ios/README.md)
+
+- ⏳ **네이티브 통합 대기** (사용자 수동 작업 필요)
+  - ⏳ `flutter create` 실행 (android/, ios/ 폴더 생성)
+  - ⏳ Android 네이티브 코드 적용 (10-15분)
+  - ⏳ iOS Xcode Widget Extension 생성 (20-25분)
+  - ⏳ 통합 테스트 (실제 기기)
 
 📄 상세 문서:
-- [IMPLEMENTATION_PHASES.md](docs/IMPLEMENTATION_PHASES.md) - 전체 구현 가이드
+- [IMPLEMENTATION_PHASES.md v2.0](docs/IMPLEMENTATION_PHASES.md) - 전체 구현 가이드
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - 테스트 전략
 
 ### 🚧 Phase 4: Integration & QA (Day 16~20) - **진행 중 (90%)** (2026-01-07)
@@ -224,14 +235,14 @@ GoNow-theTimeSaver/
   - dashboard_rendering_test: 5개 (대시보드 렌더링)
   - add_schedule_flow_test: 10개 (일정 추가 플로우)
   - integrated_scenario_test: 5개 (통합 시나리오)
-- ✅ **API 통합 완료** (2025-01-07)
+- ✅ **API 통합 완료** (2026-01-07)
   - TMAP POI Search Service 구현 (장소 검색 API)
   - 현재 위치 서비스 통합 (Geolocator, GPS)
   - 실제 경로 계산 및 저장 (mock 데이터 제거)
   - add_schedule_screen 실제 API 연동
   - 📄 세션 문서: [SESSION_2025_01_07_API_Integration.md](claudedocs/SESSION_2025_01_07_API_Integration.md)
 
-**전체 테스트 현황**: ✅ **328개 테스트 통과** (2025-01-07)
+**전체 테스트 현황**: ✅ **328개 테스트 통과** (2026-01-07)
 - Unit Tests: 305개 (100% 통과)
 - Integration Tests: 4개 (TMAP API, 100% 통과)
 - Widget Tests: 66개 (작성 완료)
@@ -265,11 +276,12 @@ GoNow-theTimeSaver/
 - [개발 환경 설정](docs/DEVELOPMENT_GUIDE.md)
 - [Supabase 설정 가이드](supabase/README.md)
 
-### 최신 업데이트 (2025-01-07)
+### 최신 업데이트 (2026-01-07)
+- 🆕 [구현 가이드 v2.0](docs/IMPLEMENTATION_PHASES.md) - **대규모 업데이트**: 원형 타이머, ScheduleDetailScreen, Settings 상세 문서화 (304줄 추가, 전체 진행률 65% 반영)
+- 🆕 [검증 리포트](docs/archive/final_verification_report.md) - IMPLEMENTATION_PHASES.md v2.0 검증 분석 (327줄)
 - [API 통합 세션](claudedocs/SESSION_2025_01_07_API_Integration.md) - POI Search, Location, Real Route 통합
 - [TMAP API 마이그레이션 문서](docs/TMAP_API_MIGRATION.md) - Naver → TMAP API 전환 + POI Search
-- [구현 가이드](docs/IMPLEMENTATION_PHASES.md) - Phase 4 진행률 90% 업데이트
-- [테스트 결과 리포트](docs/TEST_RESULTS_2025_01_07.md) - 328개 테스트 100% 통과
+- [테스트 결과 리포트](docs/archive/test_results_archive_2025_01_07/TEST_RESULTS_2025_01_07.md) - 328개 테스트 100% 통과
 
 ### 아카이브
 - [문서 아카이브](docs/archive/) - 이전 버전 문서
