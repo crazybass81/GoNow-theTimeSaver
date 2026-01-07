@@ -20,7 +20,7 @@ import 'services/real_time_updater.dart';
 
 // Screens
 import 'screens/auth/login_screen.dart';
-// import 'screens/splash_screen.dart';
+import 'screens/main_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,9 +69,41 @@ class MyApp extends StatelessWidget {
         title: 'GoNow',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        // home: const SplashScreen(),
-        home: const LoginScreen(),
+        home: const AuthGate(),
       ),
+    );
+  }
+}
+
+/// 인증 상태에 따라 화면 전환 / Route based on auth state
+///
+/// **로직 / Logic**:
+/// - 로그인됨: MainWrapper (Dashboard/Calendar)
+/// - 로그인 안 됨: LoginScreen
+/// - 로딩 중: CircularProgressIndicator
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // 로그인 상태에 따라 화면 결정 / Determine screen based on auth status
+        if (authProvider.status == AuthStatus.authenticating) {
+          // 로딩 중 / Loading
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (authProvider.isAuthenticated) {
+          // 로그인됨 → 메인 화면 / Authenticated → Main screen
+          return const MainWrapper();
+        } else {
+          // 로그인 안 됨 → 로그인 화면 / Not authenticated → Login screen
+          return const LoginScreen();
+        }
+      },
     );
   }
 }

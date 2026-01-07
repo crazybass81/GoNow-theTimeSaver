@@ -34,11 +34,11 @@
 |-------|------|------|------|--------|
 | **Phase 1** | Foundation & UI | Day 1~5 | ✅ 완료 | 2026-01-06 |
 | **Phase 2** | Core Logic & API | Day 6~10 | ✅ 완료 | 2026-01-07 |
-| **Phase 3** | Widgets & Notifications | Day 11~15 | ⏳ 60% 완료 | 2026-01-07 |
+| **Phase 3** | Widgets & Notifications | Day 11~15 | ⏳ 80% 완료 (Android ✅) | 2026-01-07 |
 | **Phase 4** | Integration & QA | Day 16~20 | 🚧 진행 중 (90%) | - |
 | **Phase 5** | Launch Preparation | Day 21~25 | ⏳ 대기 | - |
 
-**전체 MVP 진행률**: ~65%
+**전체 MVP 진행률**: ~70%
 
 ---
 
@@ -651,7 +651,7 @@ DateTime calculateDepartureTime({
 **목표**: Android/iOS 홈 위젯 구현 및 푸시 알림
 **기간**: Day 11~15 (5일)
 **담당**: 개발자 1 (Android), 개발자 2 (iOS)
-**상태**: ✅ **Flutter 레이어 완료** (2026-01-07) - 네이티브 통합 대기
+**상태**: ✅ **Android 완료** (2026-01-07) / ⏳ **iOS 대기**
 
 ### 현재 진행 상황
 
@@ -659,47 +659,59 @@ DateTime calculateDepartureTime({
 |------|------|------|
 | Flutter WidgetService | ✅ 완료 | 22개 단위 테스트 통과 |
 | Flutter NotificationService | ✅ 완료 | 17개 단위 테스트 통과 |
-| Android 네이티브 코드 | ✅ 템플릿 준비 | `templates/phase3/android/` |
+| TripProvider 위젯 통합 | ✅ 완료 | WidgetService 호출 통합 |
+| Android 네이티브 코드 | ✅ 완료 | Kotlin 코드 적용 완료 |
+| Android GoNowWidgetReceiver | ✅ 완료 | Jetpack Glance 통합 |
+| Android MainActivity | ✅ 완료 | MethodChannel 완전 구현 |
+| Android 위젯 테스트 | ✅ 완료 | 실제 기기에서 확인 |
 | iOS 네이티브 코드 | ✅ 템플릿 준비 | `templates/phase3/ios/` |
-| flutter create | ⏳ 대기 | 사용자 수동 실행 필요 |
-| Android 코드 적용 | ⏳ 대기 | flutter create 후 진행 |
 | iOS 코드 적용 | ⏳ 대기 | Xcode 작업 포함 (~20-25분) |
-| 통합 테스트 | ⏳ 대기 | 네이티브 코드 적용 후 |
+| iOS 위젯 테스트 | ⏳ 대기 | iOS 코드 적용 후 |
 
-**전체 Phase 3 진행률**: ~60% (Flutter 레이어 100%, 네이티브 레이어 대기)
+**전체 Phase 3 진행률**: ~80% (Flutter 100%, Android 100%, iOS 대기)
 
 ---
 
 ### Task 3.1: Android 홈 위젯 (Day 11~13)
 
 **목표**: Jetpack Glance 위젯 구현
+**상태**: ✅ **완료** (2026-01-07)
 
 #### 주요 작업
-- ⏳ **SubTask 3.1.1**: Jetpack Glance 위젯 기본 구조 (Day 11)
-  - Kotlin 코드 작성 (`android/app/src/main/kotlin/`)
-  - `GoNowWidget` 클래스 생성
-  - 2x2 위젯 레이아웃
-  - 위젯 Provider 등록
-- ✅ **SubTask 3.1.2**: Flutter ↔ Android 데이터 공유 (Day 11) - **Flutter 레이어만**
+- ✅ **SubTask 3.1.1**: Jetpack Glance 위젯 기본 구조 (Day 11)
+  - ✅ Kotlin 코드 작성 (`android/app/src/main/kotlin/com/gonow/gotimesaver/`)
+  - ✅ `GoNowWidget` 클래스 생성 (Jetpack Glance)
+  - ✅ `GoNowWidgetReceiver` 클래스 생성
+  - ✅ 2x2 위젯 레이아웃
+  - ✅ 위젯 Provider 등록 (AndroidManifest.xml)
+- ✅ **SubTask 3.1.2**: Flutter ↔ Android 데이터 공유 (Day 11)
   - ✅ MethodChannel 구현 (Flutter 측) - `lib/services/widget_service.dart`
   - ✅ `updateWidget()` 메서드 (Flutter에서 호출)
+  - ✅ TripProvider 통합 (loadTrips, addTrip, completeTrip, cancelTrip)
   - ✅ 다음 일정 데이터 전달
   - ✅ 시간대별 색상 시스템 (초록/주황/빨강/진한빨강)
-  - ⏳ SharedPreferences 설정 (Android 네이티브 - 대기)
-  - ⏳ MainActivity MethodChannel 구현 (Android 네이티브 - 대기)
-- ⏳ **SubTask 3.1.3**: 위젯 UI 구현 (Day 12)
-  - 일정 제목 표시
-  - 남은 시간 표시
-  - 출발 시간 표시
-  - 색상 시스템
-- ⏳ **SubTask 3.1.4**: WorkManager 자동 업데이트 (Day 13)
-  - `WidgetUpdateWorker` 클래스
-  - 15분 주기 스케줄링
-  - 배터리 최적화 설정
+  - ✅ SharedPreferences 설정 (gonow_widget_prefs)
+  - ✅ MainActivity MethodChannel 구현 (com.gonow.widget)
+- ✅ **SubTask 3.1.3**: 위젯 UI 구현 (Day 12)
+  - ✅ 일정 제목 표시
+  - ✅ 남은 시간 표시
+  - ✅ 출발 시간 표시
+  - ✅ 색상 시스템 (green/orange/red/dark_red)
+  - ✅ Empty 상태 처리 ("일정이 없습니다")
+- ✅ **SubTask 3.1.4**: WorkManager 자동 업데이트 (Day 13)
+  - ✅ `WidgetUpdateWorker` 클래스
+  - ✅ 적응형 폴링: 15분/5분/3분 주기
+  - ✅ 배터리 최적화 설정
 
 **참고 문서**: `templates/phase3/android/README.md`
 
-**완료 기준**: 홈 화면 위젯 추가 가능, 15분마다 자동 갱신
+**완료 기준**: ✅ 홈 화면 위젯 추가 가능, 실제 기기 테스트 완료
+
+**산출물**:
+- `android/app/src/main/kotlin/com/gonow/go_now/MainActivity.kt` - MethodChannel 구현
+- `android/app/src/main/kotlin/com/gonow/go_now/GoNowWidgetReceiver.kt` - Widget Receiver
+- `android/app/src/main/kotlin/com/gonow/gotimesaver/GoNowWidget.kt` - Glance 위젯 UI
+- `android/app/src/main/kotlin/com/gonow/gotimesaver/WidgetUpdateWorker.kt` - WorkManager
 
 ---
 

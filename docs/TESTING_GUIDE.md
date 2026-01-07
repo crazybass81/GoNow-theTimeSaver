@@ -314,7 +314,7 @@ testWidgets('Trip CRUD 통합 테스트', (WidgetTester tester) async {
 
 ---
 
-### Phase 3: Widgets & Notifications (Day 11~15) 🚧 진행 중
+### Phase 3: Widgets & Notifications (Day 11~15) ✅ Android 완료 / ⏳ iOS 대기
 
 **테스트 범위**:
 - Flutter ↔ Android/iOS 네이티브 통신
@@ -1170,11 +1170,11 @@ jobs:
 - [x] Supabase CRUD 테스트
 - [x] TripProvider 통합 테스트
 
-### Phase 3 🚧
+### Phase 3 ✅ Android / ⏳ iOS
 - [x] Flutter WidgetService 테스트
 - [x] Flutter NotificationService 테스트
-- [ ] Android 네이티브 위젯 테스트
-- [ ] iOS 네이티브 위젯 테스트
+- [x] Android 네이티브 위젯 테스트 (디바이스 검증 완료: SM A136S)
+- [ ] iOS 네이티브 위젯 테스트 (Xcode 작업 후)
 - [ ] 배터리 소모 테스트
 - [ ] 메모리 사용량 테스트
 

@@ -2,7 +2,7 @@
 
 **문서 작성일 / Created**: 2026-01-07
 **Phase**: 4 - Integration & QA (Day 16~20)
-**목표 / Goal**: Phase 3까지 완료된 기능들의 통합 테스트 및 품질 검증
+**목표 / Goal**: Phase 3 Android 완료 (iOS 대기) - 통합 테스트 및 품질 검증
 
 ---
 

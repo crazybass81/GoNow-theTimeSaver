@@ -20,7 +20,7 @@
 ### 📋 구현 가이드 / Implementation Guides
 | 문서 | 설명 | 상태 |
 |------|------|------|
-| [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) | Phase 1~5 구현 상세 | Phase 4 진행 중 (~65%) |
+| [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) | Phase 1~5 구현 상세 | Phase 4 진행 중 (~70%) |
 | [TESTING_GUIDE.md](./TESTING_GUIDE.md) | 전체 테스트 전략 및 체크리스트 | ✅ 완료 |
 | [PHASE_4_INTEGRATION_TEST_PLAN.md](./PHASE_4_INTEGRATION_TEST_PLAN.md) | Phase 4 통합 테스트 계획 | 작성 완료 |
 
@@ -30,6 +30,12 @@
 | [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md) | Naver → TMAP API 마이그레이션 | ⚠️ 중요 |
 
 ### 🎯 최근 완료 작업 (2025-01-07)
+- ✅ **Phase 3 Android 위젯 구현 완료**: Jetpack Glance 기반 홈 화면 위젯
+  - Flutter ↔ Android MethodChannel 완전 통합
+  - TripProvider → WidgetService 호출 통합 (loadTrips, addTrip, completeTrip, cancelTrip)
+  - Kotlin: GoNowWidget, GoNowWidgetReceiver, WidgetUpdateWorker, MainActivity
+  - WorkManager 적응형 폴링 (15분/5분/3분)
+  - 실제 기기 테스트 완료 (SM A136S)
 - ✅ **문서 최신화 완료 (v2.0)**: 모든 문서 TMAP API 전면 전환 반영
   - ARCHITECTURE.md v2.0: TMAP Public Transit API 전환 완료 표시
   - DEVELOPMENT_GUIDE.md v2.0:

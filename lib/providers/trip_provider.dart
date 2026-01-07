@@ -6,6 +6,7 @@ import '../services/trip_service.dart';
 import '../services/scheduler_service.dart';
 import '../services/real_time_updater.dart';
 import '../services/polling_service.dart';
+import '../services/widget_service.dart';
 
 /// 일정 상태 관리 Provider / Trip State Management Provider
 ///
@@ -27,6 +28,7 @@ class TripProvider with ChangeNotifier {
   final SchedulerService _schedulerService = SchedulerService();
   final RealTimeUpdater _realTimeUpdater = RealTimeUpdater();
   final PollingService _pollingService = PollingService();
+  final WidgetService _widgetService = WidgetService();
 
   // State
   List<Trip> _trips = [];
@@ -74,6 +76,9 @@ class TripProvider with ChangeNotifier {
       if (_upcomingTrip != null) {
         _startRealTimeUpdates(_upcomingTrip!);
       }
+
+      // 위젯 업데이트 / Update widget
+      await _widgetService.updateWidget(upcomingTrip: _upcomingTrip);
 
       debugPrint('✅ Loaded ${_trips.length} trips');
 
@@ -153,6 +158,9 @@ class TripProvider with ChangeNotifier {
         _startRealTimeUpdates(createdTrip);
       }
 
+      // 위젯 업데이트 / Update widget
+      await _widgetService.updateWidget(upcomingTrip: _upcomingTrip);
+
       debugPrint('✅ Trip added: ${createdTrip.id}');
 
       notifyListeners();
@@ -190,6 +198,9 @@ class TripProvider with ChangeNotifier {
         _stopRealTimeUpdates();
       }
 
+      // 위젯 업데이트 / Update widget
+      await _widgetService.updateWidget(upcomingTrip: _upcomingTrip);
+
       debugPrint('✅ Trip completed');
 
       notifyListeners();
@@ -223,6 +234,9 @@ class TripProvider with ChangeNotifier {
       } else {
         _stopRealTimeUpdates();
       }
+
+      // 위젯 업데이트 / Update widget
+      await _widgetService.updateWidget(upcomingTrip: _upcomingTrip);
 
       debugPrint('✅ Trip cancelled');
 
