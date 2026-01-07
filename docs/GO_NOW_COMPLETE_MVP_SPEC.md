@@ -1295,74 +1295,137 @@ class SupabaseService {
 
 ### 3.0 내비게이션 구조 (MainWrapper)
 
-**구현 패턴**: PageView + Custom Bottom Indicator (not BottomNavigationBar)
+**구현 패턴**: PageView + Pill 모양 페이지 인디케이터 (하단 중앙 Positioned)
+
+**참조**: `lib/screens/main_wrapper.dart` (152줄)
 
 ```dart
-// lib/screens/main_wrapper.dart 참조
 class MainWrapper extends StatefulWidget {
+  const MainWrapper({super.key});
+
   @override
   State<MainWrapper> createState() => _MainWrapperState();
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-  final PageController _pageController = PageController();
+  PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentPage();  // SharedPreferences에서 마지막 페이지 로드
+  }
+
+  Future<void> _loadCurrentPage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPage = prefs.getInt('currentPage') ?? 0;
+
+    if (savedPage != 0 && _pageController.hasClients) {
+      _pageController.jumpToPage(savedPage);
+    }
+
+    setState(() {
+      _currentPage = savedPage;
+      _isInitialized = true;
+    });
+  }
+
+  Future<void> _saveCurrentPage(int page) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('currentPage', page);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) => setState(() => _currentPage = index),
-        children: [
-          HomeScreen(),      // 홈 (일정 목록)
-          CalendarScreen(),  // 캘린더
-        ],
-      ),
-      bottomNavigationBar: _buildCustomIndicator(),
-    );
-  }
-
-  Widget _buildCustomIndicator() {
-    return Container(
-      height: 60,
-      color: Colors.white,
-      child: Row(
-        children: [
-          _buildTab(0, "홈"),
-          _buildTab(1, "캘린더"),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab(int index, String label) {
-    final isActive = _currentPage == index;
-    return Expanded(
-      child: InkWell(
-        onTap: () => _pageController.animateToPage(
-          index,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          'Go Now',
+          style: TextStyle(
+            color: Colors.blue[600],
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isActive ? Colors.blue[600] : Colors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: isActive ? Colors.blue[600]! : Colors.grey[300]!,
-                width: 3,
-              ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings_outlined, color: Colors.grey[700]),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
             ),
           ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isActive ? Colors.white : Colors.grey[600],
+        ],
+      ),
+      body: Stack(
+        children: [
+          // PageView (홈/캘린더)
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() => _currentPage = index);
+              _saveCurrentPage(index);
+            },
+            children: const [
+              HomeScreen(),
+              CalendarScreen(),
+            ],
+          ),
+
+          // 페이지 인디케이터 (하단 중앙, pill 모양)
+          Positioned(
+            bottom: 32,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildPageIndicator(0, '홈'),
+                const SizedBox(width: 12),
+                _buildPageIndicator(1, '캘린더'),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageIndicator(int index, String label) {
+    final isActive = _currentPage == index;
+    return GestureDetector(
+      onTap: () {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        setState(() => _currentPage = index);
+        _saveCurrentPage(index);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.blue[600] : Colors.white,
+          borderRadius: BorderRadius.circular(20),  // Pill shape
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.grey[700],
+            fontSize: 14,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
@@ -1371,180 +1434,382 @@ class _MainWrapperState extends State<MainWrapper> {
 }
 ```
 
+**UI Structure**:
+```
+┌─────────────────────────────┐
+│ Go Now              [⚙️]    │  AppBar
+├─────────────────────────────┤
+│                             │
+│  [PageView Content]         │  HomeScreen or CalendarScreen
+│                             │  (swipe to navigate)
+│                             │
+│                             │
+│                             │
+│                             │
+│                             │
+│                             │
+│      ┏━━━┓   ┌───┐          │  Page Indicator
+│      ┃ 홈 ┃   │캘린더│         │  (bottom center, pill shape)
+│      ┗━━━┛   └───┘          │  (Positioned at bottom: 32)
+└─────────────────────────────┘
+```
+
 **Design System**:
 - **Primary Color**: `Colors.blue[600]` (#1E88E5)
-- **Active Tab**: Blue background, white text
-- **Inactive Tab**: White background, grey text
+- **Active Pill**: Blue background, white text, bold
+- **Inactive Pill**: White background, grey text, normal
+- **Pill Shape**: borderRadius: 20, padding: 16×8
+- **Shadow**: blurRadius: 8, offset: (0, 2), opacity: 0.1
 - **Animation**: 300ms easeInOut
-- **Navigation**: Swipe 가능한 PageView
+- **Position**: bottom: 32px (하단에서 32px 위)
+- **Spacing**: 12px between pills
+- **Persistence**: SharedPreferences로 현재 페이지 저장
 
 ---
 
 ### 3.1 홈 화면 (HomeScreen)
 
-**목적**: 경로별 일정 목록 표시 및 다음 스케줄 강조
+**목적**: 다음 스케줄까지의 시간을 원형 타이머로 표시하고, 경로별 일정 목록을 보여줌
 
-**UI Structure** (참조: `home_screen.dart`):
+**UI Structure** (참조: `home_screen.dart` - 476줄):
 
 ```
 ┌─────────────────────────────────────┐
-│  Go Now           [📅] [⚙️]         │  AppBar (28px title)
+│  Go Now           [📅] [⚙️]         │  AppBar
 ├─────────────────────────────────────┤
+│         2026년 1월 7일              │  Date Header
+│          화요일                     │  (32px bold + 18px)
 │                                     │
-│  ┌─ Route Selection ─────────────┐ │  ExpansionTile
-│  │  🚗 강남 → 판교 ▼             │ │
+│      ╭───────────────────╮         │  
+│     ╱        250px       ╲        │  Circular Timer
+│    │    ╱─────────╲      │        │  (250×250px container)
+│    │   │    45     │     │        │  (64px bold blue)
+│    │   │  분 후 출발 │     │        │  (16px grey)
+│    │    ╲─────────╱      │        │
+│     ╲   (230px ring)    ╱         │  (strokeWidth: 12)
+│      ╰───────────────────╯         │
+│                                     │
+│      강남역 오피스 미팅              │  Schedule Title
+│      10:30 AM 도착 예정             │  (28px + 16px)
+│                                     │
+│  ┌─ 🚗 강남 → 판교 ▼ ─────────────┐ │  Route Dropdown
+│  │ (펼치면 경로 목록)              │ │  (ExpansionTile)
 │  └─────────────────────────────────┘ │
-│  (펼치면 경로 목록 표시)             │
 │                                     │
-│  ╔═════════════════════════════════╗ │  Next Schedule Section
-│  ║ 다음 스케줄 (1)                 ║ │  (blue[100] background)
-│  ╚═════════════════════════════════╝ │
+│  ╔═══════════════════════════════╗ │
+│  ║  다음 스케줄                  ║ │  Section Header
+│  ╚═══════════════════════════════╝ │
 │                                     │
 │  ┌─────────────────────────────────┐ │  Schedule Card
 │  │ ┌──────┐                        │ │
 │  │ │ 09:25│  📍 강남역 오피스      │ │  60×60px time box
-│  │ │ AM   │  🚗 자차 · 25분        │ │  colored by schedule
-│  │ └──────┘  ⏱️ 15분 남음          │ │
-│  │           ────────────────────→ │ │  Right arrow
+│  │ │ AM   │  🚗 자차 · 25분        │ │  (colored)
+│  │ └──────┘  ⏱️ 45분 후            │ │
 │  └─────────────────────────────────┘ │
 │                                     │
-│  ┌─ Upcoming ──────────────────────┐ │  Upcoming Section
-│  │                                 │ │
-│  │  ┌───────────────────────────┐ │ │
-│  │  │ ┌──────┐                  │ │ │
-│  │  │ │ 02:00│  📞 클라이언트    │ │ │  Regular card
-│  │  │ │ PM   │  🚇 대중교통 32분 │ │ │  (white background)
-│  │  │ └──────┘  📍 삼성역         │ │ │
-│  │  └───────────────────────────┘ │ │
-│  │                                 │ │
-│  │  ┌───────────────────────────┐ │ │
-│  │  │ ┌──────┐                  │ │ │
-│  │  │ │ 04:30│  💻 팀 회의       │ │ │
-│  │  │ │ PM   │  🚶 도보 5분      │ │ │
-│  │  │ └──────┘  📍 회의실         │ │ │
-│  │  └───────────────────────────┘ │ │
+│  ┌─────────────────────────────────┐ │
+│  │ ┌──────┐                        │ │
+│  │ │ 02:00│  📞 클라이언트 미팅    │ │
+│  │ │ PM   │  🚇 대중교통 · 32분    │ │
+│  │ └──────┘  📍 삼성역              │ │
 │  └─────────────────────────────────┘ │
 │                                     │
-│  [+ 일정 추가]  (FAB, bottom-right) │
+│              ● ○                    │  Page Indicator
+│                                     │  (pill shape, bottom center)
 └─────────────────────────────────────┘
 ```
 
-**Implementation Details**:
+**핵심 컴포넌트**:
+
+#### 1. 원형 타이머 (_buildCircularTimer)
 
 ```dart
-// Card Layout
-Card(
-  margin: EdgeInsets.only(bottom: 12),
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(12),
-  ),
-  elevation: 2,
-  shadowColor: Colors.black.withOpacity(0.05),
-  child: InkWell(
-    onTap: () => _navigateToScheduleDetail(schedule),
-    child: Padding(
-      padding: EdgeInsets.all(16),
-      child: Row(
+Widget _buildCircularTimer() {
+  return Center(
+    child: SizedBox(
+      width: 250,
+      height: 250,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          // Time Box (60×60px)
+          // 배경 원 (흰색, 그림자)
           Container(
-            width: 60,
-            height: 60,
+            width: 250,
+            height: 250,
             decoration: BoxDecoration(
-              color: schedule.color,  // User-selected color
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  schedule.time,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  schedule.ampm,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                  ),
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
           ),
-          SizedBox(width: 16),
-          // Schedule Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  schedule.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '${schedule.transportIcon} ${schedule.transportMode} · ${schedule.duration}분',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                Text(
-                  '📍 ${schedule.location}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
+          
+          // 진행 링 (230×230px)
+          SizedBox(
+            width: 230,
+            height: 230,
+            child: CircularProgressIndicator(
+              value: 0.65,  // 65% 진행 (실제로는 남은 시간 기반 계산)
+              strokeWidth: 12,
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+          
+          // 중앙 텍스트 (분 단위 + 설명)
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '45',  // 실제로는 계산된 남은 시간
+                style: TextStyle(
+                  fontSize: 64,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[600],
+                ),
+              ),
+              Text(
+                '분 후 출발',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     ),
-  ),
-)
+  );
+}
 ```
 
-**Color System**:
-- **Headings**: `Colors.grey[800]` (#424242), 28-32px, FontWeight.bold
-- **Body Text**: `Colors.grey[600]` (#757575), 14-16px, FontWeight.normal
-- **Card Background**: `Colors.white`
-- **Card Shadow**: `Colors.black.withOpacity(0.05)`
-- **Border Radius**: 12px for cards, 8px for time boxes
+**타이머 계산 로직**:
+- `remainingMinutes`: 다음 스케줄까지 남은 시간 (분)
+- `value`: 진행률 = 1 - (remainingMinutes / totalMinutes)
+- 실시간 업데이트 (1분마다)
 
-**Route Selection ExpansionTile**:
+#### 2. 날짜 헤더 (_buildDateHeader)
+
 ```dart
-ExpansionTile(
-  title: Text(
-    '🚗 강남 → 판교',
-    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-  ),
-  children: [
-    ListTile(
-      leading: Icon(Icons.route, color: Colors.blue[600]),
-      title: Text('경로 1: 강남 → 판교 (자차)'),
-      subtitle: Text('평균 35분 · 5개 스케줄'),
-      onTap: () => _selectRoute('route1'),
+Widget _buildDateHeader() {
+  final now = DateTime.now();
+  final weekday = ['월', '화', '수', '목', '금', '토', '일'][now.weekday - 1];
+  
+  return Center(
+    child: Column(
+      children: [
+        Text(
+          '${now.year}년 ${now.month}월 ${now.day}일',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[800],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$weekday요일',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
     ),
-    ListTile(
-      leading: Icon(Icons.route, color: Colors.blue[600]),
-      title: Text('경로 2: 서울 → 인천 (대중교통)'),
-      subtitle: Text('평균 60분 · 2개 스케줄'),
-      onTap: () => _selectRoute('route2'),
-    ),
-  ],
-)
+  );
+}
 ```
+
+#### 3. 스케줄 제목 (_buildScheduleTitle)
+
+```dart
+Widget _buildScheduleTitle() {
+  return Center(
+    child: Column(
+      children: [
+        Text(
+          currentScheduleTitle,  // 예: "강남역 오피스 미팅"
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '10:30 AM 도착 예정',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+#### 4. 경로 드롭다운 (_buildRouteDropdown)
+
+```dart
+Widget _buildRouteDropdown() {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: ExpansionTile(
+      title: Row(
+        children: [
+          Icon(Icons.directions, color: Colors.blue[600]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              selectedRoute,  // 예: "🚗 강남 → 판교"
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+      children: [
+        // 경로 목록 (ListTile)
+        ...routes.map((route) => ListTile(
+          leading: Icon(route.icon),
+          title: Text(route.name),
+          subtitle: Text('${route.avgTime}분 · ${route.scheduleCount}개 스케줄'),
+          onTap: () => _selectRoute(route),
+        )),
+      ],
+    ),
+  );
+}
+```
+
+#### 5. 스케줄 카드 (_buildUpcomingSchedulesSection)
+
+```dart
+Widget _buildScheduleCard(Map<String, dynamic> schedule) {
+  return Card(
+    margin: const EdgeInsets.only(bottom: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    elevation: 2,
+    shadowColor: Colors.black.withOpacity(0.05),
+    child: InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScheduleDetailScreen(schedule: schedule),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // 시간 박스 (60×60px)
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: schedule['color'],  // 사용자 선택 색상
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    schedule['time'],  // "09:25"
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    schedule['ampm'],  // "AM" or "PM"
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            // 스케줄 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    schedule['title'],  // "강남역 오피스"
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${schedule['transportIcon']} ${schedule['transportMode']} · ${schedule['duration']}분',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    '📍 ${schedule['location']}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    '⏱️ ${schedule['remainingMinutes']}분 후',  // 남은 시간
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blue[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+```
+
+**디자인 토큰**:
+- **원형 타이머**: 250×250px (외부), 230×230px (링), strokeWidth: 12
+- **타이머 색상**: blue[600] (진행), grey[200] (배경)
+- **타이머 텍스트**: 64px bold (숫자), 16px normal (설명)
+- **날짜 헤더**: 32px bold (날짜), 18px normal (요일)
+- **스케줄 제목**: 28px bold (제목), 16px normal (도착 시간)
+- **시간 박스**: 60×60px, borderRadius: 8px
+- **카드**: borderRadius: 12px, elevation: 2, margin-bottom: 12px
+- **색상**: grey[800] (제목), grey[600] (본문), blue[600] (강조)
 
 ---
 
