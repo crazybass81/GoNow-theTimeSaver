@@ -116,9 +116,9 @@ void main() {
 
   setUpAll(() async {
     // Initialize Supabase for E2E tests (local Docker environment)
-    // Use PC's local network IP instead of localhost for device access
+    // Uses ADB reverse port forwarding (adb reverse tcp:54321 tcp:54321)
     await supabase.Supabase.initialize(
-      url: 'http://192.168.45.54:54321',
+      url: 'http://127.0.0.1:54321',
       anonKey: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
     );
   });
