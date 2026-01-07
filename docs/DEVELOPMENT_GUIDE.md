@@ -1,7 +1,7 @@
 # GoNow 개발 환경 설정 가이드
 
-**최종 업데이트**: 2026-01-07
-**문서 버전**: 1.0
+**최종 업데이트**: 2025-01-07
+**문서 버전**: 2.0
 **대상**: 신규 개발자, DevOps
 
 ---
@@ -300,6 +300,8 @@ dependencies:
   table_calendar: ^3.0.9
   dio: ^5.4.0
   flutter_dotenv: ^5.1.0
+  geolocator: ^10.1.0
+  intl: ^0.18.1
 ```
 
 ---
@@ -316,9 +318,12 @@ nano .env
 
 **.env 내용**:
 ```env
-# Naver API
-NAVER_MAPS_CLIENT_ID=your_client_id_here
-NAVER_MAPS_CLIENT_SECRET=your_client_secret_here
+# Naver API (Transit only)
+NAVER_CLIENT_ID=your_client_id_here
+NAVER_CLIENT_SECRET=your_client_secret_here
+
+# TMAP API (Routes & POI Search)
+TMAP_APP_KEY=your_tmap_app_key_here
 
 # Supabase (로컬 개발)
 SUPABASE_URL=http://127.0.0.1:54321
@@ -326,8 +331,11 @@ SUPABASE_ANON_KEY=your_local_anon_key_here
 ```
 
 **API 키 발급**:
-- **Naver Maps API**: https://www.ncloud.com/product/applicationService/maps
+- **TMAP API**: https://openapi.sk.com/ (Routes, POI Search)
+- **Naver API**: https://www.ncloud.com/product/applicationService/maps (Transit only)
 - **Supabase**: 로컬 환경은 `supabase start` 후 자동 생성
+
+**Note**: 2025-01-07부터 자차 경로 계산은 TMAP Routes API를 사용합니다. 자세한 내용은 [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)를 참고하세요.
 
 ---
 
@@ -666,5 +674,5 @@ A: Android는 USB 디버깅 활성화, iOS는 Apple Developer 계정과 프로�
 
 ---
 
-**작성일**: 2026-01-07
+**작성일**: 2025-01-07
 **다음 단계**: [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) - 실제 개발 시작
