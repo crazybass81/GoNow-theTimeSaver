@@ -30,6 +30,13 @@
 | [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md) | Naver → TMAP API 마이그레이션 | ⚠️ 중요 |
 
 ### 🎯 최근 완료 작업 (2025-01-07)
+- ✅ **문서 최신화 완료 (v2.0)**: 모든 문서 TMAP API 전면 전환 반영
+  - ARCHITECTURE.md v2.0: TMAP Public Transit API 전환 완료 표시
+  - DEVELOPMENT_GUIDE.md v2.0:
+    - 의존성 목록 최신화 (pubspec.yaml 100% 동기화)
+    - TMAP API 단일화 (Routes, POI Search, Public Transit)
+    - Naver API 완전 제거 (환경 변수, 체크리스트)
+    - 체크리스트 7단계 세분화 (API 권한 확인 추가)
 - ✅ **DB-UI 정합성 수정 완료**: 색상/이모지 저장 기능 구현
   - Supabase migration: color, emoji 컬럼 추가
   - Trip 모델 업데이트 및 동적 UI 표시
