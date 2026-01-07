@@ -1,6 +1,6 @@
 # GoNow 시스템 아키텍처
 
-**최종 업데이트**: 2025-01-07
+**최종 업데이트**: 2026-01-07
 **문서 버전**: 2.0
 **시스템 버전**: MVP v1.0 (Phase 4 진행 중 - 90%)
 
@@ -215,8 +215,8 @@ ios/
 | **TMAP Public Transit API** | 대중교통 경로 (버스/지하철, 환승) | SK Open API 정책 |
 
 **Note**:
-- 2025-01-07: Naver Maps Directions API → TMAP Routes API 전환 완료
-- 2025-01-07: Naver Transit API → TMAP Public Transit API 전환 완료
+- 2026-01-07: Naver Maps Directions API → TMAP Routes API 전환 완료
+- 2026-01-07: Naver Transit API → TMAP Public Transit API 전환 완료
 - 자세한 내용: [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)
 
 ### 3.4 네이티브
@@ -790,6 +790,6 @@ supabase
 
 ---
 
-**작성일**: 2025-01-07
+**작성일**: 2026-01-07
 **다음 리뷰**: Phase 4 완료 시 (MVP 출시 전)
 **문서 유지관리자**: 개발 팀

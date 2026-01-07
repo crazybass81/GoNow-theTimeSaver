@@ -1,6 +1,6 @@
 # GoNow 개발 환경 설정 가이드
 
-**최종 업데이트**: 2025-01-07
+**최종 업데이트**: 2026-01-07
 **문서 버전**: 2.0
 **대상**: 신규 개발자, DevOps
 
@@ -348,7 +348,7 @@ SUPABASE_ANON_KEY=your_local_anon_key_here
 - **TMAP API**: https://openapi.sk.com/ (Routes, POI Search, Public Transit)
 - **Supabase**: 로컬 환경은 `supabase start` 후 자동 생성
 
-**Note**: 2025-01-07부터 모든 경로 계산(자차, 대중교통)에 TMAP API를 사용합니다. 자세한 내용은 [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)를 참고하세요.
+**Note**: 2026-01-07부터 모든 경로 계산(자차, 대중교통)에 TMAP API를 사용합니다. 자세한 내용은 [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)를 참고하세요.
 
 ---
 
@@ -721,5 +721,5 @@ A: Android는 USB 디버깅 활성화, iOS는 Apple Developer 계정과 프로�
 
 ---
 
-**작성일**: 2025-01-07
+**작성일**: 2026-01-07
 **다음 단계**: [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) - 실제 개발 시작
