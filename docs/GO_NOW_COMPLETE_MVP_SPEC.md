@@ -1950,11 +1950,13 @@ Wrap(
 - **Route Calculation**: RouteService().calculateRoute() when transport mode changes
 - **Auto-fill**: Automatically populate duration when destination selected
 
-> ⚠️ **현재 구현 상태 (2026-01-07)**:
-> 실제 코드에서는 아직 **Naver Map**을 사용하고 있습니다 (`_openNaverMap()` 함수).
-> TMAP API로의 마이그레이션은 향후 진행 예정입니다.
-> - 현재: `https://map.naver.com/v5/search/...`
-> - 목표: TMAP Routes API + POI Search API
+> ✅ **현재 구현 상태 (2026-01-07)**:
+> **TMAP API 마이그레이션 완료**
+> - TMAP Routes API: 자동차/도보 경로 계산
+> - TMAP Public Transit API: 대중교통 경로 계산
+> - TMAP POI Search API: 장소 검색 및 좌표 조회
+>
+> 자세한 내용: [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)
 
 ---
 
@@ -4505,12 +4507,13 @@ P2 (참고): 3/3 완료 (100%) ✅
 - 작성자: Claude + 사용자
 - 최종 승인: [TBD]
 - 다음 리뷰: 2026-01-14 (Week 2 종료 시)
-- 문서 버전: 3.0 FINAL
+- 문서 버전: 3.4
 
 **문서 히스토리**:
 - v1.0 (2026-01-06): 초안 작성
 - v2.0 (2026-01-06): 의사결정 18개 항목 반영
 - v3.0 (2026-01-06): 패널티 폐기, 홈 위젯/대중교통 추가, 최종 통합 완료
+- v3.4 (2026-01-07): TMAP API 마이그레이션 완료, Phase 3 Flutter 레이어 완료 반영
 
 ---
 

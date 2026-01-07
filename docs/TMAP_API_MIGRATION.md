@@ -1,7 +1,7 @@
 # TMAP API Migration Documentation
 
 ## Overview
-**Date**: 2025-01-07
+**Date**: 2026-01-07
 **Migration**: Naver Directions API 5.0 → TMAP Routes API
 **Reason**: Naver API subscription/permission issues despite proper configuration
 
@@ -162,7 +162,7 @@ List<dynamic>? _extractPath(List<dynamic> features) {
 ## TMAP POI Search Service Integration
 
 ### Overview
-**Date**: 2025-01-07
+**Date**: 2026-01-07
 **New Service**: POI (Point of Interest) Search API
 **Purpose**: Real-time place search for schedule destination selection
 
@@ -373,7 +373,7 @@ TMAP_APP_KEY=BAztkfvzM03JakoXbANyf36kqmvrRQXJaPbP6J9Y
 2. **`lib/services/route_service.dart`**: Complete rewrite for TMAP API
 3. **`test/integration/route_service_integration_test.dart`**: Updated tests for TMAP
 
-### POI Search Service Integration (2025-01-07)
+### POI Search Service Integration (2026-01-07)
 4. **`lib/services/poi_search_service.dart`**: ✅ NEW - TMAP POI Search API service
 5. **`lib/main.dart`**: Added POISearchService().initialize()
 6. **`lib/screens/schedule/add_schedule_screen_new.dart`**: Real API integration
@@ -383,7 +383,7 @@ TMAP_APP_KEY=BAztkfvzM03JakoXbANyf36kqmvrRQXJaPbP6J9Y
 
 ## Deployment Status
 
-### Profile Build (2025-01-07)
+### Profile Build (2026-01-07)
 - ✅ Build successful: `app-profile.apk` (81.7MB)
 - ✅ Device installation: SM A136S (Android 14)
 - ✅ App launch: Successful
@@ -395,7 +395,7 @@ TMAP_APP_KEY=BAztkfvzM03JakoXbANyf36kqmvrRQXJaPbP6J9Y
   - PollingService
   - RealTimeUpdater
 
-### Latest Deployment (2025-01-07)
+### Latest Deployment (2026-01-07)
 - ✅ Hot reload successful with POI Search integration
 - ✅ Real-time place search working
 - ✅ Current location service active
@@ -460,7 +460,7 @@ TMAP API에 문제가 발생할 경우:
 
 ---
 
-**Last Updated**: 2025-01-07
+**Last Updated**: 2026-01-07
 **Status**: ✅ Migration Complete - All Services Operational
 - ✅ TMAP Routes API: Fully integrated and tested
 - ✅ TMAP POI Search API: Integrated with real-time search

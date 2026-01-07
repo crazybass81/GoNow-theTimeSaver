@@ -248,7 +248,7 @@ TripProvider (ViewModel)
     ↓ 사용
 TripService (Business Logic)
     ↓ 호출
-Supabase + Naver API (Data Source)
+Supabase + TMAP API (Data Source)
 ```
 
 ---
@@ -431,7 +431,7 @@ USING (auth.uid() = user_id);
     ↓
 TripProvider.addTrip()
     ↓
-┌─ RouteService.getRoute() → Naver API → 이동 시간 계산
+┌─ RouteService.getRoute() → TMAP API → 이동 시간 계산
 │
 ├─ SchedulerService.calculateDepartureTime() → 출발 시간 산출
 │
@@ -626,8 +626,7 @@ USING (auth.uid() = user_id);
 **환경 변수 관리**:
 ```dart
 // .env 파일 (Git에 커밋 안 됨)
-NAVER_MAPS_CLIENT_ID=your_client_id
-NAVER_MAPS_CLIENT_SECRET=your_client_secret
+TMAP_APP_KEY=your_tmap_app_key
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your_anon_key
 ```
@@ -638,8 +637,8 @@ SUPABASE_ANON_KEY=your_anon_key
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Env {
-  static String get naverMapsClientId =>
-      dotenv.env['NAVER_MAPS_CLIENT_ID'] ?? '';
+  static String get tmapAppKey =>
+      dotenv.env['TMAP_APP_KEY'] ?? '';
 
   static String get supabaseUrl =>
       dotenv.env['SUPABASE_URL'] ?? '';

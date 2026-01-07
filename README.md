@@ -111,7 +111,7 @@ GoNow-theTimeSaver/
 │   │   └── settings/             # 설정
 │   ├── services/                 # 비즈니스 로직
 │   │   ├── supabase_service.dart # Supabase 연동
-│   │   ├── route_service.dart    # 경로 탐색 (Naver API)
+│   │   ├── route_service.dart    # 경로 탐색 (TMAP API)
 │   │   └── notification_service.dart # 로컬 알림
 │   ├── models/                   # 데이터 모델
 │   ├── providers/                # 상태 관리 (Provider)
@@ -247,7 +247,7 @@ GoNow-theTimeSaver/
 - Integration Tests: 4개 (TMAP API, 100% 통과)
 - Widget Tests: 66개 (작성 완료)
 - E2E Tests: 23개 (100% 통과)
-- 📄 테스트 문서: [TEST_RESULTS_2025_01_07.md](docs/TEST_RESULTS_2025_01_07.md)
+- 📄 테스트 문서: [TEST_RESULTS_2025_01_07.md](docs/archive/test_results_archive_2025_01_07/TEST_RESULTS_2025_01_07.md)
 - 🚀 디바이스 테스트: SM A136S (Android 14) 배포 완료
 
 **남은 작업**:

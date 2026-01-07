@@ -2,10 +2,10 @@
 
 > **전체 Phase 테스트 전략 및 체크리스트**
 
-**최종 업데이트**: 2025-01-07
+**최종 업데이트**: 2026-01-07
 **문서 버전**: 1.3
 **프로젝트 상태**: Phase 4 진행 중 (모든 테스트 완료: 328/328 통과)
-**테스트 결과**: [TEST_RESULTS_2025_01_07.md](../docs/TEST_RESULTS_2025_01_07.md)
+**테스트 결과**: [TEST_RESULTS_2025_01_07.md](../docs/archive/test_results_archive_2025_01_07/TEST_RESULTS_2025_01_07.md)
 
 ---
 
@@ -141,7 +141,7 @@ testWidgets('카운트다운 위젯이 정상적으로 표시됨', (WidgetTester
 
 **테스트 범위**:
 - 역산 스케줄링 알고리즘
-- Naver API 통합
+- TMAP API 통합
 - Supabase CRUD
 - 실시간 업데이트 로직
 
@@ -231,10 +231,10 @@ test('시간대별 폴링 간격이 정확함', () {
 
 #### Integration Tests
 
-**2.3 Naver API 통합**
+**2.3 TMAP API 통합**
 ```dart
 // integration_test/api_integration_test.dart
-testWidgets('Naver Maps API 실제 호출 테스트', (WidgetTester tester) async {
+testWidgets('TMAP Routes API 실제 호출 테스트', (WidgetTester tester) async {
   final routeService = RouteService();
 
   final result = await routeService.calculateRoute(
@@ -249,7 +249,7 @@ testWidgets('Naver Maps API 실제 호출 테스트', (WidgetTester tester) asyn
   expect(result.path, isNotEmpty);
 });
 
-testWidgets('Naver Transit API 실제 호출 테스트', (WidgetTester tester) async {
+testWidgets('TMAP Public Transit API 실제 호출 테스트', (WidgetTester tester) async {
   final transitService = TransitService();
 
   final result = await transitService.calculateTransitRoute(
@@ -306,8 +306,8 @@ testWidgets('Trip CRUD 통합 테스트', (WidgetTester tester) async {
 
 - [x] SchedulerService 48개 단위 테스트 통과 ✅
 - [x] PollingService 테스트 통과 ✅
-- [x] Naver Maps API 통합 테스트 통과 ✅
-- [x] Naver Transit API 통합 테스트 통과 ✅
+- [x] TMAP Routes API 통합 테스트 통과 ✅
+- [x] TMAP Public Transit API 통합 테스트 통과 ✅
 - [x] TripService CRUD 테스트 통과 ✅
 - [x] SettingsService 테스트 통과 ✅
 - [x] TripProvider 상태 관리 테스트 통과 ✅
@@ -1001,7 +1001,7 @@ void main() {
 git log -p | grep -i "api_key\|secret\|password"
 
 # 현재 코드에서 하드코딩 검색
-grep -r "NAVER_API_KEY\|SUPABASE_KEY" lib/
+grep -r "TMAP_API_KEY\|SUPABASE_KEY" lib/
 ```
 
 ---
@@ -1166,7 +1166,7 @@ jobs:
 
 ### Phase 2 ✅
 - [x] SchedulerService 48개 단위 테스트
-- [x] Naver API 통합 테스트
+- [x] TMAP API 통합 테스트
 - [x] Supabase CRUD 테스트
 - [x] TripProvider 통합 테스트
 

@@ -186,8 +186,8 @@ docs/
 - 4가지 독립 버퍼 시간 설정
 
 ### 2. 실시간 교통 정보
-- Naver Maps API: 자동차 경로 (실시간 교통 반영)
-- Naver Transit API: 대중교통 경로 (버스/지하철)
+- TMAP Routes API: 자동차 경로 (실시간 교통 반영)
+- TMAP Public Transit API: 대중교통 경로 (버스/지하철)
 
 ### 3. 스마트 알림
 - 시간대별 색상 시스템 (초록→주황→빨강)
@@ -214,8 +214,9 @@ docs/
 - **Security**: Row Level Security (RLS)
 
 ### External APIs
-- **Naver Maps API**: 자동차 경로 탐색
-- **Naver Transit API**: 대중교통 경로
+- **TMAP Routes API**: 자동차 경로 탐색
+- **TMAP Public Transit API**: 대중교통 경로
+- **TMAP POI Search API**: 장소 검색
 
 ### Native
 - **Android**: Kotlin, Jetpack Glance, WorkManager
@@ -256,7 +257,7 @@ docs/
 ### 외부 문서
 - [Flutter 공식 문서](https://docs.flutter.dev/)
 - [Supabase 문서](https://supabase.com/docs)
-- [Naver Maps API](https://www.ncloud.com/product/applicationService/maps)
+- [TMAP API](https://openapi.sk.com/)
 - [Jetpack Glance 가이드](https://developer.android.com/jetpack/compose/glance)
 - [WidgetKit 가이드](https://developer.apple.com/documentation/widgetkit)
 

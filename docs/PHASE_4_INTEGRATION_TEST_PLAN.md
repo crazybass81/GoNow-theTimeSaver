@@ -60,7 +60,7 @@
 
 **테스트 시나리오 / Test Scenarios**:
 ```yaml
-Naver_Directions_API:
+TMAP_Routes_API:
   - ✓ 정상 응답 처리 / Successful response handling
   - ✓ 실시간 교통 정보 반영 / Real-time traffic integration
   - ✓ 캐시 적중률 검증 (5분 유효) / Cache hit rate validation (5min TTL)
@@ -68,7 +68,7 @@ Naver_Directions_API:
   - ✓ 자동 재시도 로직 / Automatic retry logic
   - ✓ 중복 요청 방지 / Duplicate request prevention
 
-Naver_Transit_API:
+TMAP_Public_Transit_API:
   - ✓ 대중교통 경로 파싱 / Public transit route parsing
   - ✓ 환승 버퍼 계산 (도보/버스/지하철) / Transfer buffer calculation
   - ✓ 거리 기반 조정 (100m/500m) / Distance-based adjustment
@@ -303,7 +303,7 @@ Expected_Results:
 ```yaml
 Test_Steps:
   1. 일정 생성 (도착 시간: 30분 후) / Create trip (30 min)
-  2. RouteService가 Naver API 호출 / RouteService calls Naver API
+  2. RouteService가 TMAP API 호출 / RouteService calls TMAP API
   3. API 응답 (이동 시간: 20분) / API returns 20 min
   4. SchedulerService가 출발 시간 계산 / SchedulerService calculates
   5. Dashboard에 출발 시간 표시 / Display departure time
@@ -354,7 +354,7 @@ Expected_Results:
 - **디바이스 / Device**: Android 10+ (API 29+)
 - **요구 사항 / Requirements**:
   - Jetpack Glance 지원 (minSdk 23+) / Glance support
-  - 인터넷 연결 (Naver API) / Internet connection
+  - 인터넷 연결 (TMAP API) / Internet connection
   - 위치 권한 / Location permission
   - 알림 권한 / Notification permission
 

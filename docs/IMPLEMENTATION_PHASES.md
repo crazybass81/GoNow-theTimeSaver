@@ -34,7 +34,7 @@
 |-------|------|------|------|--------|
 | **Phase 1** | Foundation & UI | Day 1~5 | ✅ 완료 | 2026-01-06 |
 | **Phase 2** | Core Logic & API | Day 6~10 | ✅ 완료 | 2026-01-07 |
-| **Phase 3** | Widgets & Notifications | Day 11~15 | ✅ Flutter 완료 | 2026-01-07 |
+| **Phase 3** | Widgets & Notifications | Day 11~15 | ⏳ 60% 완료 | 2026-01-07 |
 | **Phase 4** | Integration & QA | Day 16~20 | 🚧 진행 중 (90%) | - |
 | **Phase 5** | Launch Preparation | Day 21~25 | ⏳ 대기 | - |
 
@@ -837,9 +837,9 @@ flutter create --org com.gonow .
 | Alpha Testing | ⏳ 대기 | 사용자 피드백 |
 
 **전체 테스트 현황**: 328개 테스트 100% 통과
-- 📄 [테스트 결과 문서](../docs/TEST_RESULTS_2026_01_07.md)
+- 📄 [테스트 결과 문서](../docs/archive/test_results_archive_2025_01_07/TEST_RESULTS_2025_01_07.md)
 - 📄 [TMAP API 마이그레이션 문서](../docs/TMAP_API_MIGRATION.md)
-- 📄 [API 통합 세션 문서](../claudedocs/SESSION_2026_01_07_API_Integration.md)
+- 📄 [API 통합 세션 문서](../claudedocs/SESSION_2025_01_07_API_Integration.md)
 
 **전체 Phase 4 진행률**: ~90%
 
@@ -1213,7 +1213,7 @@ final travelDurationMinutes = routeResult.durationMinutes; // ✅ Actual data
 |-------|------|-------------|----------------|
 | **Phase 1** | ✅ 완료 | 5/5 (100%) | 7개 화면 UI, Supabase Auth |
 | **Phase 2** | ✅ 완료 | 5/5 (100%) | 역산 알고리즘, API 통합 |
-| **Phase 3** | 🚧 진행 중 | 1/3 (33%) | Flutter 레이어 완료 |
+| **Phase 3** | 🚧 진행 중 | 1/3 (60%) | Flutter 레이어 완료, 네이티브 대기 |
 | **Phase 4** | ⏳ 대기 | 0/5 (0%) | Phase 3 완료 후 시작 |
 | **Phase 5** | ⏳ 대기 | 0/5 (0%) | Phase 4 완료 후 시작 |
 
