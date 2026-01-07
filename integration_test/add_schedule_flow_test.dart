@@ -103,10 +103,11 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    // Initialize Supabase for E2E tests
+    // Initialize Supabase for E2E tests (local Docker environment)
+    // Use PC's local network IP instead of localhost for device access
     await supabase.Supabase.initialize(
-      url: 'https://test.supabase.co',
-      anonKey: 'test-anon-key',
+      url: 'http://192.168.45.54:54321',
+      anonKey: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
     );
   });
 
