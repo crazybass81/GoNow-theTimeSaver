@@ -2,7 +2,7 @@
 
 > **MVP 개발 Phase 1~5 상세 구현 가이드**
 
-**최종 업데이트**: 2026-01-07
+**최종 업데이트**: 2025-01-07
 **문서 버전**: 1.3
 **프로젝트 상태**: Phase 4 진행 중 (~90% 완료)
 
@@ -55,7 +55,7 @@
 **목표**: 개발 환경 및 인프라 구축
 
 #### 주요 작업
-- ✅ **SubTask 1.1.1**: TMAP API 키 발급 (Routes + POI + Public Transit)
+- ✅ **SubTask 1.1.1**: Naver API 키 발급 (Maps + Transit)
 - ✅ **SubTask 1.1.2**: Supabase 프로젝트 설정
   - 6개 테이블 생성 (users, schedules, places, buffer_settings, notifications, usage_stats)
   - Row Level Security (RLS) 정책 설정
@@ -180,22 +180,22 @@
 
 ### 주요 성과
 
-- ✅ ~~Naver Maps API~~ → **TMAP Routes API 마이그레이션** (2026-01-07)
+- ✅ ~~Naver Maps API~~ → **TMAP Routes API 마이그레이션** (2025-01-07)
 - ✅ TMAP API 완전 통합 (자차 경로, GeoJSON, 실시간 교통)
-- ✅ TMAP Public Transit API 완전 통합 (대중교통 경로)
+- ✅ Naver Transit API 완전 통합 (대중교통 경로)
 - ✅ 역산 스케줄링 알고리즘 구현 (48개 단위 테스트 통과)
 - ✅ Adaptive Polling 시스템 (15/5/3분 간격)
 - ✅ Supabase 데이터 모델 구현
 - ✅ TripProvider 상태 관리
 - 📄 [TMAP API 마이그레이션 문서](../docs/TMAP_API_MIGRATION.md)
 
-### Task 2.1: ~~Naver Maps API~~ → TMAP Routes API 연동 (Day 6, Updated 2026-01-07)
+### Task 2.1: ~~Naver Maps API~~ → TMAP Routes API 연동 (Day 6, Updated 2025-01-07)
 
 **목표**: 자차 경로 탐색 API 통합
 
 **⚠️ API 변경 이력**:
 - **초기 구현** (2026-01-06): Naver Directions API 5.0
-- **마이그레이션** (2026-01-07): TMAP Routes API로 전환
+- **마이그레이션** (2025-01-07): TMAP Routes API로 전환
   - **사유**: Naver API 구독/권한 문제 (Error 210: Permission Denied)
   - **변경사항**: GET → POST, Query Parameters → JSON Body, GeoJSON 경로 형식
   - **문서**: [TMAP_API_MIGRATION.md](../docs/TMAP_API_MIGRATION.md)
@@ -214,7 +214,7 @@
 - ✅ **SubTask 2.1.3**: 캐싱 전략
   - 최근 경로 캐싱 (5분 유효)
   - 중복 요청 방지
-- ✅ **SubTask 2.1.4**: Integration Tests (2026-01-07)
+- ✅ **SubTask 2.1.4**: Integration Tests (2025-01-07)
   - 4개 테스트 케이스 작성 및 통과 (100%)
   - 실제 TMAP API 호출 검증
   - 캐시 동작 검증 (첫 호출 ~1ms, 캐시 0ms)
@@ -227,7 +227,7 @@
 
 ---
 
-### Task 2.2: TMAP Public Transit API 연동 (Day 7)
+### Task 2.2: Naver Transit API 연동 (Day 7)
 
 **목표**: 대중교통 경로 탐색 API 통합
 
@@ -532,7 +532,7 @@ flutter create --org com.gonow .
 **담당**: 개발자 1, 개발자 2, PM
 **상태**: 🚧 **진행 중** (2026-01-07 시작)
 
-### 현재 진행 상황 (2026-01-07 업데이트)
+### 현재 진행 상황 (2025-01-07 업데이트)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
@@ -550,9 +550,9 @@ flutter create --org com.gonow .
 | Alpha Testing | ⏳ 대기 | 사용자 피드백 |
 
 **전체 테스트 현황**: 328개 테스트 100% 통과
-- 📄 [테스트 결과 문서](../docs/TEST_RESULTS_2026_01_07.md)
+- 📄 [테스트 결과 문서](../docs/TEST_RESULTS_2025_01_07.md)
 - 📄 [TMAP API 마이그레이션 문서](../docs/TMAP_API_MIGRATION.md)
-- 📄 [API 통합 세션 문서](../claudedocs/SESSION_2026_01_07_API_Integration.md)
+- 📄 [API 통합 세션 문서](../claudedocs/SESSION_2025_01_07_API_Integration.md)
 
 **전체 Phase 4 진행률**: ~90%
 
@@ -569,7 +569,7 @@ flutter create --org com.gonow .
 
 ---
 
-### Task 4.6: DB-UI 정합성 수정 (Day 16 - 2026-01-07) ✅
+### Task 4.6: DB-UI 정합성 수정 (Day 16 - 2025-01-07) ✅
 
 **목표**: UI 디자인 필드(색상, 이모지)를 데이터베이스에 저장
 
@@ -609,7 +609,7 @@ flutter create --org com.gonow .
 
 ---
 
-### Task 4.7: API 통합 완료 (Day 16 - 2026-01-07) ✅
+### Task 4.7: API 통합 완료 (Day 16 - 2025-01-07) ✅
 
 **목표**: 장소 검색, 현재 위치, 실제 경로 계산을 실제 API로 통합
 
@@ -830,7 +830,7 @@ final travelDurationMinutes = routeResult.durationMinutes; // ✅ Actual data
   - 수집 항목 명시
   - 수집 목적 명시
   - 보유 기간 명시
-  - 제3자 제공 명시 (TMAP API)
+  - 제3자 제공 명시 (Naver API)
 - **SubTask 5.2.2**: 이용약관
   - 서비스 정의
   - 이용자 권리/의무
@@ -941,8 +941,8 @@ final travelDurationMinutes = routeResult.durationMinutes; // ✅ Actual data
 - Supabase 로컬 환경 및 DB 스키마
 - 7개 핵심 화면 UI 완성
 - Supabase Auth 완전 통합
-- TMAP Routes API 통합 (자차 경로)
-- TMAP Public Transit API 통합 (대중교통)
+- Naver Maps API 통합 (자차 경로)
+- Naver Transit API 통합 (대중교통)
 - 역산 스케줄링 알고리즘 (48개 테스트 통과)
 - Adaptive Polling (15/5/3분)
 - TripProvider 상태 관리
