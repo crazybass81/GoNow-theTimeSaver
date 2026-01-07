@@ -212,7 +212,7 @@ GoNow-theTimeSaver/
 - [IMPLEMENTATION_PHASES.md](docs/IMPLEMENTATION_PHASES.md) - 전체 구현 가이드
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - 테스트 전략
 
-### 🚧 Phase 4: Integration & QA (Day 16~20) - **진행 중** (2026-01-07)
+### 🚧 Phase 4: Integration & QA (Day 16~20) - **진행 중 (90%)** (2026-01-07)
 
 **완료된 작업**:
 - ✅ **Widget Tests 완료** (66개 테스트)
@@ -224,9 +224,15 @@ GoNow-theTimeSaver/
   - dashboard_rendering_test: 5개 (대시보드 렌더링)
   - add_schedule_flow_test: 10개 (일정 추가 플로우)
   - integrated_scenario_test: 5개 (통합 시나리오)
+- ✅ **API 통합 완료** (2025-01-07)
+  - TMAP POI Search Service 구현 (장소 검색 API)
+  - 현재 위치 서비스 통합 (Geolocator, GPS)
+  - 실제 경로 계산 및 저장 (mock 데이터 제거)
+  - add_schedule_screen 실제 API 연동
+  - 📄 세션 문서: [SESSION_2025_01_07_API_Integration.md](claudedocs/SESSION_2025_01_07_API_Integration.md)
 
 **전체 테스트 현황**: ✅ **328개 테스트 통과** (2025-01-07)
-- Unit Tests: 301개 (100% 통과)
+- Unit Tests: 305개 (100% 통과)
 - Integration Tests: 4개 (TMAP API, 100% 통과)
 - Widget Tests: 66개 (작성 완료)
 - E2E Tests: 23개 (100% 통과)
@@ -234,8 +240,6 @@ GoNow-theTimeSaver/
 - 🚀 디바이스 테스트: SM A136S (Android 14) 배포 완료
 
 **남은 작업**:
-- ⏳ E2E Tests 실제 디바이스에서 실행
-- ⏳ Integration Tests (API 통합, 위젯 알림 연동)
 - ⏳ 성능 및 배터리 최적화
 - ⏳ Alpha 사용자 테스트
 
@@ -262,9 +266,10 @@ GoNow-theTimeSaver/
 - [Supabase 설정 가이드](supabase/README.md)
 
 ### 최신 업데이트 (2025-01-07)
-- [TMAP API 마이그레이션 문서](docs/TMAP_API_MIGRATION.md) - Naver → TMAP API 전환
+- [API 통합 세션](claudedocs/SESSION_2025_01_07_API_Integration.md) - POI Search, Location, Real Route 통합
+- [TMAP API 마이그레이션 문서](docs/TMAP_API_MIGRATION.md) - Naver → TMAP API 전환 + POI Search
+- [구현 가이드](docs/IMPLEMENTATION_PHASES.md) - Phase 4 진행률 90% 업데이트
 - [테스트 결과 리포트](docs/TEST_RESULTS_2025_01_07.md) - 328개 테스트 100% 통과
-- [Phase 4 통합 테스트 계획](docs/PHASE_4_INTEGRATION_TEST_PLAN.md)
 
 ### 아카이브
 - [문서 아카이브](docs/archive/) - 이전 버전 문서
