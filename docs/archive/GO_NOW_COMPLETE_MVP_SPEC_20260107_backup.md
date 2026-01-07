@@ -1950,12 +1950,6 @@ Wrap(
 - **Route Calculation**: RouteService().calculateRoute() when transport mode changes
 - **Auto-fill**: Automatically populate duration when destination selected
 
-> ⚠️ **현재 구현 상태 (2026-01-07)**:
-> 실제 코드에서는 아직 **Naver Map**을 사용하고 있습니다 (`_openNaverMap()` 함수).
-> TMAP API로의 마이그레이션은 향후 진행 예정입니다.
-> - 현재: `https://map.naver.com/v5/search/...`
-> - 목표: TMAP Routes API + POI Search API
-
 ---
 
 ### 3.3 캘린더 화면 (CalendarScreen)
@@ -2034,816 +2028,110 @@ TableCalendar(
 
 ### 3.4 설정 화면 (SettingsScreen)
 
-**목적**: 앱 설정 및 준비/마무리 시간 항목 관리
-
-**참조**: `lib/screens/settings_screen.dart` (880줄)
+**목적**: 기본 버퍼 시간 및 앱 설정
 
 **UI Structure**:
 
 ```
 ┌─────────────────────────────────────┐
-│  [← 뒤로]  설정                      │  AppBar
+│  [← 뒤로]  설정                      │
 ├─────────────────────────────────────┤
-│                                     │  ScrollView
-│  알림 설정                           │  Section Header
-│  ─────────────────────────────────  │
-│  📢 알림 활성화         [  ✓  ]    │  Switch
-│  🔊 소리 활성화         [  ✓  ]    │  Switch
 │                                     │
+│  기본 버퍼 시간 설정                │  Section header
 │  ─────────────────────────────────  │
 │                                     │
-│  계정 관리                           │  Section Header
-│  ─────────────────────────────────  │
-│  👤 내 정보 관리             >      │  ListTile → Navigation
-│     프로필 및 개인정보 수정          │  subtitle
-│  🔒 비밀번호 변경             >      │  ListTile → Navigation
-│     계정 비밀번호 변경               │  subtitle
+│  1️⃣ 외출 준비 시간                  │
+│  ┌───────────────────────────────┐ │
+│  │ 15분                           │ │  Slider (5-60min)
+│  │ ◀────────●─────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 옷 입기, 짐 챙기기 등           │  Hint text
 │                                     │
-│  ─────────────────────────────────  │
+│  2️⃣ 이동 오차율                     │
+│  ┌───────────────────────────────┐ │
+│  │ 20%                            │ │  Slider (0-50%)
+│  │ ◀────────●─────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 교통 예측 불확실성              │
 │                                     │
-│  앱 설정                             │  Section Header
-│  ─────────────────────────────────  │
-│  🚗 이동수단                  >      │  ListTile → Dialog
-│     도보                             │  current value
-│  ⏰ 준비시간                  >      │  ListTile → Screen
-│     총 15분 (2개 항목)               │  summary
-│  ⏱️  마무리시간                >      │  ListTile → Screen
-│     총 5분 (1개 항목)                │  summary
+│  3️⃣ 일찍 도착 버퍼                  │
+│  ┌───────────────────────────────┐ │
+│  │ 10분                           │ │  Slider (0-30min)
+│  │ ◀────────●─────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 약속 시간 전 여유              │
 │                                     │
-│  ─────────────────────────────────  │
+│  4️⃣ 일정 마무리 시간                │
+│  ┌───────────────────────────────┐ │
+│  │ 5분                            │ │  Slider (0-20min)
+│  │ ◀──●──────────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 이전 일정 정리                  │
 │                                     │
-│  앱 정보                             │  Section Header
-│  ─────────────────────────────────  │
-│  ℹ️  버전 정보          [업데이트]  │  ListTile + Button
-│     v1.0.0                          │  subtitle
-│  📄 이용약관                  >      │  ListTile → Screen
-│  🔒 개인정보 처리방침          >      │  ListTile → Screen
+│  기본 이동 수단                     │
+│  ┌───────────────────────────────┐ │
+│  │ 🚇 대중교통        [▼]       │ │  Dropdown
+│  └───────────────────────────────┘ │
 │                                     │
+│  알림 설정                           │
 │  ─────────────────────────────────  │
+│  30분 전 알림           [✅]        │  Switch
+│  10분 전 긴급 알림       [✅]        │  Switch
+│  알림 소리              [기본 ▼]    │  Dropdown
 │                                     │
-│  🚪 로그아웃                         │  Danger Button
+│  앱 정보                             │
+│  ─────────────────────────────────  │
+│  버전: 1.0.0                        │  Text
+│  이용약관                >           │  Navigation
+│  개인정보 처리방침        >           │  Navigation
 │                                     │
 └─────────────────────────────────────┘
 ```
 
-**Implementation Details**:
-
-#### 1. Section Header
+**Slider Implementation**:
 
 ```dart
-Widget _buildSectionHeader(String title) {
-  return Padding(
-    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-    child: Text(
-      title,
+// Preparation time slider (example)
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      '1️⃣ 외출 준비 시간',
       style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey[600],
-        letterSpacing: 0.5,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey[800],
       ),
     ),
-  );
-}
-```
-
-#### 2. Setting Tile (ListTile Pattern)
-
-```dart
-Widget _buildSettingTile({
-  required IconData icon,
-  required String title,
-  String? subtitle,
-  Widget? trailing,
-  VoidCallback? onTap,
-}) {
-  return Container(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border(
-        bottom: BorderSide(color: Colors.grey[200]!, width: 1),
-      ),
-    ),
-    child: ListTile(
-      leading: Icon(icon, color: Colors.grey[700], size: 24),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            )
-          : null,
-      trailing: trailing ?? Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    ),
-  );
-}
-```
-
-#### 3. Switch Settings (알림/소리)
-
-```dart
-// 알림 설정
-_buildSettingTile(
-  icon: Icons.notifications_outlined,
-  title: '알림 활성화',
-  trailing: Switch(
-    value: _notificationsEnabled,
-    onChanged: _saveNotificationSetting,
-    activeColor: Colors.blue[600],
-  ),
-  onTap: null,  // Switch 클릭으로만 변경
-),
-
-// 소리 설정
-_buildSettingTile(
-  icon: Icons.volume_up_outlined,
-  title: '소리 활성화',
-  trailing: Switch(
-    value: _soundEnabled,
-    onChanged: _saveSoundSetting,
-    activeColor: Colors.blue[600],
-  ),
-  onTap: null,
-),
-```
-
-#### 4. 이동수단 선택 (Dialog)
-
-```dart
-void _showTransportModeDialog() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('이동수단 선택'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: ['도보', '대중교통', '자동차', '자전거', '택시'].map((mode) {
-          return RadioListTile<String>(
-            title: Text(mode),
-            value: mode,
-            groupValue: _transportMode,
-            onChanged: (value) {
-              if (value != null) {
-                _saveTransportMode(value);
-                Navigator.pop(context);
-              }
-            },
-          );
-        }).toList(),
-      ),
-    ),
-  );
-}
-```
-
-#### 5. 준비시간/마무리시간 관리 (별도 화면)
-
-**메인 화면 표시**:
-```dart
-_buildSettingTile(
-  icon: Icons.schedule_outlined,
-  title: '준비시간',
-  subtitle: _prepTimeItems.isEmpty
-      ? '항목 없음'
-      : '총 ${_getTotalTime(_prepTimeItems)}분 (${_prepTimeItems.length}개 항목)',
-  trailing: Icon(Icons.arrow_forward_ios, size: 16),
-  onTap: () => _showTimeItemsDialog('준비시간 설정', _prepTimeItems, _savePrepTimeItems),
-),
-```
-
-**항목 관리 화면** (`_TimeItemsScreen`):
-```
-┌─────────────────────────────────────┐
-│  [← 뒤로]  준비시간 설정    [+ 추가] │  AppBar with Add button
-├─────────────────────────────────────┤
-│                                     │
-│  ┌───────────────────────────────┐ │  ReorderableListView
-│  │ ≡  샤워                 10분  │ │  Draggable
-│  │    [✏️ 수정] [🗑️ 삭제]        │ │  Actions
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │ ≡  옷 입기               5분  │ │
-│  │    [✏️ 수정] [🗑️ 삭제]        │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │ ≡  짐 챙기기             3분  │ │
-│  │    [✏️ 수정] [🗑️ 삭제]        │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  [항목을 드래그하여 순서 변경]        │  Hint text
-│                                     │
-└─────────────────────────────────────┘
-```
-
-**항목 추가/수정 다이얼로그**:
-```dart
-void _showAddEditDialog({Map<String, dynamic>? item}) {
-  final nameController = TextEditingController(text: item?['name']);
-  final minutesController = TextEditingController(
-    text: item?['minutes']?.toString() ?? '',
-  );
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(item == null ? '항목 추가' : '항목 수정'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: '항목 이름',
-              hintText: '예: 샤워, 옷 입기',
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: minutesController,
-            decoration: const InputDecoration(
-              labelText: '소요 시간 (분)',
-              hintText: '예: 10',
-            ),
-            keyboardType: TextInputType.number,
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final name = nameController.text.trim();
-            final minutes = int.tryParse(minutesController.text) ?? 0;
-            
-            if (name.isNotEmpty && minutes > 0) {
-              setState(() {
-                if (item == null) {
-                  // 추가
-                  items.add({'name': name, 'minutes': minutes});
-                } else {
-                  // 수정
-                  item['name'] = name;
-                  item['minutes'] = minutes;
-                }
-              });
-              Navigator.pop(context);
-            }
-          },
-          child: Text(item == null ? '추가' : '수정'),
-        ),
-      ],
-    ),
-  );
-}
-```
-
-#### 6. 로그아웃 버튼
-
-```dart
-Padding(
-  padding: const EdgeInsets.all(16),
-  child: ElevatedButton.icon(
-    onPressed: _handleLogout,
-    icon: const Icon(Icons.logout),
-    label: const Text('로그아웃'),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.red[400],
-      foregroundColor: Colors.white,
-      minimumSize: const Size(double.infinity, 48),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-    ),
-  ),
-)
-```
-
-**Data Structure**:
-
-```dart
-// SharedPreferences에 저장되는 데이터 구조
-{
-  "notifications": true,
-  "sound": true,
-  "transportMode": "도보",
-  "prepTimeItems": [
-    {"name": "샤워", "minutes": 10},
-    {"name": "옷 입기", "minutes": 5},
-    {"name": "짐 챙기기", "minutes": 3}
-  ],
-  "finishTimeItems": [
-    {"name": "정리", "minutes": 5}
-  ]
-}
-```
-
-**Design Tokens**:
-- **Section Header**: 14px bold, grey[600], letterSpacing: 0.5
-- **ListTile Title**: 16px, FontWeight.w500
-- **ListTile Subtitle**: 14px, grey[600]
-- **Icon Size**: 24px (leading), 16px (trailing arrow)
-- **Switch Color**: blue[600] when active
-- **Divider**: grey[200], 1px
-- **Content Padding**: 16×12 (ListTile)
-- **Logout Button**: red[400] background, 48px height
-
----
-### 3.5 스케줄 상세 화면 (ScheduleDetailScreen)
-
-**목적**: 일정 정보 상세 보기 및 수정/삭제/복제 기능 제공
-
-**참조**: `lib/screens/schedule_detail_screen.dart` (579줄)
-
-**UI Structure**:
-
-```
-┌─────────────────────────────────────┐
-│  [← 뒤로]  일정 상세                 │  AppBar
-├─────────────────────────────────────┤
-│                                     │  ScrollView
-│  ╔═══════════════════════════════╗ │  Date Card (blue[600])
-│  ║ 2026년 1월 15일                ║ │  
-│  ║                               ║ │
-│  ║ 강남역 오피스 미팅             ║ │  28px bold, white
-│  ║ 10:00 AM 도착 예정            ║ │  18px, white70
-│  ╚═══════════════════════════════╝ │
-│                                     │
-│  ┌─ 🕐 시간 ──────────────────────┐ │  Info Card
-│  │ 09:30 AM                      │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌─ 📍 장소 ──────────────────────┐ │
-│  │ 서울 강남구 테헤란로 152       │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌─ 🚗 이동 수단 ──────────────────┐ │
-│  │ 자동차                         │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌─ ⏰ 준비 시간 ──────────────────┐ │  Time Items Card
-│  │ • 샤워: 10분                   │ │
-│  │ • 옷 입기: 5분                 │ │
-│  │ • 짐 챙기기: 3분               │ │
-│  │ ─────────────────────────────  │ │
-│  │ 총 18분                        │ │  bold
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌─ ⏱️  마무리 시간 ────────────────┐ │
-│  │ • 정리: 5분                    │ │
-│  │ ─────────────────────────────  │ │
-│  │ 총 5분                         │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌─ 🎨 스케줄 색상 ─────────────────┐ │  Color Card
-│  │ ●  파란색                      │ │  (user selected color)
-│  └───────────────────────────────┘ │
-│                                     │
-├─────────────────────────────────────┤
-│  ┌──────┐ ┌──────┐ ┌──────┐       │  Action Buttons
-│  │ 복제 │ │ 수정 │ │ 삭제 │       │  (grey, blue, red)
-│  └──────┘ └──────┘ └──────┘       │
-└─────────────────────────────────────┘
-```
-
-**Implementation Details**:
-
-#### 1. Date Header Card (파란색 배경)
-
-```dart
-Container(
-  width: double.infinity,
-  padding: const EdgeInsets.all(20),
-  decoration: BoxDecoration(
-    color: Colors.blue[600],
-    borderRadius: BorderRadius.circular(16),
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // 날짜
-      Text(
-        '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.white70,
-        ),
-      ),
-      const SizedBox(height: 8),
-      // 스케줄 제목
-      Text(
-        schedule['title'] ?? '',
-        style: const TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      const SizedBox(height: 4),
-      // 도착 예정 시간
-      Text(
-        '${schedule['time']} 도착 예정',
-        style: const TextStyle(
-          fontSize: 18,
-          color: Colors.white70,
-        ),
-      ),
-    ],
-  ),
-)
-```
-
-#### 2. Info Card (일반 정보)
-
-```dart
-Widget _buildInfoCard({
-  required IconData icon,
-  required String title,
-  required String content,
-}) {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Row(
+    SizedBox(height: 12),
+    Row(
       children: [
-        // Icon
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: Colors.blue[600], size: 20),
-        ),
-        const SizedBox(width: 16),
-        // Content
+        Text('5분', style: TextStyle(color: Colors.grey[600])),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                content,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          child: Slider(
+            value: _prepTime.toDouble(),
+            min: 5,
+            max: 60,
+            divisions: 11,
+            label: '$_prepTime분',
+            activeColor: Colors.blue[600],
+            onChanged: (value) => setState(() => _prepTime = value.toInt()),
           ),
         ),
+        Text('60분', style: TextStyle(color: Colors.grey[600])),
       ],
     ),
-  );
-}
-```
-
-#### 3. Time Items Card (준비/마무리 시간)
-
-```dart
-Widget _buildTimeItemsCard({
-  required IconData icon,
-  required String title,
-  required List<Map<String, dynamic>> items,
-}) {
-  final totalMinutes = items.fold(0, (sum, item) => sum + (item['minutes'] as int));
-  
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
+    Text(
+      '💡 옷 입기, 짐 챙기기 등',
+      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
     ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: Colors.blue[600], size: 20),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        
-        if (items.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          const Divider(),
-          const SizedBox(height: 8),
-          
-          // Items list
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              children: [
-                Icon(Icons.circle, size: 6, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  '${item['name']}: ${item['minutes']}분',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          )),
-          
-          const SizedBox(height: 8),
-          const Divider(),
-          const SizedBox(height: 8),
-          
-          // Total
-          Text(
-            '총 $totalMinutes분',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[600],
-            ),
-          ),
-        ] else ...[
-          const SizedBox(height: 12),
-          Text(
-            '항목 없음',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[400],
-            ),
-          ),
-        ],
-      ],
-    ),
-  );
-}
-```
-
-#### 4. Color Card (색상 표시)
-
-```dart
-Widget _buildColorCard({required Color color}) {
-  final colorName = _getColorName(color);
-  
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        // Color preview
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Color name
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '스케줄 색상',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              colorName,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-```
-
-#### 5. Action Buttons (복제/수정/삭제)
-
-```dart
-Container(
-  padding: const EdgeInsets.all(16),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.1),
-        blurRadius: 8,
-        offset: const Offset(0, -2),
-      ),
-    ],
-  ),
-  child: Row(
-    children: [
-      // 복제 버튼
-      Expanded(
-        child: OutlinedButton.icon(
-          onPressed: _handleDuplicate,
-          icon: const Icon(Icons.content_copy, size: 18),
-          label: const Text('복제'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.grey[700],
-            side: BorderSide(color: Colors.grey[300]!),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-      ),
-      const SizedBox(width: 8),
-      
-      // 수정 버튼
-      Expanded(
-        child: ElevatedButton.icon(
-          onPressed: _handleEdit,
-          icon: const Icon(Icons.edit, size: 18),
-          label: const Text('수정'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue[600],
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-      ),
-      const SizedBox(width: 8),
-      
-      // 삭제 버튼
-      Expanded(
-        child: ElevatedButton.icon(
-          onPressed: _handleDelete,
-          icon: const Icon(Icons.delete_outline, size: 18),
-          label: const Text('삭제'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red[400],
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-      ),
-    ],
-  ),
+  ],
 )
 ```
 
-#### 6. Actions Implementation
-
-```dart
-// 복제
-void _handleDuplicate() async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => ScheduleEditScreen(
-        schedule: currentSchedule,  // 기존 데이터로 초기화
-        selectedDate: widget.selectedDate,
-      ),
-    ),
-  );
-  
-  if (result == true) {
-    Navigator.pop(context, true);  // 상위 화면 새로고침
-  }
-}
-
-// 수정
-void _handleEdit() async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => ScheduleEditScreen(
-        schedule: currentSchedule,
-        selectedDate: widget.selectedDate,
-        scheduleIndex: widget.scheduleIndex,  // 수정 모드
-      ),
-    ),
-  );
-  
-  if (result == true) {
-    Navigator.pop(context, true);
-  }
-}
-
-// 삭제
-void _handleDelete() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('일정 삭제'),
-      content: const Text('이 일정을 삭제하시겠습니까?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            _scheduleManager.deleteSchedule(
-              widget.selectedDate,
-              widget.scheduleIndex,
-            );
-            Navigator.pop(context);  // 다이얼로그 닫기
-            Navigator.pop(context, true);  // 상세 화면 닫기
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red[400],
-          ),
-          child: const Text('삭제'),
-        ),
-      ],
-    ),
-  );
-}
-```
-
-**Design Tokens**:
-- **Date Card Background**: blue[600]
-- **Info Card**: white background, 12px border radius
-- **Icon Container**: 40×40px, blue[50] background, 8px border radius
-- **Icon Color**: blue[600]
-- **Shadow**: blurRadius: 8, offset: (0, 2), opacity: 0.05
-- **Title Font**: 12px (label), 16px (content)
-- **Time Items Bullet**: 6px circle
-- **Button Height**: 14px vertical padding
-- **Button Colors**: grey[700] (복제), blue[600] (수정), red[400] (삭제)
-
 ---
-### 3.6 공통 Design Tokens
+
+### 3.5 공통 Design Tokens
 
 **Typography**:
 ```dart
