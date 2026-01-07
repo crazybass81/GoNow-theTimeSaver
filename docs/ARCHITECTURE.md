@@ -1,8 +1,8 @@
 # GoNow 시스템 아키텍처
 
-**최종 업데이트**: 2026-01-07
-**문서 버전**: 1.0
-**시스템 버전**: MVP v1.0 (Phase 3 진행 중)
+**최종 업데이트**: 2025-01-07
+**문서 버전**: 2.0
+**시스템 버전**: MVP v1.0 (Phase 4 진행 중 - 90%)
 
 ---
 
@@ -84,9 +84,9 @@
 ┌──────────────────────┐  ┌─────────────────┐  ┌──────────────────┐
 │   Supabase Backend   │  │  External APIs  │  │  Local Storage   │
 │    (PostgreSQL)      │  │                 │  │                  │
-│                      │  │  • Naver Maps   │  │  • SharedPrefs   │
-│  • Authentication    │  │  • Naver Transit│  │  • SQLite        │
-│  • Database (RLS)    │  │                 │  │  • App Groups    │
+│                      │  │  • TMAP Routes  │  │  • SharedPrefs   │
+│  • Authentication    │  │  • TMAP POI     │  │  • SQLite        │
+│  • Database (RLS)    │  │  • TMAP Transit │  │  • App Groups    │
 │  • Realtime Updates  │  │                 │  │    (iOS)         │
 │  • Storage           │  │                 │  │  • UserDefaults  │
 └──────────────────────┘  └─────────────────┘  └──────────────────┘
@@ -114,11 +114,15 @@ lib/
 │
 ├── services/                         # 비즈니스 로직 레이어
 │   ├── supabase_service.dart         # Supabase 연동
-│   ├── route_service.dart            # 경로 탐색 (Naver API)
+│   ├── route_service.dart            # 경로 탐색 (TMAP Routes API)
+│   ├── transit_service.dart          # 대중교통 경로 (TMAP Public Transit API)
+│   ├── poi_search_service.dart       # 장소 검색 (TMAP POI Search API)
 │   ├── scheduler_service.dart        # 역산 스케줄링 알고리즘
 │   ├── notification_service.dart     # 로컬 푸시 알림
 │   ├── widget_service.dart           # 홈 위젯 업데이트
 │   ├── trip_service.dart             # Trip CRUD + Realtime
+│   ├── polling_service.dart          # 적응형 폴링 (15/5/3분)
+│   ├── real_time_updater.dart        # 실시간 경로 업데이트
 │   └── settings_service.dart         # 사용자 설정 관리
 │
 ├── providers/                        # 상태 관리 (Provider)
@@ -206,8 +210,14 @@ ios/
 
 | API | 용도 | 제한사항 |
 |-----|------|----------|
-| **Naver Maps Directions API** | 자차 경로 (실시간 교통) | 월 100,000건 무료 |
-| **Naver Transit API** | 대중교통 경로 (버스/지하철) | 월 100,000건 무료 |
+| **TMAP Routes API** | 자차 경로 계산 (실시간 교통, GeoJSON) | SK Open API 정책 |
+| **TMAP POI Search API** | 장소 검색 (실시간, WGS84 좌표) | 최대 20개 결과/요청 |
+| **TMAP Public Transit API** | 대중교통 경로 (버스/지하철, 환승) | SK Open API 정책 |
+
+**Note**:
+- 2025-01-07: Naver Maps Directions API → TMAP Routes API 전환 완료
+- 계획: Naver Transit API → TMAP Public Transit API 전환 예정
+- 자세한 내용: [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)
 
 ### 3.4 네이티브
 
@@ -268,8 +278,9 @@ Supabase + Naver API (Data Source)
 #### 4.2.2 RouteService (경로 탐색)
 
 **책임**:
-- Naver Maps API 호출 (자차)
-- Naver Transit API 호출 (대중교통)
+- TMAP Routes API 호출 (자차 경로 계산)
+- 실시간 교통 정보 반영
+- GeoJSON 경로 데이터 파싱
 - 캐싱 전략 (5분 유효)
 - 에러 핸들링 및 재시도
 
@@ -277,9 +288,9 @@ Supabase + Naver API (Data Source)
 ```
 1. 캐시 확인 (5분 이내?)
    ├─ Yes → 캐시 데이터 반환
-   └─ No → API 호출
-2. API 호출 (timeout: 10초)
-   ├─ Success → 캐시 저장 + 반환
+   └─ No → TMAP API 호출
+2. TMAP Routes API 호출 (timeout: 10초)
+   ├─ Success → GeoJSON 파싱 → 캐시 저장 + 반환
    └─ Fail → 재시도 (최대 3회)
 3. 재시도 실패 → 에러 반환
 ```
@@ -288,7 +299,33 @@ Supabase + Naver API (Data Source)
 
 ---
 
-#### 4.2.3 NotificationService (알림)
+#### 4.2.3 POISearchService (장소 검색)
+
+**책임**:
+- TMAP POI Search API 호출 (장소 검색)
+- WGS84 좌표계 변환
+- 검색 결과 필터링 및 정렬
+- 에러 핸들링 (네트워크, API 키 등)
+
+**API 플로우**:
+```
+1. 검색 키워드 입력
+   ↓
+2. TMAP POI Search API 호출 (최대 20개 결과)
+   ├─ Success → POIResult 객체 리스트 반환
+   └─ Fail → POISearchException 발생
+3. UI에 검색 결과 표시
+   ├─ 장소 이름
+   ├─ 도로명 주소 (우선) / 지번 주소
+   ├─ 좌표 (WGS84)
+   └─ 카테고리
+```
+
+**코드 위치**: `lib/services/poi_search_service.dart`
+
+---
+
+#### 4.2.4 NotificationService (알림)
 
 **책임**:
 - 30분 전 일반 알림
@@ -309,7 +346,7 @@ NotificationService.scheduleNotifications()
 
 ---
 
-#### 4.2.4 WidgetService (위젯 업데이트)
+#### 4.2.5 WidgetService (위젯 업데이트)
 
 **책임**:
 - Flutter → Android/iOS 네이티브 통신
@@ -699,13 +736,13 @@ supabase
 
 ### 9.1 향후 확장 계획
 
-| Phase | 기능 | 기술 스택 |
-|-------|------|----------|
-| **Phase 4** | 통합 테스트 & QA | Playwright, Unit Tests |
-| **Phase 5** | 스토어 출시 | App Store, Play Store |
-| **Phase 6** | 게임화 (Streak, 배지) | Firebase Analytics |
-| **Phase 7** | 지오펜싱 | Geolocation API |
-| **Phase 8** | 소셜 기능 (친구, 랭킹) | Supabase + GraphQL |
+| Phase | 기능 | 기술 스택 | 상태 |
+|-------|------|----------|------|
+| **Phase 4** | 통합 테스트 & QA | Unit Tests, Integration Tests | ✅ 진행 중 (90%) |
+| **Phase 5** | 스토어 출시 | App Store, Play Store | ⏳ 예정 |
+| **Phase 6** | 게임화 (Streak, 배지) | Firebase Analytics | ⏳ 예정 |
+| **Phase 7** | 지오펜싱 | Geolocation API | ⏳ 예정 |
+| **Phase 8** | 소셜 기능 (친구, 랭킹) | Supabase + GraphQL | ⏳ 예정 |
 
 ---
 
@@ -753,6 +790,6 @@ supabase
 
 ---
 
-**작성일**: 2026-01-07
-**다음 리뷰**: Phase 3 완료 시
+**작성일**: 2025-01-07
+**다음 리뷰**: Phase 4 완료 시 (MVP 출시 전)
 **문서 유지관리자**: 개발 팀
