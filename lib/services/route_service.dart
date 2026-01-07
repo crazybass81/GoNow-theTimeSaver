@@ -2,10 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'cache_service.dart';
 
-/// Naver Maps API를 사용한 경로 탐색 서비스 / Route Service
+/// TMAP API를 사용한 경로 탐색 서비스 / Route Service
 ///
 /// **기능 / Features**:
-/// - Naver Directions API 5.0 연동 (자차 경로)
+/// - TMAP Routes API 연동 (자차 경로)
 /// - 실시간 교통 정보 반영
 /// - 에러 핸들링 및 폴백 로직
 /// - 경로 캐싱 (5분 유효)
@@ -38,27 +38,26 @@ class RouteService {
       return;
     }
 
-    final clientId = dotenv.env['NAVER_CLIENT_ID'];
-    final clientSecret = dotenv.env['NAVER_CLIENT_SECRET'];
+    final appKey = dotenv.env['TMAP_APP_KEY'];
 
-    if (clientId == null || clientSecret == null) {
-      throw Exception('Naver API keys not configured in .env file');
+    if (appKey == null) {
+      throw Exception('TMAP API key not configured in .env file');
     }
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://naveropenapi.apigw.ntruss.com',
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        baseUrl: 'https://apis.openapi.sk.com',
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
         headers: {
-          'X-NCP-APIGW-API-KEY-ID': clientId,
-          'X-NCP-APIGW-API-KEY': clientSecret,
+          'Content-Type': 'application/json',
+          'appKey': appKey,
         },
       ),
     );
 
     _isInitialized = true;
-    print('RouteService: Initialized successfully');
+    print('RouteService: Initialized successfully with TMAP API');
   }
 
   /// 자차 경로 탐색 및 소요 시간 계산 / Calculate driving route
@@ -107,42 +106,50 @@ class RouteService {
     }
 
     try {
-      // Naver Directions API 호출
-      // https://api.ncloud-docs.com/docs/ai-naver-mapsdirections-driving
-      final response = await _dio.get(
-        '/map-direction/v1/driving',
-        queryParameters: {
-          'start': '$originLng,$originLat', // 네이버는 lng,lat 순서
-          'goal': '$destLng,$destLat',
-          'option': option,
+      // TMAP 경로 옵션 매핑 / Map route option to TMAP searchOption
+      // 0: 추천 (교통최적+거리), 1: 최단거리, 2: 최단시간, 10: 고속도로우선
+      final searchOption = _mapRouteOption(option);
+
+      // TMAP Routes API 호출
+      // https://openapi.sk.com/products/detail?svcSeq=59
+      final response = await _dio.post(
+        '/tmap/routes?version=1',
+        data: {
+          'startX': originLng.toString(), // 출발지 경도
+          'startY': originLat.toString(), // 출발지 위도
+          'endX': destLng.toString(), // 목적지 경도
+          'endY': destLat.toString(), // 목적지 위도
+          'reqCoordType': 'WGS84GEO', // 요청 좌표계
+          'resCoordType': 'WGS84GEO', // 응답 좌표계
+          'searchOption': searchOption.toString(),
+          'trafficInfo': 'Y', // 실시간 교통정보 반영
         },
       );
 
       // 응답 파싱 / Parse response
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final code = data['code'] as int;
 
-        // Naver API 응답 검증
-        if (code != 0) {
+        // TMAP API 응답 검증
+        if (data['features'] == null || (data['features'] as List).isEmpty) {
           throw DioException(
             requestOptions: response.requestOptions,
-            error: 'Naver API Error: ${data['message']}',
+            error: 'TMAP API Error: No route found',
             type: DioExceptionType.badResponse,
           );
         }
 
-        final route = data['route'][option][0];
-        final summary = route['summary'];
+        final features = data['features'] as List<dynamic>;
+        final properties = features[0]['properties'] as Map<String, dynamic>;
 
         final result = RouteResult(
-          durationMinutes: (summary['duration'] / 1000 / 60).ceil(), // 밀리초 → 분
-          distanceKm: (summary['distance'] / 1000).toDouble(), // 미터 → km
-          trafficLevel: _parseTrafficLevel(summary['trafficColor'] ?? 0),
-          path: route['path'] as List<dynamic>?,
-          tollFare: summary['tollFare'] ?? 0,
-          taxiFare: summary['taxiFare'] ?? 0,
-          fuelPrice: summary['fuelPrice'] ?? 0,
+          durationMinutes: ((properties['totalTime'] ?? 0) / 60).ceil(), // 초 → 분
+          distanceKm: ((properties['totalDistance'] ?? 0) / 1000).toDouble(), // 미터 → km
+          trafficLevel: TrafficLevel.unknown, // TMAP은 상세 교통 레벨 제공 안함
+          path: _extractPath(features),
+          tollFare: properties['totalFare'] ?? 0,
+          taxiFare: properties['taxiFare'] ?? 0,
+          fuelPrice: 0, // TMAP API는 유류비 제공 안함
         );
 
         // 캐시에 저장 / Save to cache (5분 유효)
@@ -170,6 +177,41 @@ class RouteService {
         originalError: e,
       );
     }
+  }
+
+  /// 경로 옵션을 TMAP searchOption으로 매핑 / Map route option to TMAP searchOption
+  int _mapRouteOption(String option) {
+    switch (option) {
+      case 'trafast': // 빠른 길 (최단시간)
+        return 2;
+      case 'tracomfort': // 편한 길 (추천)
+        return 0;
+      case 'traoptimal': // 최적 (추천)
+        return 0;
+      default:
+        return 0; // 기본값: 추천
+    }
+  }
+
+  /// TMAP API 응답에서 경로 좌표 추출 / Extract path coordinates from TMAP response
+  List<dynamic>? _extractPath(List<dynamic> features) {
+    final paths = <Map<String, double>>[];
+
+    for (final feature in features) {
+      if (feature['geometry'] != null && feature['geometry']['type'] == 'LineString') {
+        final coordinates = feature['geometry']['coordinates'] as List<dynamic>;
+        for (final coord in coordinates) {
+          if (coord is List && coord.length >= 2) {
+            paths.add({
+              'lng': (coord[0] as num).toDouble(),
+              'lat': (coord[1] as num).toDouble(),
+            });
+          }
+        }
+      }
+    }
+
+    return paths.isEmpty ? null : paths;
   }
 
   /// Dio 에러 핸들링 / Handle Dio errors
@@ -203,7 +245,7 @@ class RouteService {
         if (statusCode == 401 || statusCode == 403) {
           return _ErrorInfo(
             type: RouteErrorType.invalidApiKey,
-            message: 'API 인증에 실패했습니다. .env 파일의 API 키를 확인하세요.',
+            message: 'API 인증에 실패했습니다. .env 파일의 TMAP API 키를 확인하세요.',
           );
         } else if (statusCode == 429) {
           return _ErrorInfo(
@@ -317,20 +359,6 @@ class RouteService {
   /// **Context**: 디버깅 및 모니터링
   CacheStats getCacheStats() {
     return _cache.getStats();
-  }
-
-  /// 교통 상황 코드를 TrafficLevel enum으로 변환
-  static TrafficLevel _parseTrafficLevel(int colorCode) {
-    switch (colorCode) {
-      case 1:
-        return TrafficLevel.smooth; // 원활 (초록)
-      case 2:
-        return TrafficLevel.slow; // 지체 (주황)
-      case 3:
-        return TrafficLevel.congested; // 정체 (빨강)
-      default:
-        return TrafficLevel.unknown;
-    }
   }
 }
 

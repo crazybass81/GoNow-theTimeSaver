@@ -2,9 +2,9 @@
 
 > **MVP 개발 Phase 1~5 상세 구현 가이드**
 
-**최종 업데이트**: 2026-01-07
-**문서 버전**: 1.1
-**프로젝트 상태**: Phase 4 진행 중
+**최종 업데이트**: 2025-01-07
+**문서 버전**: 1.2
+**프로젝트 상태**: Phase 4 진행 중 (~65% 완료)
 
 ---
 
@@ -180,22 +180,32 @@
 
 ### 주요 성과
 
-- ✅ Naver Maps API 완전 통합 (자차 경로)
+- ✅ ~~Naver Maps API~~ → **TMAP Routes API 마이그레이션** (2025-01-07)
+- ✅ TMAP API 완전 통합 (자차 경로, GeoJSON, 실시간 교통)
 - ✅ Naver Transit API 완전 통합 (대중교통 경로)
 - ✅ 역산 스케줄링 알고리즘 구현 (48개 단위 테스트 통과)
 - ✅ Adaptive Polling 시스템 (15/5/3분 간격)
 - ✅ Supabase 데이터 모델 구현
 - ✅ TripProvider 상태 관리
+- 📄 [TMAP API 마이그레이션 문서](../docs/TMAP_API_MIGRATION.md)
 
-### Task 2.1: Naver Maps API 연동 (Day 6)
+### Task 2.1: ~~Naver Maps API~~ → TMAP Routes API 연동 (Day 6, Updated 2025-01-07)
 
 **목표**: 자차 경로 탐색 API 통합
 
+**⚠️ API 변경 이력**:
+- **초기 구현** (2026-01-06): Naver Directions API 5.0
+- **마이그레이션** (2025-01-07): TMAP Routes API로 전환
+  - **사유**: Naver API 구독/권한 문제 (Error 210: Permission Denied)
+  - **변경사항**: GET → POST, Query Parameters → JSON Body, GeoJSON 경로 형식
+  - **문서**: [TMAP_API_MIGRATION.md](../docs/TMAP_API_MIGRATION.md)
+
 #### 주요 작업
-- ✅ **SubTask 2.1.1**: Directions API 연동
+- ✅ **SubTask 2.1.1**: ~~Directions API~~ TMAP Routes API 연동
   - dio 패키지 사용
-  - `RouteService.calculateRoute()` 구현
-  - 실시간 교통 데이터 파싱
+  - `RouteService.calculateRoute()` 구현 (TMAP POST 방식)
+  - 실시간 교통 데이터 파싱 (GeoJSON LineString)
+  - 경로 옵션 매핑 (trafast → searchOption 2)
 - ✅ **SubTask 2.1.2**: API 에러 핸들링
   - 네트워크 오류 처리
   - API 키 오류 처리
@@ -204,10 +214,16 @@
 - ✅ **SubTask 2.1.3**: 캐싱 전략
   - 최근 경로 캐싱 (5분 유효)
   - 중복 요청 방지
+- ✅ **SubTask 2.1.4**: Integration Tests (2025-01-07)
+  - 4개 테스트 케이스 작성 및 통과 (100%)
+  - 실제 TMAP API 호출 검증
+  - 캐시 동작 검증 (첫 호출 ~1ms, 캐시 0ms)
 
-**산출물**: `lib/services/route_service.dart`, `lib/services/cache_service.dart`
+**산출물**:
+- `lib/services/route_service.dart` (TMAP API 버전)
+- `test/integration/route_service_integration_test.dart` (4/4 passed)
 
-**완료 기준**: 실제 API 호출 성공, 이동 시간 반환
+**완료 기준**: 실제 TMAP API 호출 성공, 이동 시간 반환, 모든 테스트 통과
 
 ---
 
@@ -514,18 +530,23 @@ flutter create --org com.gonow .
 **담당**: 개발자 1, 개발자 2, PM
 **상태**: 🚧 **진행 중** (2026-01-07 시작)
 
-### 현재 진행 상황
+### 현재 진행 상황 (2025-01-07 업데이트)
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
+| Unit Tests | ✅ 완료 | 301개 테스트 (100% 통과) |
+| Integration Tests (TMAP) | ✅ 완료 | 4개 테스트 (100% 통과) |
 | Widget Tests | ✅ 완료 | 66개 테스트 통과 |
 | E2E Tests 작성 | ✅ 완료 | 23개 테스트 작성 |
-| E2E Tests 실행 | ⏳ 대기 | 실제 디바이스 필요 |
-| Integration Tests | ⏳ 대기 | API 통합 테스트 |
+| E2E Tests 실행 | ✅ 완료 | 23개 테스트 (100% 통과) |
+| Device Testing | ✅ 완료 | SM A136S (Android 14) 배포 성공 |
 | Performance Tests | ⏳ 대기 | 배터리, 메모리 최적화 |
 | Alpha Testing | ⏳ 대기 | 사용자 피드백 |
 
-**전체 Phase 4 진행률**: ~40%
+**전체 테스트 현황**: 328개 테스트 100% 통과
+- 📄 [테스트 결과 문서](../docs/TEST_RESULTS_2025_01_07.md)
+
+**전체 Phase 4 진행률**: ~65%
 
 ### 주요 목표
 

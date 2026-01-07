@@ -73,8 +73,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Then: Should show empty state
-      expect(find.text('예정된 일정이 없습니다'), findsOneWidget);
-      expect(find.text('하단의 + 버튼을 눌러\n새로운 일정을 추가해보세요'), findsOneWidget);
+      expect(find.text('일정이 없습니다'), findsOneWidget);
+      expect(find.text('하단의 + 버튼을 눌러\n새 일정을 추가해보세요'), findsOneWidget);
       expect(find.byIcon(Icons.event_busy), findsOneWidget);
     });
 

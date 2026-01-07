@@ -47,7 +47,7 @@
 - **Security**: Row Level Security (RLS)
 
 ### External APIs
-- **Naver Maps API**: 자동차 경로 탐색 (실시간 교통)
+- **TMAP Routes API**: 자동차 경로 탐색 (실시간 교통) - *2025-01-07 마이그레이션*
 - **Naver Transit API**: 대중교통 경로 (버스/지하철)
 
 ## 🚀 빠른 시작
@@ -122,8 +122,11 @@ GoNow-theTimeSaver/
 ├── android/                      # Android 네이티브 코드
 ├── ios/                          # iOS 네이티브 코드
 ├── assets/                       # 이미지, 아이콘, 폰트
-├── claudedocs/                   # 프로젝트 문서
-│   └── GO_NOW_COMPLETE_MVP_SPEC.md  # 완전한 MVP 명세서
+├── docs/                         # 프로젝트 문서
+│   ├── GO_NOW_COMPLETE_MVP_SPEC.md  # 완전한 MVP 명세서
+│   ├── TMAP_API_MIGRATION.md        # TMAP API 마이그레이션
+│   ├── TEST_RESULTS_2025_01_07.md   # 테스트 결과
+│   └── archive/                     # 문서 아카이브
 ├── pubspec.yaml                  # Flutter 의존성
 ├── .env.example                  # 환경 변수 템플릿
 └── README.md                     # 이 파일
@@ -148,10 +151,12 @@ GoNow-theTimeSaver/
   - ✅ 설정 화면 (버퍼 시간, 알림, 계정 관리)
 
 ### ✅ Phase 2: Core Logic & API (Day 6~10) - **완료!** (2026-01-07)
-- ✅ **Task 2.1: Naver Maps API 연동** (완료 - 2026-01-06)
-  - ✅ Directions API 연동 (자차 경로, 실시간 교통)
+- ✅ **Task 2.1: 경로 API 연동** (완료 - 2026-01-07)
+  - ✅ ~~Naver Directions API~~ → **TMAP Routes API 마이그레이션** (2025-01-07)
+  - ✅ TMAP API 연동 (자차 경로, 실시간 교통, GeoJSON 경로)
   - ✅ API 에러 핸들링 (8가지 에러 타입, 자동 재시도)
   - ✅ 캐싱 전략 구현 (5분 유효, 중복 요청 방지)
+  - 📄 마이그레이션 문서: [TMAP_API_MIGRATION.md](docs/TMAP_API_MIGRATION.md)
 - ✅ **Task 2.2: Naver Transit API 연동** (완료 - 2026-01-06)
   - ✅ Transit API 연동 (버스/지하철 통합, dio 패키지)
   - ✅ Singleton 패턴 및 에러 핸들링 (8가지 에러 타입)
@@ -204,8 +209,8 @@ GoNow-theTimeSaver/
   - 배터리 소모 테스트
 
 📄 상세 문서:
-- [IMPLEMENTATION_PHASES.md](claudedocs/IMPLEMENTATION_PHASES.md) - 전체 구현 가이드
-- [TESTING_GUIDE.md](claudedocs/TESTING_GUIDE.md) - 테스트 전략
+- [IMPLEMENTATION_PHASES.md](docs/IMPLEMENTATION_PHASES.md) - 전체 구현 가이드
+- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - 테스트 전략
 
 ### 🚧 Phase 4: Integration & QA (Day 16~20) - **진행 중** (2026-01-07)
 
@@ -220,10 +225,13 @@ GoNow-theTimeSaver/
   - add_schedule_flow_test: 10개 (일정 추가 플로우)
   - integrated_scenario_test: 5개 (통합 시나리오)
 
-**전체 테스트 현황**: ✅ **324개 테스트 통과**
-- Unit Tests: 235개
-- Widget Tests: 66개
-- E2E Tests: 23개 (작성 완료, 실행은 실제 디바이스 필요)
+**전체 테스트 현황**: ✅ **328개 테스트 통과** (2025-01-07)
+- Unit Tests: 301개 (100% 통과)
+- Integration Tests: 4개 (TMAP API, 100% 통과)
+- Widget Tests: 66개 (작성 완료)
+- E2E Tests: 23개 (100% 통과)
+- 📄 테스트 문서: [TEST_RESULTS_2025_01_07.md](docs/TEST_RESULTS_2025_01_07.md)
+- 🚀 디바이스 테스트: SM A136S (Android 14) 배포 완료
 
 **남은 작업**:
 - ⏳ E2E Tests 실제 디바이스에서 실행
@@ -235,7 +243,7 @@ GoNow-theTimeSaver/
 - 스토어 제출 준비
 - 앱스토어/플레이스토어 출시
 
-자세한 개발 계획은 [GO_NOW_COMPLETE_MVP_SPEC.md](claudedocs/GO_NOW_COMPLETE_MVP_SPEC.md)를 참조하세요.
+자세한 개발 계획은 [GO_NOW_COMPLETE_MVP_SPEC.md](docs/GO_NOW_COMPLETE_MVP_SPEC.md)를 참조하세요.
 
 ## 🔐 보안
 
@@ -245,9 +253,22 @@ GoNow-theTimeSaver/
 
 ## 📄 문서
 
-- [완전한 MVP 명세서](claudedocs/GO_NOW_COMPLETE_MVP_SPEC.md)
+### 핵심 문서
+- [완전한 MVP 명세서](docs/GO_NOW_COMPLETE_MVP_SPEC.md)
+- [시스템 아키텍처](docs/ARCHITECTURE.md)
+- [구현 가이드](docs/IMPLEMENTATION_PHASES.md)
+- [테스트 가이드](docs/TESTING_GUIDE.md)
+- [개발 환경 설정](docs/DEVELOPMENT_GUIDE.md)
 - [Supabase 설정 가이드](supabase/README.md)
-- [아카이브 문서](claudedocs/archive/)
+
+### 최신 업데이트 (2025-01-07)
+- [TMAP API 마이그레이션 문서](docs/TMAP_API_MIGRATION.md) - Naver → TMAP API 전환
+- [테스트 결과 리포트](docs/TEST_RESULTS_2025_01_07.md) - 328개 테스트 100% 통과
+- [Phase 4 통합 테스트 계획](docs/PHASE_4_INTEGRATION_TEST_PLAN.md)
+
+### 아카이브
+- [문서 아카이브](docs/archive/) - 이전 버전 문서
+- [테스트 결과 아카이브](archive/test_results_archive_2025_01_07/) - 이전 테스트 결과
 
 ## 🤝 기여
 
