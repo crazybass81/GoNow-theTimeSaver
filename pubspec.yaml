@@ -17,7 +17,8 @@ dependencies:
   # riverpod: ^2.4.0  # Alternative state management (선택적)
 
   # Local Notifications
-  flutter_local_notifications: ^16.0.0
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2  # Required for scheduled notifications
 
   # HTTP & Network
   http: ^1.1.0
@@ -45,12 +46,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  integration_test:
+    sdk: flutter
+
   # Linting
   flutter_lints: ^3.0.0
 
   # Code Generation
   build_runner: ^2.4.0
   json_serializable: ^6.7.0
+
+  # Testing - HTTP Mocking
+  http_mock_adapter: ^0.6.0  # Dio HTTP mocking for unit tests
 
 flutter:
   uses-material-design: true

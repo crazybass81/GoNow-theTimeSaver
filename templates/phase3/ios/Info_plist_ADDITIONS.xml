@@ -1,0 +1,135 @@
+<!--
+  Info.plist에 추가할 내용 / Additions for Info.plist
+
+  위치 / Location: ios/Runner/Info.plist
+
+  설명 / Description:
+  - App Group 설정
+  - Widget Extension 연결
+  - Background Modes 설정
+-->
+
+<!--
+  다음 내용을 <dict> 태그 안에 추가하세요:
+  Add the following inside the <dict> tag:
+-->
+
+<!-- App Group for Widget Data Sharing -->
+<key>AppGroups</key>
+<array>
+    <string>group.com.gonow.gotimesaver</string>
+</array>
+
+<!-- Widget Extension -->
+<key>NSExtension</key>
+<dict>
+    <key>NSExtensionPointIdentifier</key>
+    <string>com.apple.widgetkit-extension</string>
+</dict>
+
+<!-- Background Modes (for updating widget data) -->
+<key>UIBackgroundModes</key>
+<array>
+    <string>fetch</string>
+    <string>processing</string>
+</array>
+
+<!-- Widget Display Name -->
+<key>CFBundleDisplayName</key>
+<string>GoNow</string>
+
+
+<!--
+  ==========================================
+  Widget Extension의 Info.plist 설정
+  Widget Extension Info.plist Settings
+  ==========================================
+
+  위치 / Location: ios/GoNowWidgetExtension/Info.plist
+
+  설명 / Description:
+  - Xcode에서 Widget Extension을 추가할 때 자동 생성됩니다
+  - 다음 내용이 포함되어 있는지 확인하세요
+-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Bundle Identifier -->
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+    <!-- Bundle Name -->
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+
+    <!-- App Group -->
+    <key>AppGroups</key>
+    <array>
+        <string>group.com.gonow.gotimesaver</string>
+    </array>
+
+    <!-- Extension Point -->
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.widgetkit-extension</string>
+        <key>NSExtensionPrincipalClass</key>
+        <string>$(PRODUCT_MODULE_NAME).GoNowWidget</string>
+    </dict>
+
+    <!-- Minimum iOS Version -->
+    <key>MinimumOSVersion</key>
+    <string>14.0</string>
+
+    <!-- Widget Kind -->
+    <key>WidgetKind</key>
+    <string>GoNowWidget</string>
+</dict>
+</plist>
+
+
+<!--
+  ==========================================
+  Xcode Entitlements 설정
+  Xcode Entitlements Settings
+  ==========================================
+
+  파일: Runner.entitlements
+  위치: ios/Runner/Runner.entitlements
+
+  Xcode에서 자동 생성되며, 다음 내용이 포함되어야 합니다:
+-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Groups -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.gonow.gotimesaver</string>
+    </array>
+</dict>
+</plist>
+
+
+<!--
+  ==========================================
+  주의사항 / Important Notes
+  ==========================================
+
+  1. App Group ID는 반드시 일치해야 합니다:
+     - Runner: group.com.gonow.gotimesaver
+     - Widget Extension: group.com.gonow.gotimesaver
+
+  2. Xcode에서 App Groups 활성화:
+     - Target → Runner → Signing & Capabilities
+     - "+ Capability" 클릭 → "App Groups" 추가
+     - "group.com.gonow.gotimesaver" 체크
+
+  3. Widget Extension에도 동일하게 App Groups 활성화
+
+  4. Apple Developer Portal에서 App Group 등록 필요
+-->

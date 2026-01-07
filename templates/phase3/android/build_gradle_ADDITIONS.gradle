@@ -1,0 +1,122 @@
+/*
+  build.gradle에 추가할 내용 / Additions for build.gradle
+
+  위치 / Location: android/app/build.gradle
+
+  설명 / Description:
+  - Jetpack Glance 의존성
+  - WorkManager 의존성
+  - Kotlin Coroutines 의존성
+*/
+
+// ============================================
+// 1. 최소 SDK 버전 확인 / Check minimum SDK version
+// ============================================
+// android { defaultConfig { minSdkVersion } } 섹션에서
+// minSdkVersion이 최소 23 이상인지 확인하세요.
+// Glance requires Android 6.0 (API 23) or higher
+
+android {
+    defaultConfig {
+        minSdkVersion 23  // 최소 23 필요
+    }
+}
+
+
+// ============================================
+// 2. dependencies 블록에 추가 / Add to dependencies block
+// ============================================
+
+dependencies {
+    // Jetpack Glance for Widgets
+    implementation 'androidx.glance:glance-appwidget:1.0.0'
+    implementation 'androidx.glance:glance:1.0.0'
+
+    // WorkManager for Background Tasks
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+
+    // Kotlin Coroutines (이미 있을 수 있음)
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    // Compose UI (Glance가 Compose 기반이므로 필요)
+    implementation 'androidx.compose.ui:ui:1.5.4'
+    implementation 'androidx.compose.foundation:foundation:1.5.4'
+}
+
+
+// ============================================
+// 3. Kotlin 컴파일 옵션 확인 / Check Kotlin compile options
+// ============================================
+// android { kotlinOptions } 섹션에 다음 확인:
+
+android {
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+
+// ============================================
+// 4. buildFeatures에 Compose 활성화 / Enable Compose in buildFeatures
+// ============================================
+
+android {
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.5.4'
+    }
+}
+
+
+// ============================================
+// 완전한 예시 / Complete Example
+// ============================================
+
+/*
+android {
+    namespace 'com.gonow.gotimesaver'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.gonow.gotimesaver"
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = '1.5.4'
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    // Flutter 관련 (이미 있음)
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    // Jetpack Glance for Widgets
+    implementation 'androidx.glance:glance-appwidget:1.0.0'
+    implementation 'androidx.glance:glance:1.0.0'
+
+    // WorkManager for Background Tasks
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+
+    // Kotlin Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    // Compose UI
+    implementation 'androidx.compose.ui:ui:1.5.4'
+    implementation 'androidx.compose.foundation:foundation:1.5.4'
+}
+*/

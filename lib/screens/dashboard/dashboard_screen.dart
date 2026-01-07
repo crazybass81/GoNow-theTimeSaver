@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/trip_provider.dart';
 import '../../widgets/countdown_widget.dart';
 import '../../widgets/route_display_widget.dart';
 import '../../models/route_step.dart';
+import '../../models/trip.dart';
 import '../schedule/add_schedule_screen.dart';
 import '../settings/settings_screen.dart';
 import '../calendar/calendar_screen.dart';
@@ -11,20 +13,57 @@ import '../calendar/calendar_screen.dart';
 /// 대시보드 메인 화면 / Dashboard Main Screen
 ///
 /// **기능 / Features**:
-/// - 다음 일정 카운트다운
+/// - 다음 일정 카운트다운 (실시간 업데이트)
 /// - 경로 정보 표시
 /// - 이후 일정 3개 미리보기
 /// - "출발했어요" 버튼
 /// - 일정 추가 FAB
 ///
 /// **Context**: 로그인 후 메인 화면
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  /// 테스트용 Provider 주입 / Provider injection for testing
+  final dynamic authProviderOverride;
+  final dynamic tripProviderOverride;
+
+  const DashboardScreen({
+    super.key,
+    this.authProviderOverride,
+    this.tripProviderOverride,
+  });
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // TripProvider 초기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.authProviderOverride != null && widget.tripProviderOverride != null) {
+        // Test mode: use injected providers
+        if (widget.authProviderOverride.currentUser != null) {
+          widget.tripProviderOverride.initialize(widget.authProviderOverride.currentUser.id);
+        }
+      } else {
+        // Production mode: use Provider
+        final authProvider = context.read<AuthProvider>();
+        final tripProvider = context.read<TripProvider>();
+
+        if (authProvider.currentUser != null) {
+          tripProvider.initialize(authProvider.currentUser!.id);
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final authProvider = context.watch<AuthProvider>();
+    // Use injected providers in test mode, otherwise use Provider
+    final authProvider = widget.authProviderOverride ?? context.watch<AuthProvider>();
+    final tripProvider = widget.tripProviderOverride ?? context.watch<TripProvider>();
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -61,37 +100,52 @@ class DashboardScreen extends StatelessWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // TODO: 데이터 새로고침
-          await Future.delayed(const Duration(seconds: 1));
+          // 실제 데이터 새로고침 / Refresh data
+          if (authProvider.currentUser != null) {
+            await tripProvider.loadTrips(authProvider.currentUser!.id);
+          }
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 환영 메시지
-              _buildWelcomeSection(theme, authProvider),
-              const SizedBox(height: 24),
+        child: tripProvider.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : tripProvider.error != null
+                ? _buildErrorView(theme, tripProvider.error!)
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 환영 메시지
+                        _buildWelcomeSection(theme, authProvider),
+                        const SizedBox(height: 24),
 
-              // 다음 일정 카운트다운
-              _buildNextScheduleSection(theme),
-              const SizedBox(height: 24),
+                        // 다음 일정 카운트다운 또는 빈 상태
+                        tripProvider.upcomingTrip != null
+                            ? _buildNextScheduleSection(
+                                theme, tripProvider.upcomingTrip!)
+                            : _buildEmptyState(theme),
 
-              // 경로 정보
-              _buildRouteSection(theme),
-              const SizedBox(height: 24),
+                        if (tripProvider.upcomingTrip != null) ...[
+                          const SizedBox(height: 24),
 
-              // "출발했어요" 버튼
-              _buildDepartureButton(context, theme),
-              const SizedBox(height: 32),
+                          // 경로 정보
+                          _buildRouteSection(theme, tripProvider.upcomingTrip!),
+                          const SizedBox(height: 24),
 
-              // 이후 일정 미리보기
-              _buildUpcomingSchedulesSection(theme),
-              const SizedBox(height: 80), // FAB를 위한 여백
-            ],
-          ),
-        ),
+                          // "출발했어요" 버튼
+                          _buildDepartureButton(
+                              context, theme, tripProvider, tripProvider.upcomingTrip!),
+                          const SizedBox(height: 32),
+                        ],
+
+                        // 이후 일정 미리보기
+                        if (tripProvider.trips.length > 1)
+                          _buildUpcomingSchedulesSection(theme, tripProvider.trips),
+
+                        const SizedBox(height: 80), // FAB를 위한 여백
+                      ],
+                    ),
+                  ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -108,8 +162,85 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  /// 에러 뷰 / Error view
+  Widget _buildErrorView(ThemeData theme, String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: theme.colorScheme.error,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '데이터를 불러오는데 실패했습니다',
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () async {
+              final authProvider = context.read<AuthProvider>();
+              final tripProvider = context.read<TripProvider>();
+              if (authProvider.currentUser != null) {
+                await tripProvider.loadTrips(authProvider.currentUser!.id);
+              }
+            },
+            child: const Text('다시 시도'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 빈 상태 뷰 / Empty state view
+  Widget _buildEmptyState(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.event_busy,
+            size: 64,
+            color: theme.colorScheme.onSurface.withOpacity(0.4),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '예정된 일정이 없습니다',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '하단의 + 버튼을 눌러\n새로운 일정을 추가해보세요',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 환영 섹션 / Welcome section
-  Widget _buildWelcomeSection(ThemeData theme, AuthProvider authProvider) {
+  /// 환영 메시지 섹션 / Welcome message section
+  /// authProvider: AuthProvider 또는 테스트용 Mock / AuthProvider or Mock for testing
+  Widget _buildWelcomeSection(ThemeData theme, dynamic authProvider) {
     final userName = authProvider.currentUser?.userMetadata?['name'] as String?;
     final displayName = userName ?? '사용자';
 
@@ -133,13 +264,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  /// 다음 일정 섹션 / Next schedule section
-  Widget _buildNextScheduleSection(ThemeData theme) {
-    // TODO: 실제 일정 데이터로 대체
-    final now = DateTime.now();
-    final departureTime = now.add(const Duration(minutes: 25));
-    final targetTime = now.add(const Duration(minutes: 55));
-
+  /// 다음 일정 섹션 / Next schedule section (실제 데이터)
+  Widget _buildNextScheduleSection(ThemeData theme, Trip trip) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -181,17 +307,26 @@ class DashboardScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '강남역 스타벅스',
+                      trip.title,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${targetTime.hour}:${targetTime.minute.toString().padLeft(2, '0')} 도착 예정',
+                      '${trip.arrivalTime.hour}:${trip.arrivalTime.minute.toString().padLeft(2, '0')} 도착 예정',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      trip.destinationAddress,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -203,55 +338,28 @@ class DashboardScreen extends StatelessWidget {
 
         // 카운트다운 위젯
         CountdownWidget(
-          targetTime: targetTime,
-          departureTime: departureTime,
+          targetTime: trip.arrivalTime,
+          departureTime: trip.departureTime,
           onCountdownComplete: () {
             // TODO: 카운트다운 완료 시 알림
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('출발 시간입니다!')),
+            );
           },
         ),
       ],
     );
   }
 
-  /// 경로 섹션 / Route section
-  Widget _buildRouteSection(ThemeData theme) {
-    // TODO: 실제 경로 데이터로 대체
-    final sampleRouteSteps = [
-      RouteStep(
-        id: '1',
-        type: RouteStepType.walk,
-        duration: 5,
-        distance: 400,
-        description: '집에서 도보',
-      ),
-      RouteStep(
-        id: '2',
-        type: RouteStepType.bus,
-        lineName: '401',
-        lineColor: const Color(0xFF4CAF50),
-        duration: 15,
-        departureStation: '역삼역',
-        arrivalStation: '강남역',
-        arrivalInfo: '2분 후 도착',
-      ),
-      RouteStep(
-        id: '3',
-        type: RouteStepType.subway,
-        lineName: '2호선',
-        lineColor: const Color(0xFF4CAF50),
-        duration: 10,
-        departureStation: '강남역',
-        arrivalStation: '역삼역',
-      ),
-      RouteStep(
-        id: '4',
-        type: RouteStepType.walk,
-        duration: 5,
-        distance: 300,
-        description: '3번 출구로 나와서 직진',
-      ),
-    ];
+  /// 경로 섹션 / Route section (실제 데이터)
+  Widget _buildRouteSection(ThemeData theme, Trip trip) {
+    // routeData가 있으면 실제 경로 표시, 없으면 기본 정보만 표시
+    if (trip.routeData != null) {
+      // TODO: routeData를 RouteStep 리스트로 변환
+      // 현재는 기본 정보만 표시
+    }
 
+    // 간단한 경로 정보 표시
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -264,7 +372,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '추천 경로',
+              '이동 정보',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -273,42 +381,83 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        RouteDisplayWidget(
-          routeSteps: sampleRouteSteps,
-          totalTravelTime: 35,
-          totalDistance: 12500,
-          onChangeRoute: () {
-            // TODO: 다른 경로 보기
-          },
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    trip.transportMode == 'car'
+                        ? Icons.directions_car
+                        : Icons.directions_transit,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          trip.transportMode == 'car' ? '자동차' : '대중교통',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '예상 소요 시간: ${trip.travelDurationMinutes}분',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  /// 출발 버튼 / Departure button (실제 동작)
   /// 출발 버튼 / Departure button
-  Widget _buildDepartureButton(BuildContext context, ThemeData theme) {
+  /// tripProvider: TripProvider 또는 테스트용 Mock / TripProvider or Mock for testing
+  Widget _buildDepartureButton(
+      BuildContext context, ThemeData theme, dynamic tripProvider, Trip trip) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          // TODO: 출발 확인 다이얼로그 표시
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('출발 확인'),
-              content: const Text('출발하셨나요?\n출발 시간이 기록됩니다.'),
+              content: const Text('출발하셨나요?\n일정이 완료 처리됩니다.'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text('취소'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
-                    // TODO: 출발 기록 저장
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('출발 시간이 기록되었습니다')),
-                    );
+
+                    // 실제 Trip 완료 처리 / Complete trip
+                    await tripProvider.completeTrip(trip.id!);
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('일정이 완료되었습니다')),
+                      );
+                    }
                   },
                   child: const Text('출발했어요'),
                 ),
@@ -338,28 +487,12 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  /// 이후 일정 섹션 / Upcoming schedules section
-  Widget _buildUpcomingSchedulesSection(ThemeData theme) {
-    // TODO: 실제 일정 데이터로 대체
-    final upcomingSchedules = [
-      {
-        'title': '회의',
-        'time': '15:00',
-        'location': '삼성동 코엑스',
-      },
-      {
-        'title': '저녁 약속',
-        'time': '18:30',
-        'location': '홍대입구역 2번 출구',
-      },
-      {
-        'title': '영화 관람',
-        'time': '20:00',
-        'location': 'CGV 강남',
-      },
-    ];
+  /// 이후 일정 섹션 / Upcoming schedules section (실제 데이터)
+  Widget _buildUpcomingSchedulesSection(ThemeData theme, List<Trip> trips) {
+    // 현재 일정(첫 번째)을 제외한 나머지 일정 (최대 3개)
+    final upcomingTrips = trips.skip(1).take(3).toList();
 
-    if (upcomingSchedules.isEmpty) {
+    if (upcomingTrips.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -384,7 +517,7 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        ...upcomingSchedules.map((schedule) {
+        ...upcomingTrips.map((trip) {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
@@ -400,13 +533,13 @@ class DashboardScreen extends StatelessWidget {
                 Column(
                   children: [
                     Text(
-                      schedule['time']!.split(':')[0],
+                      trip.arrivalTime.hour.toString(),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      schedule['time']!.split(':')[1],
+                      trip.arrivalTime.minute.toString().padLeft(2, '0'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
@@ -419,7 +552,7 @@ class DashboardScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        schedule['title']!,
+                        trip.title,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -435,7 +568,7 @@ class DashboardScreen extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              schedule['location']!,
+                              trip.destinationAddress,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color:
                                     theme.colorScheme.onSurface.withOpacity(0.6),

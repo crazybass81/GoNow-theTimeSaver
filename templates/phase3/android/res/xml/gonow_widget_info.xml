@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GoNow 위젯 메타데이터 / GoNow Widget Metadata
+
+  위치 / Location: android/app/src/main/res/xml/gonow_widget_info.xml
+
+  설정 / Configuration:
+  - 최소 크기: 4x2 (가로 4칸, 세로 2칸)
+  - 업데이트 주기: 15분 (시스템 최소값)
+  - 초기 레이아웃: widget_initial_layout
+  - 크기 조절: 가능
+  - 위젯 카테고리: 홈 화면
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:updatePeriodMillis="900000"
+    android:initialLayout="@layout/widget_initial_layout"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description"
+    android:previewImage="@drawable/widget_preview" />

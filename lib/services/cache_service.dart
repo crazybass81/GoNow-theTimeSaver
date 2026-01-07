@@ -13,8 +13,15 @@
 /// **Context**: RouteService에서 사용
 class CacheService<T> {
   /// Singleton instance
-  static final CacheService _instance = CacheService._internal();
-  factory CacheService() => _instance;
+  static final Map<Type, CacheService> _instances = {};
+
+  factory CacheService() {
+    if (!_instances.containsKey(T)) {
+      _instances[T] = CacheService<T>._internal();
+    }
+    return _instances[T] as CacheService<T>;
+  }
+
   CacheService._internal();
 
   /// 캐시 저장소 / Cache storage

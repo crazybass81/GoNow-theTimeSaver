@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  strings.xml에 추가할 내용 / Additions for strings.xml
+
+  위치 / Location: android/app/src/main/res/values/strings.xml
+
+  설명 / Description:
+  - 위젯 관련 문자열 리소스
+  - 알림 관련 문자열 리소스
+-->
+
+<!--
+  다음 내용을 <resources> 태그 안에 추가하세요:
+  Add the following inside the <resources> tag:
+-->
+
+<resources>
+    <!-- Widget Strings -->
+    <string name="widget_description">다가오는 일정과 출발 시간을 표시합니다</string>
+    <string name="widget_name">GoNow 일정</string>
+
+    <!-- Notification Channels -->
+    <string name="notification_channel_reminders">일정 알림</string>
+    <string name="notification_channel_reminders_desc">일정 30분 전 알림</string>
+    <string name="notification_channel_urgent">긴급 알림</string>
+    <string name="notification_channel_urgent_desc">일정 10분 전 긴급 알림</string>
+
+    <!-- Widget Messages -->
+    <string name="widget_no_trip">일정이 없습니다</string>
+    <string name="widget_add_trip">새 일정을 추가하세요</string>
+    <string name="widget_loading">로딩 중...</string>
+
+    <!-- Time Formatting -->
+    <string name="time_hours">시간</string>
+    <string name="time_minutes">분</string>
+    <string name="time_late">지각!</string>
+
+    <!-- Status Messages -->
+    <string name="status_relaxed">✅ 여유있어요</string>
+    <string name="status_prepare">⚠️ 준비하세요</string>
+    <string name="status_urgent">🚨 지금 출발!</string>
+    <string name="status_late">❌ 지각 위험!</string>
+</resources>

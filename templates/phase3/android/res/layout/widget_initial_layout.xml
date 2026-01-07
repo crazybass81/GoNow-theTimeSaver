@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GoNow 위젯 초기 레이아웃 / GoNow Widget Initial Layout
+
+  위치 / Location: android/app/src/main/res/layout/widget_initial_layout.xml
+
+  설명 / Description:
+  - 위젯이 처음 추가될 때 보이는 레이아웃
+  - Glance가 로드되기 전 임시 UI
+  - 심플한 로딩 인디케이터 표시
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/widget_background"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📅"
+        android:textSize="32sp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GoNow 위젯"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="로딩 중..."
+        android:textSize="12sp"
+        android:textColor="#999999" />
+
+</LinearLayout>

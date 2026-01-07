@@ -1,0 +1,55 @@
+<!--
+  AndroidManifest.xml에 추가할 내용 / Additions for AndroidManifest.xml
+
+  위치 / Location: android/app/src/main/AndroidManifest.xml
+
+  설명 / Description:
+  - <application> 태그 내부에 추가
+  - Widget Receiver 등록
+  - WorkManager 초기화 설정
+-->
+
+<!--
+  다음 내용을 <application> 태그 안에 추가하세요:
+  Add the following inside the <application> tag:
+-->
+
+        <!-- GoNow Widget Receiver -->
+        <receiver
+            android:name=".GoNowWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/gonow_widget_info" />
+        </receiver>
+
+        <!-- WorkManager Configuration -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup" />
+        </provider>
+
+
+<!--
+  추가 권한 / Additional Permissions:
+
+  다음 권한을 <manifest> 태그 안에 추가하세요:
+  Add the following permissions inside the <manifest> tag:
+-->
+
+    <!-- 정확한 알람 권한 (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- WorkManager를 위한 WAKE_LOCK -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- 인터넷 권한 (이미 있을 수 있음) -->
+    <uses-permission android:name="android.permission.INTERNET" />
