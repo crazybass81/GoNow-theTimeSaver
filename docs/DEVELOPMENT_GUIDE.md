@@ -292,16 +292,34 @@ flutter pub get
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
+
+  # UI & Core
+  cupertino_icons: ^1.0.6
   provider: ^6.1.0
-  supabase_flutter: ^2.0.0
-  flutter_local_notifications: ^16.0.0
-  timezone: ^0.9.2
-  table_calendar: ^3.0.9
-  dio: ^5.4.0
-  flutter_dotenv: ^5.1.0
-  geolocator: ^10.1.0
   intl: ^0.18.1
+  table_calendar: ^3.0.9
+
+  # Backend & Auth
+  supabase_flutter: ^2.0.0
+
+  # Notifications
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
+
+  # HTTP & Network
+  dio: ^5.4.0
+  http: ^1.1.0
+
+  # Location & Maps
+  geolocator: ^11.0.0
+  geocoding: ^2.1.1
+
+  # Storage & Config
+  shared_preferences: ^2.2.2
+  flutter_dotenv: ^5.1.0
+
+  # JSON Serialization
+  json_annotation: ^4.8.1
 ```
 
 ---
@@ -318,11 +336,7 @@ nano .env
 
 **.env 내용**:
 ```env
-# Naver API (Transit only)
-NAVER_CLIENT_ID=your_client_id_here
-NAVER_CLIENT_SECRET=your_client_secret_here
-
-# TMAP API (Routes & POI Search)
+# TMAP API (Routes, POI Search, Public Transit)
 TMAP_APP_KEY=your_tmap_app_key_here
 
 # Supabase (로컬 개발)
@@ -331,11 +345,10 @@ SUPABASE_ANON_KEY=your_local_anon_key_here
 ```
 
 **API 키 발급**:
-- **TMAP API**: https://openapi.sk.com/ (Routes, POI Search)
-- **Naver API**: https://www.ncloud.com/product/applicationService/maps (Transit only)
+- **TMAP API**: https://openapi.sk.com/ (Routes, POI Search, Public Transit)
 - **Supabase**: 로컬 환경은 `supabase start` 후 자동 생성
 
-**Note**: 2025-01-07부터 자차 경로 계산은 TMAP Routes API를 사용합니다. 자세한 내용은 [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)를 참고하세요.
+**Note**: 2025-01-07부터 모든 경로 계산(자차, 대중교통)에 TMAP API를 사용합니다. 자세한 내용은 [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md)를 참고하세요.
 
 ---
 
@@ -661,16 +674,50 @@ A: Android는 USB 디버깅 활성화, iOS는 Apple Developer 계정과 프로�
 
 개발 환경 설정이 완료되었는지 확인하세요:
 
+### 1단계: 기본 환경 설정
 - [ ] Flutter SDK 설치 및 `flutter doctor` 통과
 - [ ] Android Studio / Xcode 설치
-- [ ] Supabase CLI 설치
-- [ ] 프로젝트 클론 완료
+- [ ] Supabase CLI 설치 (`supabase --version`)
+- [ ] Docker Desktop 설치 및 실행 중
+- [ ] Git 설치 확인 (`git --version`)
+
+### 2단계: 프로젝트 설정
+- [ ] 프로젝트 클론 완료 (`git clone`)
 - [ ] `flutter create .` 실행 (android/, ios/ 생성)
-- [ ] `flutter pub get` 성공
-- [ ] `.env` 파일 설정 완료
+- [ ] `flutter pub get` 성공 (모든 의존성 설치)
+
+### 3단계: API 키 발급
+- [ ] TMAP API 키 발급 (https://openapi.sk.com/)
+  - Routes API 권한 확인
+  - POI Search API 권한 확인
+  - Public Transit API 권한 확인
+
+### 4단계: 환경 변수 설정
+- [ ] `.env` 파일 생성 (`.env.example` 복사)
+- [ ] TMAP_APP_KEY 설정
+- [ ] SUPABASE_URL 설정
+- [ ] SUPABASE_ANON_KEY 설정
+
+### 5단계: Supabase 로컬 환경
 - [ ] `supabase start` 성공
+- [ ] Supabase Studio 접속 (http://127.0.0.1:54323)
+- [ ] `trips` 테이블 확인
+- [ ] RLS 정책 활성화 확인
+
+### 6단계: 앱 실행 및 테스트
 - [ ] `flutter run` 성공 (앱 실행됨)
-- [ ] Hot Reload 작동 확인
+- [ ] 로그인 화면 표시 확인
+- [ ] Hot Reload 작동 확인 (`r` 키)
+- [ ] 서비스 초기화 로그 확인 (모두 TMAP API 사용):
+  - RouteService: Initialized successfully (자차 경로)
+  - TransitService: Initialized successfully (대중교통 경로)
+  - POISearchService: Initialized successfully (장소 검색)
+
+### 7단계: 기능 테스트
+- [ ] 회원가입/로그인 동작 확인
+- [ ] 장소 검색 (POI Search) 동작 확인
+- [ ] 일정 추가 기능 확인
+- [ ] 경로 계산 기능 확인
 
 ---
 
