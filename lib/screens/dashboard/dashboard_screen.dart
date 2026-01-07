@@ -6,7 +6,7 @@ import '../../widgets/circular_timer_widget.dart';
 import '../../widgets/route_display_widget.dart';
 import '../../models/route_step.dart';
 import '../../models/trip.dart';
-import '../schedule/add_schedule_screen.dart';
+import '../schedule/add_schedule_screen_new.dart';
 import '../settings/settings_screen.dart';
 import '../calendar/calendar_screen.dart';
 
@@ -152,7 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const AddScheduleScreen(),
+              builder: (context) => const AddScheduleScreenNew(),
             ),
           );
         },
