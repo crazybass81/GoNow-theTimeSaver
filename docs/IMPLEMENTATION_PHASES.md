@@ -3,8 +3,15 @@
 > **MVP 개발 Phase 1~5 상세 구현 가이드**
 
 **최종 업데이트**: 2026-01-07
-**문서 버전**: 1.3
+**문서 버전**: 2.0
 **프로젝트 상태**: Phase 4 진행 중 (~90% 완료)
+
+**주요 변경사항 v2.0**:
+- ✅ 전체 진행률 수정: 92% → 65% (실제 완료 상태 반영)
+- ✅ Task 1.3.1: 원형 타이머 상세 구현 문서화 (CircularProgressIndicator)
+- ✅ Task 1.4.4: ScheduleDetailScreen 전체 추가 (579줄, 579라인 화면 문서화)
+- ✅ Task 1.5.2: Settings 화면 상세 확장 (ReorderableListView, Dialog 패턴)
+- ✅ Task 1.2.4: MainWrapper 네비게이션 구조 추가 (PageView, 탭 전환)
 
 ---
 
@@ -31,7 +38,7 @@
 | **Phase 4** | Integration & QA | Day 16~20 | 🚧 진행 중 (90%) | - |
 | **Phase 5** | Launch Preparation | Day 21~25 | ⏳ 대기 | - |
 
-**전체 MVP 진행률**: ~92%
+**전체 MVP 진행률**: ~65%
 
 ---
 
@@ -86,10 +93,112 @@
   - Supabase Auth 완전 통합 (signIn, signUp, signOut, resetPassword)
   - 실시간 인증 상태 변경 감지
   - 한글 에러 메시지 처리
+- ✅ **SubTask 1.2.4**: MainWrapper 네비게이션 구조
+  **참조 파일**: `lib/screens/main_wrapper.dart` (152줄)
 
-**산출물**: `lib/screens/auth/login_screen.dart`, `lib/screens/auth/signup_screen.dart`, `lib/providers/auth_provider.dart`
+  **핵심 구현**: PageView + BottomNavigationBar
 
-**완료 기준**: 로그인/회원가입 성공 시 대시보드로 네비게이션
+  **UI 구조**:
+  - PageView: 4개 화면 (Home, Calendar, AddSchedule, Settings)
+  - PageView Controller: 화면 전환 애니메이션
+  - BottomNavigationBar: 4개 탭 (홈/캘린더/추가/설정)
+  - Pill-shaped 인디케이터: 선택된 탭 강조
+
+  **상태 관리**:
+  - SharedPreferences: 마지막 선택 탭 저장
+  - 앱 재시작 시 마지막 탭으로 복원
+  - `_currentIndex` 상태 변수
+
+  **구현 예시**:
+  ```dart
+  class MainWrapper extends StatefulWidget {
+    @override
+    _MainWrapperState createState() => _MainWrapperState();
+  }
+
+  class _MainWrapperState extends State<MainWrapper> {
+    late PageController _pageController;
+    int _currentIndex = 0;
+
+    @override
+    void initState() {
+      super.initState();
+      _pageController = PageController(initialPage: _currentIndex);
+      _loadLastTab();
+    }
+
+    Future<void> _loadLastTab() async {
+      final prefs = await SharedPreferences.getInstance();
+      final lastIndex = prefs.getInt('last_tab_index') ?? 0;
+      setState(() {
+        _currentIndex = lastIndex;
+        _pageController.jumpToPage(lastIndex);
+      });
+    }
+
+    Future<void> _saveTab(int index) async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('last_tab_index', index);
+    }
+
+    void _onTabTapped(int index) {
+      setState(() {
+        _currentIndex = index;
+      });
+      _pageController.animateToPage(
+        index,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      _saveTab(index);
+    }
+
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        body: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            _saveTab(index);
+          },
+          children: [
+            HomeScreen(),
+            CalendarScreen(),
+            AddScheduleScreen(),
+            SettingsScreen(),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+            BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: '캘린더'),
+            BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: '추가'),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: '설정'),
+          ],
+        ),
+      );
+    }
+  }
+  ```
+
+  **네비게이션 플로우**:
+  - LoginScreen (인증 성공) → MainWrapper (Home 탭)
+  - 앱 재시작 → MainWrapper (마지막 탭)
+  - 탭 전환 시 애니메이션 (300ms, easeInOut)
+
+**산출물**:
+- `lib/screens/auth/login_screen.dart`
+- `lib/screens/auth/signup_screen.dart`
+- `lib/providers/auth_provider.dart`
+- `lib/screens/main_wrapper.dart` (152줄) ✅
+
+**완료 기준**: 로그인/회원가입 성공 시 MainWrapper로 네비게이션, 탭 전환 정상 작동
 
 ---
 
@@ -98,12 +207,70 @@
 **목표**: 메인 대시보드 화면 및 핵심 위젯 완성
 
 #### 주요 작업
-- ✅ **SubTask 1.3.1**: 카운트다운 컴포넌트
-  - 시/분/초 표시
-  - 프로그레스 바 (선형 + 도트 10개)
-  - 색상 시스템 (초록→주황→빨강→진한빨강)
-  - 긴급 상태 펄스 애니메이션
-  - 시간 상태 메시지
+- ✅ **SubTask 1.3.1**: 원형 타이머 컴포넌트 (_buildCircularTimer)
+  **참조 파일**: `lib/screens/home_screen.dart` (476줄, Line 184-244)
+  **핵심 구현**: CircularProgressIndicator + Stack 레이아웃
+
+  **디자인 토큰**:
+  - 컨테이너: 250×250px, 흰색 배경, boxShadow (0,4) blur 20
+  - 진행 링: 230×230px, strokeWidth: 12
+  - 색상: blue[600] (진행 상태), grey[200] (배경)
+  - 타이머 텍스트: 64px bold (숫자), 16px normal (설명)
+
+  **타이머 계산 로직**:
+  - `remainingMinutes`: 다음 스케줄까지 남은 시간 (분)
+  - `progress value`: 1 - (remainingMinutes / totalMinutes)
+  - 실시간 업데이트: 1분마다 재계산
+  - 시간대별 색상 시스템: 초록(충분) → 주황(주의) → 빨강(긴급) → 진한빨강(출발)
+
+  **구현 예시**:
+  ```dart
+  Widget _buildCircularTimer() {
+    return Center(
+      child: SizedBox(
+        width: 250,
+        height: 250,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 230,
+              height: 230,
+              child: CircularProgressIndicator(
+                value: 0.65,
+                strokeWidth: 12,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('45', fontSize: 64, fontWeight: bold, color: blue[600]),
+                Text('분 후 출발', fontSize: 16, color: grey[600]),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  ```
 - ✅ **SubTask 1.3.2**: 경로 표시 컴포넌트
   - 대중교통 경로 리스트 (버스/지하철/도보)
   - 교통수단별 아이콘 및 색상
@@ -142,10 +309,67 @@
     - 일정 마무리 시간
   - 최종 계산 요약 표시
   - 저장 버튼
+- ✅ **SubTask 1.4.4**: 스케줄 상세 화면 (ScheduleDetailScreen)
+  **참조 파일**: `lib/screens/schedule_detail_screen.dart` (579줄)
+  **참조 명세**: GO_NOW_COMPLETE_MVP_SPEC.md Section 3.5 (479줄)
 
-**산출물**: `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
+  **UI 구조**:
+  - **Date Header Card**: blue[600] 배경, 날짜/요일 표시
+  - **Info Cards**: 시간, 장소, 이동 방식 정보 (3개 카드)
+  - **Time Items Cards**: 준비 시간, 마무리 시간 표시
+  - **Color Card**: 스케줄 색상 표시 (60×60px 컬러 박스)
+  - **Action Buttons**: 복제/수정/삭제 버튼 (Row 레이아웃)
 
-**완료 기준**: 모든 슬라이더 작동, 계산 요약 표시, 저장 버튼 구현
+  **Action Buttons 구현**:
+  ```dart
+  Container(
+    padding: const EdgeInsets.all(16),
+    child: Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _handleDuplicate,
+            icon: const Icon(Icons.content_copy, size: 18),
+            label: const Text('복제'),
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _handleEdit,
+            icon: const Icon(Icons.edit, size: 18),
+            label: const Text('수정'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[600],
+            ),
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _handleDelete,
+            icon: const Icon(Icons.delete_outline, size: 18),
+            label: const Text('삭제'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[400],
+            ),
+          ),
+        ),
+      ],
+    ),
+  )
+  ```
+
+  **네비게이션**:
+  - DashboardScreen 스케줄 카드 탭 → ScheduleDetailScreen
+  - 수정 버튼 → AddScheduleScreen (edit mode)
+  - 삭제 버튼 → 확인 Dialog → Supabase 삭제
+
+**산출물**:
+- `lib/screens/schedule/add_schedule_screen.dart` (4-step integrated)
+- `lib/screens/schedule_detail_screen.dart` (579줄) ✅
+
+**완료 기준**: 모든 슬라이더 작동, 계산 요약 표시, 저장 버튼 구현, 스케줄 상세 화면 완성
 
 ---
 
@@ -158,11 +382,74 @@
   - table_calendar 패키지 사용
   - 날짜별 일정 개수 표시
   - 선택된 날짜의 일정 리스트
-- ✅ **SubTask 1.5.2**: 설정 화면 UI
-  - 4가지 버퍼 시간 기본값 설정
-  - 알림 설정 (30분 전, 10분 전)
-  - 계정 관리 (프로필, 비밀번호 변경, 로그아웃)
-  - 앱 정보 (버전, 약관, 개인정보 처리방침)
+- ✅ **SubTask 1.5.2**: 설정 화면 UI (SettingsScreen)
+  **참조 파일**: `lib/screens/settings_screen.dart` (880줄)
+  **참조 명세**: GO_NOW_COMPLETE_MVP_SPEC.md Section 3.4
+
+  **UI 구조 (4개 섹션)**:
+
+  **1. 버퍼 시간 설정 섹션**:
+  - ReorderableListView: 드래그 앤 드롭으로 순서 변경 가능
+  - 4가지 시간 항목 (준비 시간, 이동 오차율, 일찍 도착, 마무리 시간)
+  - 각 항목: ListTile + trailing IconButton (edit/delete)
+  - Add 버튼: FloatingActionButton (화면 우하단)
+
+  **시간 항목 추가/수정 Dialog**:
+  ```dart
+  AlertDialog(
+    title: Text('시간 항목 추가'),
+    content: Column(
+      children: [
+        TextField(
+          decoration: InputDecoration(labelText: '항목 이름'),
+          controller: _nameController,
+        ),
+        TextField(
+          decoration: InputDecoration(labelText: '시간 (분)'),
+          keyboardType: TextInputType.number,
+          controller: _minutesController,
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text('취소'),
+      ),
+      ElevatedButton(
+        onPressed: _saveTimeItem,
+        child: Text('저장'),
+      ),
+    ],
+  )
+  ```
+
+  **2. 알림 설정 섹션**:
+  - ListTile + Switch: "30분 전 알림" (기본: ON)
+  - ListTile + Switch: "10분 전 긴급 알림" (기본: ON)
+  - SharedPreferences 저장
+
+  **3. 계정 관리 섹션**:
+  - ListTile: "프로필 수정" (→ 프로필 화면)
+  - ListTile: "비밀번호 변경" (→ 비밀번호 변경 화면)
+  - ListTile: "로그아웃" (위험 색상, 확인 Dialog)
+
+  **4. 앱 정보 섹션**:
+  - ListTile: "앱 버전" (trailing: "1.0.0")
+  - ListTile: "이용약관" (→ WebView 또는 외부 링크)
+  - ListTile: "개인정보 처리방침" (→ WebView 또는 외부 링크)
+
+  **ListTile 디자인 패턴**:
+  - leading: Icon (24×24px, grey[600])
+  - title: Text (16px, bold)
+  - subtitle: Text (14px, grey[500]) - 선택적
+  - trailing: IconButton, Switch, 또는 Text
+  - onTap: 네비게이션 또는 Dialog 표시
+
+  **상태 관리**:
+  - SettingsProvider: 버퍼 시간, 알림 설정 관리
+  - SharedPreferences: 로컬 저장
+  - Supabase: 사용자별 설정 동기화
 - ⏳ **SubTask 1.5.3**: UI 통합 테스트 (Phase 4로 연기)
 
 **산출물**: `lib/screens/calendar/calendar_screen.dart`, `lib/screens/settings/settings_screen.dart`
