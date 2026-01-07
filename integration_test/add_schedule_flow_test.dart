@@ -85,7 +85,7 @@ class MockAuthProvider extends ChangeNotifier implements AuthProvider {
 /// Mock Supabase User
 class MockUser implements supabase.User {
   @override
-  final String id = 'test_user_id';
+  final String id = '550e8400-e29b-41d4-a716-446655440000';
 
   @override
   final String? email = 'test@example.com';
