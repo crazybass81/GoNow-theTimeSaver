@@ -347,111 +347,251 @@ void scheduleNotification(Trip trip) {
 | **Frontend** | Flutter 3.x (Dart) | 크로스 플랫폼 개발 효율성, 빠른 UI 렌더링 |
 | **iOS Widget** | SwiftUI + WidgetKit | 홈 화면 위젯 (iOS 14+) |
 | **Android Widget** | Jetpack Glance | 홈 화면 위젯 (Flutter 호환성 우수) |
-| **Maps (자차)** | Naver Directions API | 한국 시장 정확도 최우선, 실시간 교통 |
-| **Maps (대중교통)** | Naver Transit API | 버스/지하철 실시간 경로 |
+| **Routes (자차)** | TMAP Routes API | 실시간 교통 반영, GeoJSON 표준 경로 포맷 |
+| **POI Search** | TMAP POI Search API | 실시간 장소 검색, WGS84 좌표 제공 |
+| **Transit (대중교통)** | TMAP Public Transit API | 버스/지하철 실시간 경로, 환승 정보 |
+| **Location** | Geolocator + Geocoding | GPS 위치, 주소 변환 |
 | **Database** | Supabase (PostgreSQL) | 실시간 동기화, 확장성, Row Level Security |
 | **Notifications** | flutter_local_notifications | 로컬 푸시 알림 |
-| **State Management** | Provider / Riverpod | 반응형 상태 관리 |
+| **State Management** | Provider | 반응형 상태 관리 |
+| **HTTP Client** | Dio | API 통신, 인터셉터, 에러 핸들링 |
 
 ### 2.3 API 연동 예시 코드
 
-#### Naver Maps - 자차 경로 탐색
+> **2026-01-07 업데이트**: Naver API → TMAP API 완전 전환 완료
+
+#### TMAP Routes API - 자차 경로 탐색
 
 ```dart
 // lib/services/route_service.dart
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:dio/dio.dart';
 
 class RouteService {
-  static const String _baseUrl = 'https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving';
+  static final RouteService _instance = RouteService._internal();
+  factory RouteService() => _instance;
+  RouteService._internal();
 
-  /// 자차 경로 탐색 및 소요 시간 계산
+  late Dio _dio;
+  static const String _baseUrl = 'https://apis.openapi.sk.com';
+
+  void initialize() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: _baseUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'appKey': dotenv.env['TMAP_APP_KEY']!,
+        },
+      ),
+    );
+  }
+
+  /// 자차 경로 탐색 및 소요 시간 계산 / Calculate driving route with real-time traffic
   ///
-  /// **비즈니스 규칙**: 실시간 교통 반영 필수
+  /// **비즈니스 규칙 / Business Rule**: 실시간 교통 정보 반영 필수
   /// **Context**: 사용자가 목적지 입력 시 자동 호출
-  static Future<RouteResult> calculateRoute({
-    required LatLng origin,
-    required LatLng destination,
+  ///
+  /// @param originLat - 출발지 위도 (WGS84)
+  /// @param originLng - 출발지 경도 (WGS84)
+  /// @param destLat - 목적지 위도 (WGS84)
+  /// @param destLng - 목적지 경도 (WGS84)
+  /// @returns RouteResult with duration, distance, traffic info
+  Future<RouteResult> calculateRoute({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+    String option = 'trafast', // trafast, tracomfort, traoptimal
   }) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl?start=${origin.longitude},${origin.latitude}'
-          '&goal=${destination.longitude},${destination.latitude}'
-          '&option=trafast'), // 실시간 빠른길
-      headers: {
-        'X-NCP-APIGW-API-KEY-ID': naverClientId,
-        'X-NCP-APIGW-API-KEY': naverClientSecret,
+    final response = await _dio.post(
+      '/tmap/routes?version=1',
+      data: {
+        'startX': originLng.toString(),
+        'startY': originLat.toString(),
+        'endX': destLng.toString(),
+        'endY': destLat.toString(),
+        'reqCoordType': 'WGS84GEO',
+        'resCoordType': 'WGS84GEO',
+        'searchOption': _mapRouteOption(option),
+        'trafficInfo': 'Y',
       },
     );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final route = data['route']['trafast'][0];
+    final data = response.data;
+    final features = data['features'] as List<dynamic>;
+    final properties = features[0]['properties'];
 
-      return RouteResult(
-        duration: route['summary']['duration'] ~/ 1000, // 초 → 분
-        distance: route['summary']['distance'] ~/ 1000, // 미터 → km
-        trafficLevel: _parseTrafficLevel(route['summary']['trafficColor']),
-        path: route['path'], // 경로 좌표
-      );
-    } else {
-      throw Exception('경로 탐색 실패: ${response.statusCode}');
+    return RouteResult(
+      durationMinutes: ((properties['totalTime'] ?? 0) / 60).ceil(),
+      distanceKm: ((properties['totalDistance'] ?? 0) / 1000).toDouble(),
+      path: _extractPath(features), // GeoJSON LineString
+      tollFare: properties['totalFare'] ?? 0,
+      taxiFare: properties['taxiFare'] ?? 0,
+    );
+  }
+
+  int _mapRouteOption(String option) {
+    switch (option) {
+      case 'trafast': return 2;      // 최단시간
+      case 'tracomfort': return 0;   // 추천
+      case 'traoptimal': return 0;   // 추천
+      default: return 0;
     }
   }
 
-  static TrafficLevel _parseTrafficLevel(int colorCode) {
-    switch (colorCode) {
-      case 1: return TrafficLevel.smooth; // 원활
-      case 2: return TrafficLevel.slow; // 지체
-      case 3: return TrafficLevel.congested; // 정체
-      default: return TrafficLevel.unknown;
+  List<Map<String, double>>? _extractPath(List<dynamic> features) {
+    final paths = <Map<String, double>>[];
+    for (final feature in features) {
+      if (feature['geometry']?['type'] == 'LineString') {
+        final coordinates = feature['geometry']['coordinates'] as List<dynamic>;
+        for (final coord in coordinates) {
+          paths.add({
+            'lng': (coord[0] as num).toDouble(),
+            'lat': (coord[1] as num).toDouble(),
+          });
+        }
+      }
     }
+    return paths.isEmpty ? null : paths;
   }
 }
 ```
 
-#### Naver Transit - 대중교통 경로 탐색
+#### TMAP POI Search API - 장소 검색
+
+```dart
+// lib/services/poi_search_service.dart
+class POISearchService {
+  static final POISearchService _instance = POISearchService._internal();
+  factory POISearchService() => _instance;
+  POISearchService._internal();
+
+  late Dio _dio;
+
+  void initialize() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://apis.openapi.sk.com',
+        headers: {'appKey': dotenv.env['TMAP_APP_KEY']!},
+      ),
+    );
+  }
+
+  /// 장소 검색 / Search places by keyword
+  ///
+  /// **비즈니스 규칙 / Business Rule**: 최대 20개 결과 반환 (TMAP API 정책)
+  /// **Context**: 일정 추가 화면에서 목적지 검색 시 호출
+  ///
+  /// @param keyword - 검색 키워드 (예: "강남역", "스타벅스")
+  /// @param count - 결과 개수 (기본 10개, 최대 20개)
+  /// @returns List<POIResult> with name, address, coordinates
+  Future<List<POIResult>> searchPOI({
+    required String keyword,
+    int count = 10,
+  }) async {
+    if (keyword.trim().isEmpty) return [];
+
+    final response = await _dio.get(
+      '/tmap/pois',
+      queryParameters: {
+        'version': '1',
+        'searchKeyword': keyword,
+        'resCoordType': 'WGS84GEO',
+        'reqCoordType': 'WGS84GEO',
+        'count': count.toString(),
+      },
+    );
+
+    final data = response.data;
+    final searchPoiInfo = data['searchPoiInfo'];
+    final pois = searchPoiInfo['pois']['poi'] as List<dynamic>;
+
+    return pois.map((poi) {
+      return POIResult(
+        id: poi['id'] ?? '',
+        name: poi['name'] ?? '',
+        address: poi['upperAddrName'] ?? '',
+        lat: double.parse(poi['noorLat'] ?? '0'),
+        lng: double.parse(poi['noorLon'] ?? '0'),
+        category: poi['firstNo'] ?? '',
+        telNo: poi['telNo'],
+        roadAddress: poi['middleAddrName'],
+      );
+    }).toList();
+  }
+}
+```
+
+#### TMAP Public Transit API - 대중교통 경로
 
 ```dart
 // lib/services/transit_service.dart
 class TransitService {
-  static const String _baseUrl = 'https://naveropenapi.apigw.ntruss.com/map-direction/v1/transit';
+  static final TransitService _instance = TransitService._internal();
+  factory TransitService() => _instance;
+  TransitService._internal();
 
-  /// 대중교통 경로 탐색 (버스/지하철 통합)
+  late Dio _dio;
+
+  void initialize() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://apis.openapi.sk.com',
+        headers: {
+          'Content-Type': 'application/json',
+          'appKey': dotenv.env['TMAP_APP_KEY']!,
+        },
+      ),
+    );
+  }
+
+  /// 대중교통 경로 탐색 (버스/지하철) / Calculate public transit route
   ///
-  /// **비즈니스 규칙**: 환승 시간 자동 반영 (도보 5분, 버스 3분)
-  static Future<TransitRoute> getTransitRoute({
-    required LatLng origin,
-    required LatLng destination,
+  /// **비즈니스 규칙 / Business Rule**: 환승 시간 자동 반영
+  /// **Context**: 교통 수단 '대중교통' 선택 시 호출
+  ///
+  /// @returns List<TransitRoute> - 복수 경로 옵션 제공
+  Future<List<TransitRoute>> calculateTransitRoute({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
   }) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl?start=${origin.longitude},${origin.latitude}'
-          '&goal=${destination.longitude},${destination.latitude}'),
-      headers: {
-        'X-NCP-APIGW-API-KEY-ID': naverClientId,
-        'X-NCP-APIGW-API-KEY': naverClientSecret,
+    final response = await _dio.post(
+      '/tmap/routes/pedestrian?version=1',
+      data: {
+        'startX': originLng.toString(),
+        'startY': originLat.toString(),
+        'endX': destLng.toString(),
+        'endY': destLat.toString(),
+        'reqCoordType': 'WGS84GEO',
+        'resCoordType': 'WGS84GEO',
+        'searchOption': '0', // 추천 경로
       },
     );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final route = data['route']['trafast'][0];
+    final data = response.data;
+    final features = data['features'] as List<dynamic>;
+    final properties = features[0]['properties'];
 
-      return TransitRoute(
-        totalDuration: route['summary']['duration'] ~/ 60, // 초 → 분
-        segments: _parseSegments(route['legs']),
-      );
-    } else {
-      throw Exception('대중교통 경로 탐색 실패');
-    }
+    return [
+      TransitRoute(
+        durationMinutes: ((properties['totalTime'] ?? 0) / 60).ceil(),
+        distanceMeters: properties['totalDistance'] ?? 0,
+        transferCount: 0, // TMAP API는 환승 정보 별도 파싱 필요
+        segments: _parseSegments(features),
+      )
+    ];
   }
 
-  static List<TransitSegment> _parseSegments(List<dynamic> legs) {
-    return legs.map((leg) {
+  List<TransitSegment> _parseSegments(List<dynamic> features) {
+    // GeoJSON features에서 경로 구간 파싱
+    return features.where((f) => f['geometry'] != null).map((feature) {
+      final props = feature['properties'];
       return TransitSegment(
-        type: leg['mode'], // 'BUS', 'SUBWAY', 'WALK'
-        name: leg['route']?['name'], // '버스 472번', '지하철 2호선'
-        duration: leg['duration'] ~/ 60,
-        distance: leg['distance'],
+        type: props['facilityType'] ?? 'WALK',
+        duration: ((props['time'] ?? 0) / 60).ceil(),
+        distance: props['distance'] ?? 0,
       );
     }).toList();
   }
@@ -1151,225 +1291,665 @@ class SupabaseService {
 
 ## 📱 3. MVP Screens / 화면 설계
 
-### 3.1 대시보드 (Main Screen)
+> **2026-01-07 업데이트**: 참조 레포지토리 UI 패턴 반영 (https://github.com/khyapple/go_now)
 
-**목적**: 다음 일정의 출발 시간 카운트다운 표시
+### 3.0 내비게이션 구조 (MainWrapper)
+
+**구현 패턴**: PageView + Custom Bottom Indicator (not BottomNavigationBar)
+
+```dart
+// lib/screens/main_wrapper.dart 참조
+class MainWrapper extends StatefulWidget {
+  @override
+  State<MainWrapper> createState() => _MainWrapperState();
+}
+
+class _MainWrapperState extends State<MainWrapper> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) => setState(() => _currentPage = index),
+        children: [
+          HomeScreen(),      // 홈 (일정 목록)
+          CalendarScreen(),  // 캘린더
+        ],
+      ),
+      bottomNavigationBar: _buildCustomIndicator(),
+    );
+  }
+
+  Widget _buildCustomIndicator() {
+    return Container(
+      height: 60,
+      color: Colors.white,
+      child: Row(
+        children: [
+          _buildTab(0, "홈"),
+          _buildTab(1, "캘린더"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTab(int index, String label) {
+    final isActive = _currentPage == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _pageController.animateToPage(
+          index,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isActive ? Colors.blue[600] : Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? Colors.blue[600]! : Colors.grey[300]!,
+                width: 3,
+              ),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isActive ? Colors.white : Colors.grey[600],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+**Design System**:
+- **Primary Color**: `Colors.blue[600]` (#1E88E5)
+- **Active Tab**: Blue background, white text
+- **Inactive Tab**: White background, grey text
+- **Animation**: 300ms easeInOut
+- **Navigation**: Swipe 가능한 PageView
+
+---
+
+### 3.1 홈 화면 (HomeScreen)
+
+**목적**: 경로별 일정 목록 표시 및 다음 스케줄 강조
+
+**UI Structure** (참조: `home_screen.dart`):
 
 ```
 ┌─────────────────────────────────────┐
-│  [☰]    Go Now           [👤]       │
+│  Go Now           [📅] [⚙️]         │  AppBar (28px title)
+├─────────────────────────────────────┤
 │                                     │
-│       🏢 강남역 오피스               │
-│      오전 10:00 도착 목표            │
+│  ┌─ Route Selection ─────────────┐ │  ExpansionTile
+│  │  🚗 강남 → 판교 ▼             │ │
+│  └─────────────────────────────────┘ │
+│  (펼치면 경로 목록 표시)             │
 │                                     │
-│  ┌─────────────────────────────┐   │
-│  │                             │   │
-│  │        🚨 15분 남음         │   │
-│  │      ●●●●●●●●○○             │   │
-│  │                             │   │
-│  │   09:25까지 집을 나가세요   │   │
-│  │                             │   │
-│  └─────────────────────────────┘   │
+│  ╔═════════════════════════════════╗ │  Next Schedule Section
+│  ║ 다음 스케줄 (1)                 ║ │  (blue[100] background)
+│  ╚═════════════════════════════════╝ │
 │                                     │
-│  ┌───────────────────────────────┐ │
-│  │     [출발했어요] 버튼         │ │
-│  └───────────────────────────────┘ │
+│  ┌─────────────────────────────────┐ │  Schedule Card
+│  │ ┌──────┐                        │ │
+│  │ │ 09:25│  📍 강남역 오피스      │ │  60×60px time box
+│  │ │ AM   │  🚗 자차 · 25분        │ │  colored by schedule
+│  │ └──────┘  ⏱️ 15분 남음          │ │
+│  │           ────────────────────→ │ │  Right arrow
+│  └─────────────────────────────────┘ │
 │                                     │
-│  ─── 선택한 경로 ───                │
+│  ┌─ Upcoming ──────────────────────┐ │  Upcoming Section
+│  │                                 │ │
+│  │  ┌───────────────────────────┐ │ │
+│  │  │ ┌──────┐                  │ │ │
+│  │  │ │ 02:00│  📞 클라이언트    │ │ │  Regular card
+│  │  │ │ PM   │  🚇 대중교통 32분 │ │ │  (white background)
+│  │  │ └──────┘  📍 삼성역         │ │ │
+│  │  └───────────────────────────┘ │ │
+│  │                                 │ │
+│  │  ┌───────────────────────────┐ │ │
+│  │  │ ┌──────┐                  │ │ │
+│  │  │ │ 04:30│  💻 팀 회의       │ │ │
+│  │  │ │ PM   │  🚶 도보 5분      │ │ │
+│  │  │ └──────┘  📍 회의실         │ │ │
+│  │  └───────────────────────────┘ │ │
+│  └─────────────────────────────────┘ │
 │                                     │
-│  🚇 대중교통 (32분)                 │
-│  ├─ 🚌 버스 472번 (15분)            │
-│  │   └─ 3분 후 도착                │
-│  ├─ 🚶 도보 환승 (3분)              │
-│  └─ 🚇 지하철 2호선 (12분)          │
-│                                     │
-│  [경로 변경]                        │
-│                                     │
-│  ─── 이후 일정 ───                  │
-│                                     │
-│  14:00 📞 클라이언트 미팅           │
-│  16:30 💻 팀 회의                   │
-│                                     │
+│  [+ 일정 추가]  (FAB, bottom-right) │
 └─────────────────────────────────────┘
 ```
 
-**기능 요구사항**:
-- 다음 일정의 출발 시간 카운트다운
-- 시간대별 색상 변경 (초록→주황→빨강)
-- 대중교통 경로 표시 (버스 도착 시간 실시간 반영)
-- "출발했어요" 버튼 (Phase 1에서는 수동 체크인)
-- 이후 일정 3개 미리보기
+**Implementation Details**:
 
-### 3.2 스케줄 추가 화면
+```dart
+// Card Layout
+Card(
+  margin: EdgeInsets.only(bottom: 12),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  elevation: 2,
+  shadowColor: Colors.black.withOpacity(0.05),
+  child: InkWell(
+    onTap: () => _navigateToScheduleDetail(schedule),
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: Row(
+        children: [
+          // Time Box (60×60px)
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: schedule.color,  // User-selected color
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  schedule.time,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  schedule.ampm,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 16),
+          // Schedule Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  schedule.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '${schedule.transportIcon} ${schedule.transportMode} · ${schedule.duration}분',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  '📍 ${schedule.location}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+        ],
+      ),
+    ),
+  ),
+)
+```
 
-**목적**: 새로운 일정 등록
+**Color System**:
+- **Headings**: `Colors.grey[800]` (#424242), 28-32px, FontWeight.bold
+- **Body Text**: `Colors.grey[600]` (#757575), 14-16px, FontWeight.normal
+- **Card Background**: `Colors.white`
+- **Card Shadow**: `Colors.black.withOpacity(0.05)`
+- **Border Radius**: 12px for cards, 8px for time boxes
+
+**Route Selection ExpansionTile**:
+```dart
+ExpansionTile(
+  title: Text(
+    '🚗 강남 → 판교',
+    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  ),
+  children: [
+    ListTile(
+      leading: Icon(Icons.route, color: Colors.blue[600]),
+      title: Text('경로 1: 강남 → 판교 (자차)'),
+      subtitle: Text('평균 35분 · 5개 스케줄'),
+      onTap: () => _selectRoute('route1'),
+    ),
+    ListTile(
+      leading: Icon(Icons.route, color: Colors.blue[600]),
+      title: Text('경로 2: 서울 → 인천 (대중교통)'),
+      subtitle: Text('평균 60분 · 2개 스케줄'),
+      onTap: () => _selectRoute('route2'),
+    ),
+  ],
+)
+```
+
+---
+
+### 3.2 스케줄 추가/수정 화면 (ScheduleEditScreen)
+
+**목적**: 일정 생성 및 편집
+
+**UI Structure** (참조: `schedule_edit_screen.dart`):
 
 ```
 ┌─────────────────────────────────────┐
-│  [← 뒤로]    일정 추가               │
-│                                     │
-│  단계 1/3: 목적지 입력              │
-│  ●○○                                │
-│                                     │
+│  [← 뒤로]  일정 추가/수정  [저장]   │  AppBar
+├─────────────────────────────────────┤
+│                                     │  ScrollView
+│  1️⃣ 제목                             │
 │  ┌───────────────────────────────┐ │
-│  │ 🔍 목적지 검색                │ │
+│  │ 강남역 오피스 미팅            │ │  TextField
 │  └───────────────────────────────┘ │
 │                                     │
-│  📍 최근 장소:                      │
-│  - 강남역 오피스                    │
-│  - 서울대학교                       │
-│  - 코엑스                           │
-│                                     │
-│  🏷️ 즐겨찾기:                       │
-│  - 🏠 집                            │
-│  - 🏢 회사                          │
-│  - 💪 헬스장                        │
-│                                     │
+│  2️⃣ 날짜                             │
 │  ┌───────────────────────────────┐ │
-│  │        다음 단계 →            │ │
-│  └───────────────────────────────┘ │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│  [← 뒤로]    일정 추가               │
-│                                     │
-│  단계 2/3: 시간 설정                │
-│  ●●○                                │
-│                                     │
-│  도착 시간                           │
-│  ┌───────────────────────────────┐ │
-│  │  2026-01-15    10:00 AM       │ │
+│  │ 2026년 01월 15일 (수)  [📅]  │ │  DatePicker button
 │  └───────────────────────────────┘ │
 │                                     │
-│  ⭐ 이동 수단 선택                  │
+│  3️⃣ 시간                             │
 │  ┌───────────────────────────────┐ │
-│  │  [🚗 자차]  [🚇 대중교통]      │ │
+│  │ 오전 10:00           [🕐]    │ │  TimePicker (12hr)
 │  └───────────────────────────────┘ │
 │                                     │
-│  이동 시간 (자동 계산)              │
-│  🚗 자차: 25분 (실시간 교통)        │
-│  또는                               │
-│  🚇 대중교통: 32분                  │
-│     - 버스 472번: 15분              │
-│     - 지하철 2호선: 12분            │
-│                                     │
+│  4️⃣ 장소                             │
 │  ┌───────────────────────────────┐ │
-│  │        다음 단계 →            │ │
+│  │ 🔍 강남역 (검색 결과)        │ │  POI Search + Map
+│  │ 📍 서울시 강남구 역삼동...    │ │  (TMAP POI API)
+│  │ [지도 보기]                   │ │
 │  └───────────────────────────────┘ │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│  [← 뒤로]    일정 추가               │
 │                                     │
-│  단계 3/3: 버퍼 시간 설정 (4가지)   │
-│  ●●●                                │
-│                                     │
-│  1️⃣ 외출 준비 시간                  │
+│  5️⃣ 교통 수단                        │
 │  ┌───────────────────────────────┐ │
-│  │      15분                     │ │
-│  │  ◀────────────●──────▶        │ │
-│  │  (5분 ~ 60분)                 │ │
+│  │ 🚶 도보  🚇 대중교통  🚗 자차 │ │  Dropdown
+│  │ 🚴 자전거  🚕 택시             │ │  (5 options)
 │  └───────────────────────────────┘ │
-│  💡 옷 입기, 짐 챙기기 등           │
+│  (선택 시 TMAP API 자동 계산)        │
 │                                     │
-│  2️⃣ 이동 오차율                     │
+│  6️⃣ 경로 (자동 계산됨)               │
 │  ┌───────────────────────────────┐ │
-│  │      20%                      │ │
-│  │  ◀────────●──────────▶        │ │
-│  │  (0% ~ 50%)                   │ │
+│  │ 🚗 자차 · 약 25분             │ │  Read-only
+│  │ 거리: 18.5km                  │ │  (TMAP Routes API)
+│  │ [Naver Map으로 보기]          │ │  Open external map
 │  └───────────────────────────────┘ │
-│  💡 교통 예측 불확실성, 신호 대기   │
 │                                     │
-│  3️⃣ 일찍 도착 버퍼                  │
+│  7️⃣ 준비 시간 (Preparation)          │
 │  ┌───────────────────────────────┐ │
-│  │      10분                     │ │
-│  │  ◀────────●──────────▶        │ │
-│  │  (0분 ~ 30분)                 │ │
+│  │ + 샤워: 10분          [×]    │ │  Chip-based list
+│  │ + 옷 입기: 5분        [×]    │ │  (editable duration)
+│  │ [+ 항목 추가]                 │ │
 │  └───────────────────────────────┘ │
-│  💡 약속 시간 전 여유롭게 도착      │
 │                                     │
-│  4️⃣ 일정 마무리 시간                │
+│  8️⃣ 마무리 시간 (Finish)              │
 │  ┌───────────────────────────────┐ │
-│  │      5분                      │ │
-│  │  ◀──●────────────────▶        │ │
-│  │  (0분 ~ 20분)                 │ │
+│  │ + 정리: 5분           [×]    │ │  Chip-based list
+│  │ [+ 항목 추가]                 │ │
 │  └───────────────────────────────┘ │
-│  💡 이전 일정 정리 후 출발          │
 │                                     │
-│  ─── 최종 계산 ───                  │
+│  9️⃣ 색상 선택                        │
+│  ┌───────────────────────────────┐ │
+│  │ ● ● ● ● ● ● ● ●              │ │  8 circular options
+│  │ (빨강, 주황, 노랑, 초록...)     │ │
+│  └───────────────────────────────┘ │
 │                                     │
+│  ─── 최종 계산 (Preview) ───         │
 │  📍 강남역 오피스                   │
-│  🕐 도착 시간: 10:00 AM             │
-│  🚇 이동 시간: 32분 (대중교통)      │
-│  📊 오차율: +6분 (20%)              │
-│  👕 외출 준비: 15분                 │
-│  ⏰ 일찍 도착: 10분                 │
-│  📝 일정 마무리: 5분                │
+│  🕐 도착: 10:00 AM                  │
+│  🚗 이동: 25분                      │
+│  👔 준비: 15분                      │
+│  📝 마무리: 5분                     │
+│  ⏰ 출발: 09:15 AM                  │
 │                                     │
-│  ⭐ 출발 시간: 08:52 AM             │
-│  (총 소요: 68분)                    │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │        일정 저장 ✅           │ │
-│  └───────────────────────────────┘ │
 └─────────────────────────────────────┘
 ```
 
-### 3.3 월간 캘린더
+**Form Implementation**:
 
-**목적**: 한 달 일정 한눈에 보기
+```dart
+// Color Picker (9th section)
+Wrap(
+  spacing: 12,
+  children: [
+    Colors.red,
+    Colors.orange,
+    Colors.yellow,
+    Colors.green,
+    Colors.blue,
+    Colors.indigo,
+    Colors.purple,
+    Colors.pink,
+  ].map((color) {
+    final isSelected = _selectedColor == color;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedColor = color),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: isSelected
+              ? Border.all(color: Colors.blue[600]!, width: 3)
+              : null,
+        ),
+      ),
+    );
+  }).toList(),
+)
+
+// Preparation Time Chips (7th section)
+Wrap(
+  spacing: 8,
+  runSpacing: 8,
+  children: _prepItems.map((item) {
+    return Chip(
+      label: Text('${item.name}: ${item.duration}분'),
+      deleteIcon: Icon(Icons.close, size: 18),
+      onDeleted: () => _removePrepItem(item),
+    );
+  }).toList()
+    ..add(
+      ActionChip(
+        avatar: Icon(Icons.add, size: 18),
+        label: Text('항목 추가'),
+        onPressed: _showAddPrepItemDialog,
+      ),
+    ),
+)
+```
+
+**TMAP API Integration**:
+- **Location Search**: POISearchService().searchPOI(keyword)
+- **Route Calculation**: RouteService().calculateRoute() when transport mode changes
+- **Auto-fill**: Automatically populate duration when destination selected
+
+---
+
+### 3.3 캘린더 화면 (CalendarScreen)
+
+**목적**: 월간/주간 일정 조회
+
+**UI Structure**:
 
 ```
 ┌─────────────────────────────────────┐
-│  [☰]    2026년 1월          [+]     │
+│  2026년 1월         [< >]  [⚙️]    │  AppBar with month nav
+├─────────────────────────────────────┤
 │                                     │
-│  일  월  화  수  목  금  토          │
+│  일  월  화  수  목  금  토          │  table_calendar package
 │           1   2   3   4   5         │
-│   6   7   8   9  10  11  12         │
-│  13  14  15  16  17  18  19         │
+│   6   7●  8   9  10  11  12         │  ● = has schedules
+│  13  14  15● 16  17  18  19         │
 │  20  21  22  23  24  25  26         │
 │  27  28  29  30  31                 │
 │                                     │
-│  ● 15일 (수) - 3개 일정             │
+├─────────────────────────────────────┤
+│  ● 2026년 1월 15일 (수)             │  Selected date header
+├─────────────────────────────────────┤
 │                                     │
-│  09:00 🏢 출근                      │
-│  14:00 📞 클라이언트 미팅           │
-│  16:30 💻 팀 회의                   │
+│  ┌───────────────────────────────┐ │  Same card design
+│  │ ┌──────┐                      │ │  as HomeScreen
+│  │ │ 09:25│  📍 강남역 오피스    │ │
+│  │ │ AM   │  🚗 자차 · 25분      │ │
+│  │ └──────┘  ────────────────→  │ │
+│  └───────────────────────────────┘ │
+│                                     │
+│  ┌───────────────────────────────┐ │
+│  │ ┌──────┐                      │ │
+│  │ │ 02:00│  📞 클라이언트 미팅  │ │
+│  │ │ PM   │  🚇 대중교통 · 32분  │ │
+│  │ └──────┘  ────────────────→  │ │
+│  └───────────────────────────────┘ │
 │                                     │
 └─────────────────────────────────────┘
 ```
 
-### 3.4 설정 화면
+**Package**: `table_calendar: ^3.0.9`
 
-**목적**: 사용자 기본 설정
+```dart
+TableCalendar(
+  firstDay: DateTime.utc(2020, 1, 1),
+  lastDay: DateTime.utc(2030, 12, 31),
+  focusedDay: _focusedDay,
+  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+  eventLoader: (day) => _getSchedulesForDay(day),
+  calendarStyle: CalendarStyle(
+    markerDecoration: BoxDecoration(
+      color: Colors.blue[600],
+      shape: BoxShape.circle,
+    ),
+    todayDecoration: BoxDecoration(
+      color: Colors.blue[100],
+      shape: BoxShape.circle,
+    ),
+    selectedDecoration: BoxDecoration(
+      color: Colors.blue[600],
+      shape: BoxShape.circle,
+    ),
+  ),
+  onDaySelected: (selectedDay, focusedDay) {
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+    });
+    _loadSchedulesForDay(selectedDay);
+  },
+)
+```
+
+---
+
+### 3.4 설정 화면 (SettingsScreen)
+
+**목적**: 기본 버퍼 시간 및 앱 설정
+
+**UI Structure**:
 
 ```
 ┌─────────────────────────────────────┐
-│  [← 뒤로]    설정                    │
+│  [← 뒤로]  설정                      │
+├─────────────────────────────────────┤
 │                                     │
-│  기본 버퍼 시간 설정 (4가지)        │
-│  ├─ 1️⃣ 외출 준비 시간: 15분         │
-│  ├─ 2️⃣ 이동 오차율: 20%             │
-│  ├─ 3️⃣ 일찍 도착 버퍼: 10분         │
-│  ├─ 4️⃣ 일정 마무리 시간: 5분        │
-│  └─ 기본 이동 수단: 대중교통        │
+│  기본 버퍼 시간 설정                │  Section header
+│  ─────────────────────────────────  │
+│                                     │
+│  1️⃣ 외출 준비 시간                  │
+│  ┌───────────────────────────────┐ │
+│  │ 15분                           │ │  Slider (5-60min)
+│  │ ◀────────●─────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 옷 입기, 짐 챙기기 등           │  Hint text
+│                                     │
+│  2️⃣ 이동 오차율                     │
+│  ┌───────────────────────────────┐ │
+│  │ 20%                            │ │  Slider (0-50%)
+│  │ ◀────────●─────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 교통 예측 불확실성              │
+│                                     │
+│  3️⃣ 일찍 도착 버퍼                  │
+│  ┌───────────────────────────────┐ │
+│  │ 10분                           │ │  Slider (0-30min)
+│  │ ◀────────●─────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 약속 시간 전 여유              │
+│                                     │
+│  4️⃣ 일정 마무리 시간                │
+│  ┌───────────────────────────────┐ │
+│  │ 5분                            │ │  Slider (0-20min)
+│  │ ◀──●──────────────▶          │ │
+│  └───────────────────────────────┘ │
+│  💡 이전 일정 정리                  │
+│                                     │
+│  기본 이동 수단                     │
+│  ┌───────────────────────────────┐ │
+│  │ 🚇 대중교통        [▼]       │ │  Dropdown
+│  └───────────────────────────────┘ │
 │                                     │
 │  알림 설정                           │
-│  ├─ 30분 전 알림: ✅                │
-│  ├─ 10분 전 긴급 알림: ✅           │
-│  └─ 알림 소리: 기본                 │
-│                                     │
-│  계정 관리                           │
-│  ├─ 프로필 수정                     │
-│  ├─ 비밀번호 변경                   │
-│  └─ 로그아웃                        │
+│  ─────────────────────────────────  │
+│  30분 전 알림           [✅]        │  Switch
+│  10분 전 긴급 알림       [✅]        │  Switch
+│  알림 소리              [기본 ▼]    │  Dropdown
 │                                     │
 │  앱 정보                             │
-│  ├─ 버전: 1.0.0                     │
-│  ├─ 이용약관                        │
-│  └─ 개인정보 처리방침               │
+│  ─────────────────────────────────  │
+│  버전: 1.0.0                        │  Text
+│  이용약관                >           │  Navigation
+│  개인정보 처리방침        >           │  Navigation
 │                                     │
 └─────────────────────────────────────┘
+```
+
+**Slider Implementation**:
+
+```dart
+// Preparation time slider (example)
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      '1️⃣ 외출 준비 시간',
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey[800],
+      ),
+    ),
+    SizedBox(height: 12),
+    Row(
+      children: [
+        Text('5분', style: TextStyle(color: Colors.grey[600])),
+        Expanded(
+          child: Slider(
+            value: _prepTime.toDouble(),
+            min: 5,
+            max: 60,
+            divisions: 11,
+            label: '$_prepTime분',
+            activeColor: Colors.blue[600],
+            onChanged: (value) => setState(() => _prepTime = value.toInt()),
+          ),
+        ),
+        Text('60분', style: TextStyle(color: Colors.grey[600])),
+      ],
+    ),
+    Text(
+      '💡 옷 입기, 짐 챙기기 등',
+      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+    ),
+  ],
+)
+```
+
+---
+
+### 3.5 공통 Design Tokens
+
+**Typography**:
+```dart
+// Heading (제목)
+TextStyle(
+  fontSize: 28,  // Large headings
+  fontWeight: FontWeight.bold,
+  color: Colors.grey[800],
+)
+
+// Subheading (부제목)
+TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w600,
+  color: Colors.grey[800],
+)
+
+// Body (본문)
+TextStyle(
+  fontSize: 14,
+  fontWeight: FontWeight.normal,
+  color: Colors.grey[600],
+)
+
+// Caption (보조 텍스트)
+TextStyle(
+  fontSize: 12,
+  color: Colors.grey[500],
+)
+```
+
+**Spacing**:
+- **Card margin**: 12px bottom
+- **Card padding**: 16px all sides
+- **Section spacing**: 24px vertical
+- **Element spacing**: 8-16px between related items
+
+**Colors**:
+```dart
+// Primary
+Colors.blue[600]       // #1E88E5 - CTA, active states
+Colors.blue[100]       // #BBDEFB - backgrounds, highlights
+
+// Neutral
+Colors.grey[800]       // #424242 - headings
+Colors.grey[600]       // #757575 - body text
+Colors.grey[500]       // #9E9E9E - captions
+Colors.grey[400]       // #BDBDBD - icons
+Colors.grey[300]       // #E0E0E0 - borders
+Colors.grey[100]       // #F5F5F5 - backgrounds
+
+// Status Colors
+Colors.red             // 긴급 (15분 이하)
+Colors.orange          // 주의 (30분 이하)
+Colors.green           // 여유 (30분 이상)
+```
+
+**Shadows**:
+```dart
+BoxShadow(
+  color: Colors.black.withOpacity(0.05),
+  blurRadius: 10,
+  offset: Offset(0, 2),
+)
+```
+
+**Border Radius**:
+- **Cards**: 12px
+- **Time boxes**: 8px
+- **Buttons**: 8px
+- **Input fields**: 8px
+
+**Theme Configuration**:
+```dart
+// lib/main.dart
+MaterialApp(
+  theme: ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+    ),
+    useMaterial3: true,
+  ),
+)
 ```
 
 ---
