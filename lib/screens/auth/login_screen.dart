@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../main_wrapper.dart';
 import 'signup_screen.dart';
 
 /// 로그인 화면 / Login Screen
@@ -50,11 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         if (success) {
-          // 대시보드로 이동
+          // MainWrapper로 이동 (Dashboard + Calendar PageView navigation)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const DashboardScreen(),
+              builder: (context) => const MainWrapper(),
             ),
           );
         } else {
