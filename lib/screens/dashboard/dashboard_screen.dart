@@ -494,7 +494,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '출발지: 현재 위치\n도착지: ${trip.destination}',
+              '출발지: 현재 위치\n도착지: ${trip.destinationAddress}',
               style: AppTextStyles.scheduleDescription.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.7),
               ),
