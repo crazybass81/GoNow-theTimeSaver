@@ -876,6 +876,11 @@ flutter create --org com.gonow .
 - 📄 [API 통합 세션 문서](../claudedocs/SESSION_2025_01_07_API_Integration.md)
 - 📄 [GitHub UI 분석 문서](../claudedocs/GITHUB_UI_GAP_ANALYSIS.md)
 - 📄 [UI 일치율 분석](../claudedocs/UI_MATCH_ANALYSIS.md)
+- 📄 ⭐ **[GitHub vs Local UI 비교 분석](../claudedocs/GITHUB_VS_LOCAL_UI_COMPARISON.md)** (신규)
+  - 아키텍처 비교: Flat vs Feature-based
+  - Dialog/Modal 패턴 비교
+  - 상태 관리: SharedPreferences vs Provider+Supabase
+  - GitHub UI 패턴 ~95% 준수하면서도 더 나은 구조 증명
 
 **전체 Phase 4 진행률**: ~95%
 

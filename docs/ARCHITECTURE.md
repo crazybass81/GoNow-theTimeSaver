@@ -147,6 +147,38 @@ lib/
     └── constants.dart                # 상수 정의
 ```
 
+#### 📊 GitHub Repository vs Local 구조 비교
+
+**Local 프로젝트 특징** (Feature-based Architecture):
+- ✅ **Feature별 그룹화**: auth/, dashboard/, schedule/, settings/ 서브디렉토리
+- ✅ **재사용 위젯 분리**: widgets/ 폴더에 5개 공통 위젯
+- ✅ **확장성 우수**: 새로운 feature 추가 시 독립적인 폴더 생성
+- ✅ **유지보수성 향상**: 기능별 명확한 경계와 의존성 관리
+
+**GitHub Repository (khyapple/go_now)** (Flat Architecture):
+```
+lib/screens/  # 모든 13개 화면이 직접 하위
+├── admin_screen.dart
+├── calendar_screen.dart
+├── home_screen.dart
+├── loading_screen.dart
+├── login_screen.dart
+├── main_wrapper.dart
+├── privacy_policy_screen.dart
+├── schedule_detail_screen.dart
+├── schedule_edit_screen.dart
+├── settings_screen.dart
+├── signup_screen.dart
+├── splash_screen.dart
+└── terms_screen.dart
+```
+
+**구조적 우수성**:
+- ✅ Local은 9개 화면 + 5개 위젯으로 GitHub 대비 더 체계적
+- ✅ Provider + Supabase 상태 관리 (GitHub: SharedPreferences)
+- ✅ GitHub UI 패턴 ~95% 준수하면서도 더 나은 아키텍처 제공
+- 📖 상세 비교: [GITHUB_VS_LOCAL_UI_COMPARISON.md](../claudedocs/GITHUB_VS_LOCAL_UI_COMPARISON.md)
+
 ---
 
 ### 2.3 네이티브 레이어 구조
