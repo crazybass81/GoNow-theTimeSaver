@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Theme
 import 'utils/app_theme.dart';
@@ -24,6 +25,9 @@ import 'screens/main_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Korean locale for date formatting / 한국어 날짜 형식 초기화
+  await initializeDateFormatting('ko_KR', null);
 
   // Load environment variables
   await dotenv.load(fileName: ".env");

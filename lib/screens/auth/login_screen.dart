@@ -180,14 +180,34 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // 이메일 입력
+                  // 이메일 입력 (GitHub UI: 12px border radius)
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: '이메일',
                       hintText: 'example@email.com',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.red[600]!),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -201,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 비밀번호 입력
+                  // 비밀번호 입력 (GitHub UI: 12px border radius)
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
@@ -220,6 +240,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             _isPasswordVisible = !_isPasswordVisible;
                           });
                         },
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.red[600]!),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.red[600]!, width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -286,32 +326,77 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // 소셜 로그인 버튼들
-                  OutlinedButton.icon(
+                  // 소셜 로그인 버튼들 (GitHub UI 스타일 - 브랜드 컬러 filled buttons)
+                  // Google 로그인 (흰색 배경, 검은색 텍스트)
+                  ElevatedButton(
                     onPressed: _isLoading
                         ? null
                         : () => _handleSocialLogin('Google'),
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
-                    label: const Text('Google로 계속하기'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      minimumSize: const Size(double.infinity, 50),
+                      side: BorderSide(color: Colors.grey[300]!, width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.g_mobiledata, size: 28, color: Colors.black87),
+                        SizedBox(width: 12),
+                        Text('Google로 계속하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
+                  // Apple 로그인 (검은색 배경, 흰색 텍스트)
+                  ElevatedButton(
                     onPressed: _isLoading
                         ? null
                         : () => _handleSocialLogin('Apple'),
-                    icon: const Icon(Icons.apple, size: 24),
-                    label: const Text('Apple로 계속하기'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.apple, size: 24, color: Colors.white),
+                        SizedBox(width: 12),
+                        Text('Apple로 계속하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
+                  // Kakao 로그인 (카카오 옐로우 배경, 검은색 텍스트)
+                  ElevatedButton(
                     onPressed: _isLoading
                         ? null
                         : () => _handleSocialLogin('Kakao'),
-                    icon: const Icon(Icons.chat_bubble, size: 24),
-                    label: const Text('Kakao로 계속하기'),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFFEE500)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEE500), // 카카오 브랜드 컬러
                       foregroundColor: const Color(0xFF3C1E1E),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.chat_bubble, size: 24, color: Color(0xFF3C1E1E)),
+                        SizedBox(width: 12),
+                        Text('Kakao로 계속하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 32),

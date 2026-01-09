@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
-import '../../utils/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../schedule/schedule_detail_screen.dart';
+import '../../providers/trip_provider.dart';
+import '../../models/trip.dart';
+import '../../utils/app_colors.dart';
+import '../../utils/app_text_styles.dart';
 
-/// 월간 캘린더 화면 / Monthly Calendar Screen
+/// 캘린더 화면 - GitHub 패턴 완전 복제 / Calendar Screen - Complete GitHub pattern clone
 ///
-/// **기능 / Features**:
-/// - 월간 캘린더 뷰
-/// - 날짜별 일정 개수 표시
-/// - 선택된 날짜의 일정 리스트
-/// - 일정 추가 버튼
-///
-/// **Context**: 대시보드 또는 네비게이션 바에서 접근
+/// **GitHub Reference**: https://github.com/khyapple/go_now/blob/master/lib/screens/calendar_screen.dart
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -20,444 +18,384 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  late final ValueNotifier<List<Map<String, dynamic>>> _selectedEvents;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // TODO: 실제 데이터로 대체 - Supabase에서 일정 로드
-  // 샘플 일정 데이터 (날짜별로 일정 저장)
-  final Map<DateTime, List<Map<String, dynamic>>> _events = {
-    DateTime.utc(2026, 1, 15): [
-      {
-        'title': '강남역 스타벅스',
-        'time': '09:00',
-        'location': '강남역 2번 출구',
-        'icon': Icons.coffee,
-      },
-      {
-        'title': '클라이언트 미팅',
-        'time': '14:00',
-        'location': '삼성동 코엑스',
-        'icon': Icons.business,
-      },
-      {
-        'title': '팀 회의',
-        'time': '16:30',
-        'location': '회사',
-        'icon': Icons.groups,
-      },
-    ],
-    DateTime.utc(2026, 1, 16): [
-      {
-        'title': '병원 진료',
-        'time': '10:30',
-        'location': '서울대병원',
-        'icon': Icons.local_hospital,
-      },
-      {
-        'title': '저녁 약속',
-        'time': '18:30',
-        'location': '홍대입구역',
-        'icon': Icons.restaurant,
-      },
-    ],
-    DateTime.utc(2026, 1, 20): [
-      {
-        'title': '친구 생일',
-        'time': '19:00',
-        'location': '강남역',
-        'icon': Icons.cake,
-      },
-    ],
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-  }
-
-  @override
-  void dispose() {
-    _selectedEvents.dispose();
-    super.dispose();
-  }
-
-  /// 특정 날짜의 일정 가져오기 / Get events for a specific day
-  List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
-    return _events[DateTime.utc(day.year, day.month, day.day)] ?? [];
-  }
-
-  /// 날짜 선택 처리 / Handle day selection
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-      });
-      _selectedEvents.value = _getEventsForDay(selectedDay);
+  MaterialColor _getColorFromString(String colorName) {
+    switch (colorName.toLowerCase()) {
+      case 'blue':
+        return Colors.blue;
+      case 'red':
+        return Colors.red;
+      case 'green':
+        return Colors.green;
+      case 'orange':
+        return Colors.orange;
+      case 'purple':
+        return Colors.purple;
+      case 'pink':
+        return Colors.pink;
+      case 'teal':
+        return Colors.teal;
+      case 'amber':
+        return Colors.amber;
+      default:
+        return Colors.blue;
     }
+  }
+
+  /// 특정 날짜의 일정 가져오기 (TripProvider 사용)
+  List<Map<String, String>> _getEventsForDay(DateTime day) {
+    final tripProvider = context.watch<TripProvider>();
+    final allTrips = tripProvider.trips;
+
+    // 해당 날짜에 해당하는 일정만 필터링
+    final dayTrips = allTrips.where((trip) {
+      final tripDate = trip.departureTime;
+      return tripDate.year == day.year &&
+             tripDate.month == day.month &&
+             tripDate.day == day.day;
+    }).toList();
+
+    return dayTrips.map((trip) {
+      return <String, String>{
+        'title': trip.title,
+        // Supabase에서 UTC로 반환되므로 로컬 시간으로 변환 / Convert from UTC to local time
+        'time': '${trip.departureTime.toLocal().hour.toString().padLeft(2, '0')}:${trip.departureTime.toLocal().minute.toString().padLeft(2, '0')}',
+        'location': trip.destinationAddress,
+        'color': trip.color,
+      };
+    }).toList();
+  }
+
+  /// 커스텀 날짜 셀 (GitHub pattern: 각 날짜 칸에 스케줄 제목 직접 표시)
+  Widget _buildCalendarCell(BuildContext context, DateTime day, bool isToday, bool isSelected, {bool isOutside = false}) {
+    final events = _getEventsForDay(day);
+
+    Color backgroundColor = Colors.white;
+    Color textColor = isOutside ? AppColors.disabled : Colors.black87;
+    Color dayCircleColor = Colors.transparent;
+
+    if (isToday) {
+      dayCircleColor = AppColors.primary;
+      textColor = Colors.white;
+    }
+
+    if (isSelected) {
+      backgroundColor = AppColors.primaryLighter;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: Border(
+          right: BorderSide(color: AppColors.disabled, width: 0.5),
+          bottom: BorderSide(color: AppColors.disabled, width: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 날짜 숫자
+          Padding(
+            padding: const EdgeInsets.all(6.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Container(
+                width: isToday ? 28 : null,
+                height: isToday ? 28 : null,
+                decoration: BoxDecoration(
+                  color: dayCircleColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '${day.day}',
+                    style: AppTextStyles.referenceLabel.copyWith(
+                      fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
+                      color: isToday ? Colors.white : textColor,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // 스케줄 제목들 (GitHub pattern: 최대 4개까지 표시)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: events.length > 4 ? 4 : events.length,
+                itemBuilder: (context, index) {
+                  final eventColor = _getColorFromString(events[index]['color'] ?? 'blue');
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: eventColor[600],
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      events[index]['title']!,
+                      style: AppTextStyles.formLabel.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          // 더 많은 일정이 있으면 "+N more" 표시
+          if (events.length > 4)
+            Padding(
+              padding: const EdgeInsets.only(left: 6, bottom: 4),
+              child: Text(
+                '+${events.length - 4} more',
+                style: AppTextStyles.referenceLabel.copyWith(
+                  color: AppColors.secondaryText,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 일정 모달 (GitHub pattern: 날짜 클릭 시 일정 목록 표시)
+  void _showEventModal(BuildContext context, DateTime selectedDay) {
+    final tripProvider = context.read<TripProvider>();
+    final dayTrips = tripProvider.trips.where((trip) {
+      final tripDate = trip.departureTime;
+      return tripDate.year == selectedDay.year &&
+             tripDate.month == selectedDay.month &&
+             tripDate.day == selectedDay.day;
+    }).toList();
+
+    final events = _getEventsForDay(selectedDay);
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Container(
+          constraints: const BoxConstraints(
+            maxWidth: 500,
+            maxHeight: 600,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 날짜 헤더
+              Container(
+                padding: const EdgeInsets.all(24.0),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${selectedDay.year}년 ${selectedDay.month}월 ${selectedDay.day}일',
+                      style: AppTextStyles.sectionTitle.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              // 일정 리스트
+              Flexible(
+                child: events.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(48.0),
+                        child: Text(
+                          '일정이 없습니다',
+                          style: AppTextStyles.referenceBody.copyWith(
+                            color: AppColors.secondaryText,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: events.length,
+                        itemBuilder: (context, index) {
+                          final event = events[index];
+                          final eventColor = _getColorFromString(event['color'] ?? 'blue');
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.divider),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: eventColor[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    event['time']!,
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.badgeTimeSmall.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: eventColor[600],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                event['title']!,
+                                style: AppTextStyles.referenceBody.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: AppColors.disabled,
+                              ),
+                              onTap: () {
+                                Navigator.of(context).pop(); // 모달 닫기
+                                // 해당 index의 Trip 객체 전달
+                                if (index < dayTrips.length) {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => ScheduleDetailScreen(
+                                        trip: dayTrips[index],
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('캘린더'),
-        actions: [
-          // 오늘로 이동 버튼
-          IconButton(
-            icon: const Icon(Icons.today),
-            tooltip: '오늘',
-            onPressed: () {
-              setState(() {
-                _focusedDay = DateTime.now();
-                _selectedDay = DateTime.now();
-              });
-              _selectedEvents.value = _getEventsForDay(_selectedDay!);
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 캘린더 위젯
-          _buildCalendar(theme),
-
-          const SizedBox(height: 8),
-
-          // 선택된 날짜 표시
-          _buildSelectedDateHeader(theme),
-
-          const Divider(height: 1),
-
-          // 선택된 날짜의 일정 리스트
-          Expanded(
-            child: _buildEventList(theme),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: 일정 추가 화면으로 이동 (선택된 날짜 전달)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${DateFormat('yyyy-MM-dd').format(_selectedDay!)} 일정 추가 (구현 예정)',
-              ),
-            ),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('일정 추가'),
-      ),
-    );
-  }
-
-  /// 캘린더 위젯 / Calendar widget
-  Widget _buildCalendar(ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TableCalendar(
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2030, 12, 31),
-        focusedDay: _focusedDay,
-        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-        calendarFormat: _calendarFormat,
-        eventLoader: _getEventsForDay,
-        onDaySelected: _onDaySelected,
-        onFormatChanged: (format) {
-          if (_calendarFormat != format) {
-            setState(() => _calendarFormat = format);
-          }
-        },
-        onPageChanged: (focusedDay) {
-          _focusedDay = focusedDay;
-        },
-        // 캘린더 스타일링
-        calendarStyle: CalendarStyle(
-          // 오늘 날짜
-          todayDecoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          todayTextStyle: TextStyle(
-            color: theme.colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.w600,
-          ),
-          // 선택된 날짜
-          selectedDecoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            shape: BoxShape.circle,
-          ),
-          selectedTextStyle: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-          // 이벤트 마커
-          markerDecoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            shape: BoxShape.circle,
-          ),
-          markerSize: 6,
-          markersMaxCount: 3,
-          // 일반 날짜
-          defaultTextStyle: theme.textTheme.bodyMedium!,
-          weekendTextStyle: theme.textTheme.bodyMedium!.copyWith(
-            color: theme.colorScheme.error,
-          ),
-          // 다른 달 날짜
-          outsideTextStyle: theme.textTheme.bodyMedium!.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
-          ),
-        ),
-        // 헤더 스타일링
-        headerStyle: HeaderStyle(
-          titleCentered: true,
-          formatButtonVisible: false,
-          titleTextStyle: theme.textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-          leftChevronIcon: Icon(
-            Icons.chevron_left,
-            color: theme.colorScheme.onSurface,
-          ),
-          rightChevronIcon: Icon(
-            Icons.chevron_right,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        // 요일 헤더 스타일링
-        daysOfWeekStyle: DaysOfWeekStyle(
-          weekdayStyle: theme.textTheme.bodySmall!.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
-          ),
-          weekendStyle: theme.textTheme.bodySmall!.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.error.withOpacity(0.6),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 선택된 날짜 헤더 / Selected date header
-  Widget _buildSelectedDateHeader(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(
-            Icons.event,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _selectedDay != null
-                ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(_selectedDay!)
-                : '날짜를 선택하세요',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const Spacer(),
-          ValueListenableBuilder<List<Map<String, dynamic>>>(
-            valueListenable: _selectedEvents,
-            builder: (context, events, _) {
-              if (events.isEmpty) return const SizedBox.shrink();
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${events.length}개 일정',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 일정 리스트 / Event list
-  Widget _buildEventList(ThemeData theme) {
-    return ValueListenableBuilder<List<Map<String, dynamic>>>(
-      valueListenable: _selectedEvents,
-      builder: (context, events, _) {
-        if (events.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.event_available,
-                  size: 64,
-                  color: theme.colorScheme.onSurface.withOpacity(0.3),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '일정이 없습니다',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '새 일정을 추가해보세요',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.4),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: events.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final event = events[index];
-            return _buildEventCard(theme, event);
-          },
-        );
-      },
-    );
-  }
-
-  /// 일정 카드 / Event card
-  Widget _buildEventCard(ThemeData theme, Map<String, dynamic> event) {
-    return InkWell(
-      onTap: () {
-        // TODO: 일정 상세 화면으로 이동
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${event['title']} 상세 화면 (구현 예정)')),
-        );
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: AppColors.background,
+      body: Container(
+        margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.onSurface.withOpacity(0.1),
-          ),
-        ),
-        child: Row(
-          children: [
-            // 시간
-            Column(
-              children: [
-                Text(
-                  event['time'].split(':')[0],
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                Text(
-                  event['time'].split(':')[1],
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-
-            // 구분선
-            Container(
-              width: 2,
-              height: 40,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // 일정 정보
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        event['icon'] as IconData,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event['title'],
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.place,
-                        size: 14,
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          event['location'],
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // 화살표
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12), // GitHub pattern: 12px for cards
+          border: Border.all(color: AppColors.disabled, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12), // GitHub pattern: 12px for cards
+          child: TableCalendar(
+            firstDay: DateTime.utc(2024, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDay, day);
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+              // GitHub pattern: 일정이 있으면 모달 표시
+              final events = _getEventsForDay(selectedDay);
+              if (events.isNotEmpty) {
+                _showEventModal(context, selectedDay);
+              }
+              // TODO: 일정 추가 화면 구현 필요 (schedule_edit_screen.dart)
+            },
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+            onPageChanged: (focusedDay) {
+              _focusedDay = focusedDay;
+            },
+            eventLoader: _getEventsForDay,
+            calendarBuilders: CalendarBuilders(
+              defaultBuilder: (context, day, focusedDay) {
+                return _buildCalendarCell(context, day, false, false);
+              },
+              todayBuilder: (context, day, focusedDay) {
+                return _buildCalendarCell(context, day, true, false);
+              },
+              selectedBuilder: (context, day, focusedDay) {
+                return _buildCalendarCell(context, day, false, true);
+              },
+              outsideBuilder: (context, day, focusedDay) {
+                return _buildCalendarCell(context, day, false, false, isOutside: true);
+              },
+            ),
+            calendarStyle: CalendarStyle(
+              cellMargin: EdgeInsets.zero,
+              cellPadding: EdgeInsets.zero,
+              todayDecoration: const BoxDecoration(
+                color: Colors.transparent,
+              ),
+              selectedDecoration: const BoxDecoration(
+                color: Colors.transparent,
+              ),
+              markerDecoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              markersMaxCount: 0, // GitHub pattern: 마커 숨기기 (커스텀 셀에서 표시)
+            ),
+            headerStyle: HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+              titleTextStyle: AppTextStyles.sectionTitle.copyWith(
+                height: 1.3,
+              ),
+              // GitHub pattern: 2줄로 표시 (2024년\n1월)
+              titleTextFormatter: (date, locale) {
+                return '${date.year}년\n${date.month}월';
+              },
+            ),
+            daysOfWeekHeight: 40,
+            rowHeight: 140, // GitHub pattern: 날짜 칸 높이 증가
+          ),
         ),
       ),
     );

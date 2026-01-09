@@ -24,8 +24,26 @@ class AppColors {
   /// 주 색상 / Primary color (reference: Colors.blue[600])
   static const Color primary = Color(0xFF1E88E5); // blue[600]
 
+  /// 주 색상 어두운 버전 / Primary color dark (reference: Colors.blue[700])
+  static const Color primaryDark = Color(0xFF1976D2); // blue[700]
+
+  /// 주 색상 밝은 버전 / Primary color light (reference: Colors.blue[100])
+  static const Color primaryLight = Color(0xFFBBDEFB); // blue[100]
+
+  /// 주 색상 매우 밝은 버전 / Primary color very light (reference: Colors.blue[50])
+  static const Color primaryLighter = Color(0xFFE3F2FD); // blue[50]
+
+  /// 주 텍스트 색상 / Primary text color (reference: Colors.grey[800])
+  static const Color primaryText = Color(0xFF424242); // grey[800]
+
   /// 보조 텍스트 색상 / Secondary text color (reference: Colors.grey[600])
   static const Color secondaryText = Color(0xFF757575); // grey[600]
+
+  /// 비활성 텍스트/아이콘 / Disabled text/icon (reference: Colors.grey[300])
+  static const Color disabled = Color(0xFFE0E0E0); // grey[300]
+
+  /// 구분선/테두리 / Divider/border (reference: Colors.grey[200])
+  static const Color divider = Color(0xFFEEEEEE); // grey[200]
 
   // ========================================
   // 일정 카테고리 색상 / Schedule category colors
@@ -122,6 +140,15 @@ class AppColors {
 
   /// 에러 / Error
   static const Color error = Color(0xFFF44336);
+
+  /// 에러 어두운 버전 / Error dark (reference: Colors.red[900])
+  static const Color errorDark = Color(0xFFB71C1C); // red[900]
+
+  /// 에러 중간 버전 / Error medium (reference: Colors.red[700])
+  static const Color errorMedium = Color(0xFFD32F2F); // red[700]
+
+  /// 에러 밝은 버전 / Error light (reference: Colors.red[50])
+  static const Color errorLight = Color(0xFFFFEBEE); // red[50]
 
   /// 정보 / Info
   static const Color info = Color(0xFF2196F3);

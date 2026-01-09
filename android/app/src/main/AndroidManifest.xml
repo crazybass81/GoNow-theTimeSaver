@@ -36,9 +36,9 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- GoNow Widget Receiver -->
+        <!-- GoNow Widget Receiver (RemoteViews-based) -->
         <receiver
-            android:name=".GoNowWidgetReceiver"
+            android:name="com.gonow.gotimesaver.GoNowWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

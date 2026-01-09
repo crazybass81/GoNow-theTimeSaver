@@ -61,7 +61,8 @@ class WidgetService {
   /// 위젯 데이터 포맷 / Format data for widget display
   Map<String, dynamic> _formatWidgetData(Trip trip) {
     final now = DateTime.now();
-    final timeUntilDeparture = trip.departureTime.difference(now);
+    // Supabase에서 UTC로 반환되므로 로컬 시간으로 변환 / Convert from UTC (Supabase) to local time
+    final timeUntilDeparture = trip.departureTime.toLocal().difference(now);
     final minutesRemaining = timeUntilDeparture.inMinutes;
 
     // 시간대별 색상 결정 / Determine color phase
@@ -86,11 +87,11 @@ class WidgetService {
       'colorPhase': colorPhase,
       'transportMode': trip.transportMode,
       'travelDurationMinutes': trip.travelDurationMinutes,
-      // 포맷된 시간 문자열 / Formatted time strings
+      // 포맷된 시간 문자열 - UTC에서 로컬 시간으로 변환 / Formatted time strings - convert from UTC to local
       'departureTimeFormatted':
-          '${trip.departureTime.hour.toString().padLeft(2, '0')}:${trip.departureTime.minute.toString().padLeft(2, '0')}',
+          '${trip.departureTime.toLocal().hour.toString().padLeft(2, '0')}:${trip.departureTime.toLocal().minute.toString().padLeft(2, '0')}',
       'arrivalTimeFormatted':
-          '${trip.arrivalTime.hour.toString().padLeft(2, '0')}:${trip.arrivalTime.minute.toString().padLeft(2, '0')}',
+          '${trip.arrivalTime.toLocal().hour.toString().padLeft(2, '0')}:${trip.arrivalTime.toLocal().minute.toString().padLeft(2, '0')}',
       'timeRemainingText': _formatTimeRemaining(minutesRemaining),
     };
   }

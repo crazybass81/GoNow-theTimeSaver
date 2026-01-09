@@ -73,7 +73,7 @@ class WidgetUpdateWorker(
             }
 
             // 위젯 갱신 / Refresh widget
-            GoNowWidget.updateWidget(context)
+            GoNowWidgetProvider.updateWidget(context)
 
             android.util.Log.d(TAG, "Widget updated successfully: $updatedMinutesRemaining minutes remaining")
 

@@ -39,8 +39,8 @@ class ColorPickerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 12, // GitHub pattern: 12px spacing
+      runSpacing: 12,
       children: availableColors.map((color) {
         final isSelected = color.value == selectedColor.value;
 

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../utils/app_colors.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/app_text_styles.dart';
 import '../auth/login_screen.dart';
 
-/// 설정 화면 / Settings Screen
+/// 설정 화면 - GitHub 패턴 완전 복제 / Settings Screen - Complete GitHub pattern clone
+///
+/// **GitHub Reference**: https://github.com/khyapple/go_now/blob/master/lib/screens/settings_screen.dart
 ///
 /// **기능 / Features**:
 /// - 4가지 버퍼 시간 기본값 설정
@@ -42,30 +46,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: AppColors.background, // GitHub pattern: light background
       appBar: AppBar(
-        title: const Text('설정'),
+        backgroundColor: Colors.white, // GitHub pattern: white appbar
+        elevation: 0, // GitHub pattern: no shadow
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '설정',
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+          ),
+        ),
+        centerTitle: false, // GitHub pattern: left-aligned title
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20), // GitHub pattern: 20px padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 기본 버퍼 시간 설정
-            _buildBufferTimeSection(theme),
-            const SizedBox(height: 24),
+            // GitHub UI 순서: Notifications → Transport → Buffer Time → Account → App Info
 
-            // 알림 설정
+            // 알림 설정 (1순위)
             _buildNotificationSection(theme),
-            const SizedBox(height: 24),
+            const SizedBox(height: GitHubUI.spacingSectionGap),
 
-            // 계정 관리
+            // 기본 이동 수단 (2순위)
+            _buildTransportSection(theme),
+            const SizedBox(height: GitHubUI.spacingSectionGap),
+
+            // 기본 버퍼 시간 설정 (3순위)
+            _buildBufferTimeSection(theme),
+            const SizedBox(height: GitHubUI.spacingSectionGap),
+
+            // 계정 관리 (4순위)
             _buildAccountSection(theme, authProvider),
-            const SizedBox(height: 24),
+            const SizedBox(height: GitHubUI.spacingSectionGap),
 
-            // 앱 정보
+            // 앱 정보 (5순위)
             _buildAppInfoSection(theme),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40), // Extra bottom padding
           ],
         ),
       ),
@@ -77,20 +99,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // GitHub pattern: Section header with bold font
         Text(
           '기본 버퍼 시간 설정 (4가지)',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+            height: 1.3,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6), // GitHub pattern: 6px spacing
         Text(
           '새 일정 추가 시 기본값으로 사용됩니다',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          style: AppTextStyles.formLabel.copyWith(
+            color: AppColors.secondaryText,
+            height: 1.4,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingScreen),
 
         // 외출 준비 시간
         _buildBufferSlider(
@@ -107,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             setState(() => _defaultPreparationTime = value.toInt());
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingCardInternal),
 
         // 일찍 도착 버퍼
         _buildBufferSlider(
@@ -124,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             setState(() => _defaultEarlyArrivalBuffer = value.toInt());
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingCardInternal),
 
         // 이동 오차율
         _buildBufferSlider(
@@ -142,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             setState(() => _defaultTravelErrorRate = value);
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingCardInternal),
 
         // 일정 마무리 시간
         _buildBufferSlider(
@@ -159,55 +184,66 @@ class _SettingsScreenState extends State<SettingsScreen> {
             setState(() => _defaultFinishUpTime = value.toInt());
           },
         ),
-        const SizedBox(height: 16),
+      ],
+    );
+  }
 
-        // 기본 이동 수단
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+  /// 기본 이동 수단 섹션 / Default transport mode section (GitHub UI: 2순위)
+  Widget _buildTransportSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // GitHub pattern: Section header with bold font
+        Text(
+          '기본 이동 수단',
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+            height: 1.3,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.directions,
-                    size: 20,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '기본 이동 수단',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+        ),
+        const SizedBox(height: 6), // GitHub pattern: 6px spacing
+        Text(
+          '새 일정 추가 시 기본값으로 사용됩니다',
+          style: AppTextStyles.formLabel.copyWith(
+            color: AppColors.secondaryText,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: GitHubUI.spacingScreen),
+
+        // Transport mode selection card
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12), // GitHub pattern: 12px for cards
+            border: Border.all(color: AppColors.divider, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTransportModeButton(
-                      theme: theme,
-                      mode: 'transit',
-                      icon: Icons.directions_transit,
-                      label: '대중교통',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTransportModeButton(
-                      theme: theme,
-                      mode: 'car',
-                      icon: Icons.directions_car,
-                      label: '자가용',
-                    ),
-                  ),
-                ],
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildTransportModeButton(
+                  theme: theme,
+                  mode: 'transit',
+                  icon: Icons.directions_transit,
+                  label: '대중교통',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTransportModeButton(
+                  theme: theme,
+                  mode: 'car',
+                  icon: Icons.directions_car,
+                  label: '자가용',
+                ),
               ),
             ],
           ),
@@ -216,7 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 버퍼 시간 슬라이더 위젯 / Buffer time slider widget
+  /// 버퍼 시간 슬라이더 위젯 / Buffer time slider widget - GitHub pattern
   Widget _buildBufferSlider({
     required ThemeData theme,
     required IconData icon,
@@ -235,56 +271,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
         : '${value.toInt()}$unit';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18), // GitHub pattern: 18px padding
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white, // GitHub pattern: white card
+        borderRadius: BorderRadius.circular(12), // GitHub pattern: 12px for cards
+        border: Border.all(color: AppColors.divider, width: 1), // GitHub pattern: subtle border
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
+              // GitHub UI: Icon with 48x48 blue[50] background container
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 24, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleSmall?.copyWith(
+                  style: AppTextStyles.referenceBody.copyWith(
                     fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    height: 1.3,
                   ),
                 ),
               ),
               Text(
                 displayValue,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: AppTextStyles.badgeTimeLarge.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
+                  color: AppColors.primary,
+                  height: 1.3,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             description,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            style: AppTextStyles.referenceLabel.copyWith(
+              color: AppColors.secondaryText,
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: GitHubUI.spacingCardGap),
           Slider(
             value: value,
             min: min,
             max: max,
             divisions: divisions,
             onChanged: onChanged,
+            activeColor: AppColors.primary,
+            inactiveColor: AppColors.divider,
           ),
         ],
       ),
     );
   }
 
-  /// 이동 수단 선택 버튼 / Transport mode selection button
+  /// 이동 수단 선택 버튼 / Transport mode selection button - GitHub pattern
   Widget _buildTransportModeButton({
     required ThemeData theme,
     required String mode,
@@ -299,16 +358,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surface,
+          color: isSelected ? AppColors.primaryLighter : AppColors.background, // GitHub pattern: subtle bg
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurface.withOpacity(0.2),
+            color: isSelected ? AppColors.primary! : AppColors.disabled,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -316,19 +371,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
-              size: 28,
+              color: isSelected ? AppColors.primary : AppColors.secondaryText,
+              size: 32,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.6),
+              style: AppTextStyles.formLabel.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppColors.primaryDark : AppColors.primaryText,
+                height: 1.3,
               ),
             ),
           ],
@@ -337,18 +389,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 알림 설정 섹션 / Notification settings section
+  /// 알림 설정 섹션 / Notification settings section - GitHub pattern
   Widget _buildNotificationSection(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '알림 설정',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+            height: 1.3,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingScreen),
 
         // 알림 활성화
         _buildSettingTile(
@@ -417,7 +470,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 계정 관리 섹션 / Account management section
+  /// 계정 관리 섹션 / Account management section - GitHub pattern
   Widget _buildAccountSection(ThemeData theme, AuthProvider authProvider) {
     final userName = authProvider.currentUser?.userMetadata?['name'] as String?;
     final userEmail = authProvider.currentUser?.email ?? '';
@@ -427,31 +480,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Text(
           '계정 관리',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+            height: 1.3,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingScreen),
 
-        // 프로필 정보
+        // 프로필 정보 - GitHub pattern: white card
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12), // GitHub pattern: 12px for cards
+            border: Border.all(color: AppColors.divider, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 30,
-                backgroundColor: theme.colorScheme.primary,
+                radius: 32, // GitHub pattern: slightly larger avatar
+                backgroundColor: AppColors.primary,
                 child: Text(
                   userName != null && userName.isNotEmpty
                       ? userName[0].toUpperCase()
                       : userEmail[0].toUpperCase(),
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  style: AppTextStyles.dateHeader.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
                   ),
                 ),
               ),
@@ -462,15 +524,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       userName ?? '사용자',
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: AppTextStyles.badgeTimeLarge.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                        height: 1.3,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       userEmail,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      style: AppTextStyles.formLabel.copyWith(
+                        color: AppColors.secondaryText,
+                        height: 1.4,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -480,7 +545,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingCardInternal),
 
         // 프로필 수정
         _buildSettingTile(
@@ -527,18 +592,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 앱 정보 섹션 / App information section
+  /// 앱 정보 섹션 / App information section - GitHub pattern
   Widget _buildAppInfoSection(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '앱 정보',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+            height: 1.3,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: GitHubUI.spacingScreen),
 
         // 버전 정보
         _buildSettingTile(
@@ -601,7 +667,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 설정 타일 위젯 / Setting tile widget
+  /// 설정 타일 위젯 / Setting tile widget - GitHub pattern
   Widget _buildSettingTile({
     required ThemeData theme,
     required IconData icon,
@@ -611,25 +677,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VoidCallback? onTap,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: theme.colorScheme.onSurface.withOpacity(0.6),
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.primary,
+          size: 24,
+        ),
       ),
       title: Text(
         title,
-        style: theme.textTheme.titleSmall?.copyWith(
+        style: AppTextStyles.referenceBody.copyWith(
           fontWeight: FontWeight.w600,
+          color: Colors.black87,
+          height: 1.3,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurface.withOpacity(0.6),
+        style: AppTextStyles.referenceLabel.copyWith(
+          color: AppColors.secondaryText,
+          height: 1.4,
         ),
       ),
       trailing: trailing,
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8), // GitHub pattern: minimal padding
     );
   }
 

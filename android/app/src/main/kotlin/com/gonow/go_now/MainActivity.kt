@@ -6,7 +6,7 @@ import androidx.work.*
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import com.gonow.gotimesaver.GoNowWidget
+import com.gonow.gotimesaver.GoNowWidgetProvider
 import java.util.concurrent.TimeUnit
 
 /**
@@ -35,7 +35,9 @@ class MainActivity: FlutterActivity() {
                         val minutesRemaining = call.argument<Int>("minutesRemaining")
                         val colorPhase = call.argument<String>("colorPhase")
                         val departureTimeFormatted = call.argument<String>("departureTimeFormatted")
+                        val arrivalTimeFormatted = call.argument<String>("arrivalTimeFormatted")
                         val timeRemainingText = call.argument<String>("timeRemainingText")
+                        val travelDurationMinutes = call.argument<Int>("travelDurationMinutes")
 
                         // SharedPreferences에 위젯 데이터 저장 / Save widget data to SharedPreferences
                         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -45,13 +47,15 @@ class MainActivity: FlutterActivity() {
                             putInt("minutesRemaining", minutesRemaining ?: 0)
                             putString("colorPhase", colorPhase)
                             putString("departureTimeFormatted", departureTimeFormatted)
+                            putString("arrivalTimeFormatted", arrivalTimeFormatted)
                             putString("timeRemainingText", timeRemainingText)
+                            putInt("travelDurationMinutes", travelDurationMinutes ?: 0)
                             putLong("lastUpdated", System.currentTimeMillis())
                             apply()
                         }
 
                         // 위젯 갱신 트리거 / Trigger widget refresh
-                        GoNowWidget.updateWidget(this)
+                        GoNowWidgetProvider.updateWidget(this)
 
                         // WorkManager 스케줄링 / Schedule WorkManager
                         scheduleWidgetUpdates(minutesRemaining ?: 30)
@@ -69,7 +73,7 @@ class MainActivity: FlutterActivity() {
                         prefs.edit().clear().apply()
 
                         // 위젯 갱신 / Refresh widget
-                        GoNowWidget.updateWidget(this)
+                        GoNowWidgetProvider.updateWidget(this)
 
                         // WorkManager 작업 취소 / Cancel WorkManager tasks
                         WorkManager.getInstance(this).cancelUniqueWork("gonow_widget_update")
@@ -82,7 +86,7 @@ class MainActivity: FlutterActivity() {
 
                 "forceRefresh" -> {
                     try {
-                        GoNowWidget.updateWidget(this)
+                        GoNowWidgetProvider.updateWidget(this)
                         result.success(true)
                     } catch (e: Exception) {
                         result.error("REFRESH_FAILED", "Failed to refresh widget: ${e.message}", null)

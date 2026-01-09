@@ -15,7 +15,7 @@ class AppTheme {
   static const Color timeRed = Color(0xFFF44336); // 긴급 (늦음)
 
   // Brand Colors
-  static const Color primaryBlue = Color(0xFF2196F3); // 브랜드 메인 컬러
+  static const Color primaryBlue = Color(0xFF1E88E5); // GitHub pattern: blue[600] #1E88E5
   static const Color primaryDark = Color(0xFF1976D2); // 어두운 블루
 
   // Neutral Colors

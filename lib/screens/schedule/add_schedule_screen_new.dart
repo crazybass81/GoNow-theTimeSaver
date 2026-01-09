@@ -11,7 +11,15 @@ import '../../services/route_service.dart';
 import '../../services/transit_service.dart';
 import '../../providers/auth_provider.dart';
 
-/// 일정 추가 화면 (단일 스크롤 레이아웃) / Add Schedule Screen (Single Scroll Layout)
+/// 시간 항목 클래스 / Time item class
+class TimeItem {
+  final String name;
+  final int minutes;
+
+  TimeItem({required this.name, required this.minutes});
+}
+
+/// 일정 추가/수정 화면 (단일 스크롤 레이아웃) / Add/Edit Schedule Screen (Single Scroll Layout)
 ///
 /// **기능 / Features**:
 /// - 단일 스크롤 레이아웃 (4단계 PageView 제거)
@@ -19,10 +27,18 @@ import '../../providers/auth_provider.dart';
 /// - 이모지 피커로 일정 아이콘 선택
 /// - DropdownButton으로 교통수단 선택
 /// - 읽기 전용 필드 탭하여 피커 표시
+/// - Edit Mode: 기존 일정 수정 지원
 ///
-/// **Context**: 대시보드 FAB에서 이동 - 참조: https://github.com/khyapple/go_now/master/lib/screens/schedule_edit_screen.dart
+/// **Context**: 대시보드 FAB에서 이동 또는 ScheduleDetailScreen에서 수정/복제 - 참조: https://github.com/khyapple/go_now/master/lib/screens/schedule_edit_screen.dart
 class AddScheduleScreenNew extends StatefulWidget {
-  const AddScheduleScreenNew({super.key});
+  final Trip? tripToEdit; // 수정할 일정 (null이면 새로 추가)
+  final bool isDuplicate; // 복제 모드 여부
+
+  const AddScheduleScreenNew({
+    super.key,
+    this.tripToEdit,
+    this.isDuplicate = false,
+  });
 
   @override
   State<AddScheduleScreenNew> createState() => _AddScheduleScreenNewState();
@@ -35,15 +51,15 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
 
   // 기본 정보
   String _selectedEmoji = '🚗';
-  Color _selectedColor = const Color(0xFF64B5F6);
+  Color _selectedColor = AppColors.scheduleBlue;
   DateTime? _arrivalDateTime;
   String _transportMode = 'transit'; // 'transit' or 'car'
 
-  // 버퍼 시간
-  int _preparationTime = 15;
+  // 버퍼 시간 - Chip-based lists / Buffer time - Chip-based lists
+  List<TimeItem> _prepItems = [];
+  List<TimeItem> _finishItems = [];
   int _earlyArrivalBuffer = 10;
   double _travelErrorRate = 0.2;
-  int _finishUpTime = 5;
 
   // 피커 표시 상태
   bool _showColorPicker = false;
@@ -61,6 +77,49 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _loadTripDataIfEditing();
+  }
+
+  /// Edit mode일 경우 기존 일정 데이터 로드 / Load existing trip data if in edit mode
+  void _loadTripDataIfEditing() {
+    if (widget.tripToEdit != null) {
+      final trip = widget.tripToEdit!;
+
+      // 기본 정보
+      _titleController.text = widget.isDuplicate ? '${trip.title} (복사본)' : trip.title;
+      _selectedEmoji = trip.emoji;
+      _selectedColor = AppColors.getColorByName(trip.color);
+      // Supabase에서 UTC로 반환되므로 로컬 시간으로 변환 / Convert from UTC to local time
+      _arrivalDateTime = trip.arrivalTime.toLocal();
+      _transportMode = trip.transportMode;
+
+      // 버퍼 시간 - Initialize lists from totals / Initialize lists from totals
+      _earlyArrivalBuffer = trip.earlyArrivalBufferMinutes;
+      _travelErrorRate = trip.travelUncertaintyRate;
+
+      // 준비 시간을 리스트로 초기화 (기존 값이 있으면 '외출 준비' 항목으로)
+      // Initialize prep time as list (use existing value as '외출 준비' item)
+      _prepItems = trip.preparationMinutes > 0
+          ? [TimeItem(name: '외출 준비', minutes: trip.preparationMinutes)]
+          : [];
+
+      // 마무리 시간을 리스트로 초기화 (기존 값이 있으면 '이전 일정 마무리' 항목으로)
+      // Initialize finish time as list (use existing value as '이전 일정 마무리' item)
+      _finishItems = trip.previousTaskWrapupMinutes > 0
+          ? [TimeItem(name: '이전 일정 마무리', minutes: trip.previousTaskWrapupMinutes)]
+          : [];
+
+      // 목적지 정보 (검색 결과 없이 기존 주소 사용)
+      _destinationController.text = trip.destinationAddress;
+      _selectedPOI = POIResult(
+        id: trip.id ?? '',
+        name: trip.destinationAddress,
+        address: trip.destinationAddress,
+        lat: trip.destinationLat,
+        lng: trip.destinationLng,
+        category: '',
+      );
+    }
   }
 
   @override
@@ -108,6 +167,132 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
     } catch (e) {
       debugPrint('❌ Error getting current location: $e');
     }
+  }
+
+  /// 총 준비 시간 계산 / Calculate total preparation time
+  int _getTotalPrepTime() {
+    return _prepItems.fold(0, (sum, item) => sum + item.minutes);
+  }
+
+  /// 총 마무리 시간 계산 / Calculate total finish time
+  int _getTotalFinishTime() {
+    return _finishItems.fold(0, (sum, item) => sum + item.minutes);
+  }
+
+  /// 준비 항목 추가 다이얼로그 / Show add preparation item dialog
+  Future<void> _showAddPrepItemDialog() async {
+    final nameController = TextEditingController();
+    final minutesController = TextEditingController(text: '10');
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24), // GitHub pattern: 24px for dialogs
+        ),
+        title: const Text('준비 항목 추가'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: '항목 이름',
+                hintText: '예: 샤워, 메이크업, 짐 챙기기',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: minutesController,
+              decoration: const InputDecoration(
+                labelText: '소요 시간 (분)',
+                hintText: '예: 10',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final minutes = int.tryParse(minutesController.text.trim()) ?? 0;
+
+              if (name.isNotEmpty && minutes > 0) {
+                setState(() {
+                  _prepItems.add(TimeItem(name: name, minutes: minutes));
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('추가'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 마무리 항목 추가 다이얼로그 / Show add finish item dialog
+  Future<void> _showAddFinishItemDialog() async {
+    final nameController = TextEditingController();
+    final minutesController = TextEditingController(text: '5');
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24), // GitHub pattern: 24px for dialogs
+        ),
+        title: const Text('마무리 항목 추가'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: '항목 이름',
+                hintText: '예: 회의 정리, 자료 저장, 정리',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: minutesController,
+              decoration: const InputDecoration(
+                labelText: '소요 시간 (분)',
+                hintText: '예: 5',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final minutes = int.tryParse(minutesController.text.trim()) ?? 0;
+
+              if (name.isNotEmpty && minutes > 0) {
+                setState(() {
+                  _finishItems.add(TimeItem(name: name, minutes: minutes));
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('추가'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 장소 검색 / Search POI
@@ -230,6 +415,7 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
 
       // 3. 경로 API 호출하여 실제 이동 시간 계산
       int travelDurationMinutes;
+      Map<String, dynamic>? routeData; // 경로 상세 데이터
 
       if (_transportMode == 'transit') {
         // 대중교통 경로
@@ -244,7 +430,9 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
           throw Exception('대중교통 경로를 찾을 수 없습니다');
         }
 
-        travelDurationMinutes = transitResults.first.durationMinutes;
+        final transitResult = transitResults.first;
+        travelDurationMinutes = transitResult.durationMinutes;
+        routeData = transitResult.toJson(); // TransitResult 전체를 JSON으로 저장
       } else {
         // 자동차 경로
         final routeResult = await RouteService().calculateRoute(
@@ -261,17 +449,31 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
         travelDurationMinutes = routeResult.durationMinutes;
       }
 
-      // 4. 출발 시간 계산: 도착시간 - (이동시간 + 모든 버퍼)
-      final totalBufferMinutes = _preparationTime +
-          _earlyArrivalBuffer +
-          _finishUpTime +
-          (travelDurationMinutes * _travelErrorRate).round();
-      final departureDatetime = _arrivalDateTime!.subtract(
-        Duration(minutes: travelDurationMinutes + totalBufferMinutes),
+      // 4. 시간 계산 로직 (약속시간 기준)
+      // 약속시간(meetingTime): 사용자가 입력한 시간 (_arrivalDateTime)
+      // 도착시간(arrivalTime): 약속시간 - 일찍도착버퍼
+      // 출발시간(departureTime): 도착시간 - 이동시간 - 준비시간 - 이동오차 - 마무리시간
+
+      final meetingDateTime = _arrivalDateTime!; // 약속시간 (사용자 입력)
+
+      // 도착시간 = 약속시간 - 일찍도착버퍼
+      final actualArrivalTime = meetingDateTime.subtract(
+        Duration(minutes: _earlyArrivalBuffer),
       );
 
-      // 5. Trip 객체 생성 (실제 데이터 사용)
+      // 출발시간 = 도착시간 - (이동시간 + 준비시간 + 이동오차 + 마무리시간)
+      final totalPrepBufferMinutes = _getTotalPrepTime() +
+          _getTotalFinishTime() +
+          (travelDurationMinutes * _travelErrorRate).round();
+      final departureDatetime = actualArrivalTime.subtract(
+        Duration(minutes: travelDurationMinutes + totalPrepBufferMinutes),
+      );
+
+      // 5. Trip 객체 생성
+      // 주의: arrivalTime은 실제 도착시간 (약속시간 - 일찍도착버퍼)
+      // Supabase는 UTC로 저장하므로 .toUtc() 변환 필요
       final trip = Trip(
+        id: widget.isDuplicate ? null : widget.tripToEdit?.id, // 복제 모드면 새 ID, 수정이면 기존 ID
         userId: currentUser.id,
         title: _titleController.text.trim(),
         color: AppColors.getColorName(_selectedColor) ?? 'blue',
@@ -279,19 +481,27 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
         destinationAddress: _selectedPOI!.displayAddress,
         destinationLat: destLat,
         destinationLng: destLng,
-        arrivalTime: _arrivalDateTime!,
-        departureTime: departureDatetime,
+        arrivalTime: actualArrivalTime.toUtc(),  // 로컬 → UTC 변환
+        departureTime: departureDatetime.toUtc(),  // 로컬 → UTC 변환
         transportMode: _transportMode,
+        routeData: routeData, // 대중교통 상세 경로 데이터 저장
         travelDurationMinutes: travelDurationMinutes,
-        preparationMinutes: _preparationTime,
+        preparationMinutes: _getTotalPrepTime(),
         earlyArrivalBufferMinutes: _earlyArrivalBuffer,
         travelUncertaintyRate: _travelErrorRate,
-        previousTaskWrapupMinutes: _finishUpTime,
+        previousTaskWrapupMinutes: _getTotalFinishTime(),
       );
 
-      // 6. Supabase에 저장
+      // 6. Supabase에 저장 (추가 또는 수정)
       final tripService = TripService();
-      await tripService.createTrip(trip);
+
+      if (widget.tripToEdit == null || widget.isDuplicate) {
+        // 새로 추가 또는 복제
+        await tripService.createTrip(trip);
+      } else {
+        // 기존 일정 수정
+        await tripService.updateTrip(trip);
+      }
 
       // 로딩 다이얼로그 닫기
       if (!mounted) return;
@@ -367,7 +577,13 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text('일정 추가'),
+        title: Text(
+          widget.tripToEdit == null
+              ? '일정 추가'
+              : widget.isDuplicate
+                  ? '일정 복제'
+                  : '일정 수정',
+        ),
         actions: [
           // 저장 버튼
           TextButton(
@@ -507,15 +723,14 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
               _buildSectionHeader(theme, '버퍼 시간 설정', Icons.schedule),
               const SizedBox(height: 16),
 
-              _buildBufferTimeSlider(
+              _buildTimeItemsChips(
                 theme,
                 '외출 준비 시간',
-                '옷 입고 짐 챙기는 시간',
+                '옷 입고 짐 챙기는 시간 (여러 항목 추가 가능)',
                 Icons.checkroom,
-                _preparationTime,
-                0,
-                60,
-                (value) => setState(() => _preparationTime = value.round()),
+                _prepItems,
+                _showAddPrepItemDialog,
+                (index) => setState(() => _prepItems.removeAt(index)),
               ),
               const SizedBox(height: 16),
 
@@ -543,16 +758,20 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
               ),
               const SizedBox(height: 16),
 
-              _buildBufferTimeSlider(
+              _buildTimeItemsChips(
                 theme,
                 '일정 마무리 시간',
-                '이전 일정을 마무리하는 시간',
+                '이전 일정을 마무리하는 시간 (여러 항목 추가 가능)',
                 Icons.event_note,
-                _finishUpTime,
-                0,
-                30,
-                (value) => setState(() => _finishUpTime = value.round()),
+                _finishItems,
+                _showAddFinishItemDialog,
+                (index) => setState(() => _finishItems.removeAt(index)),
               ),
+
+              const SizedBox(height: 24),
+
+              // 최종 계산 Preview / Final calculation preview
+              _buildFinalPreview(theme),
 
               const SizedBox(height: 80), // 하단 여백
             ],
@@ -601,8 +820,8 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
                   GestureDetector(
                     onTap: () => setState(() => _showColorPicker = !_showColorPicker),
                     child: Container(
-                      width: 60,
-                      height: 60,
+                      width: 50, // GitHub pattern: 50x50px for color picker circles
+                      height: 50,
                       decoration: BoxDecoration(
                         color: _selectedColor,
                         shape: BoxShape.circle,
@@ -631,7 +850,7 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
               ),
             ),
 
-            const SizedBox(width: 24),
+            const SizedBox(width: 12), // GitHub pattern: 12px gap between sections
 
             // 이모지 섹션
             Expanded(
@@ -649,8 +868,8 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
                   GestureDetector(
                     onTap: () => setState(() => _showEmojiPicker = !_showEmojiPicker),
                     child: Container(
-                      width: 60,
-                      height: 60,
+                      width: 50, // GitHub pattern: 50x50px for emoji picker circles
+                      height: 50,
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceVariant,
                         shape: BoxShape.circle,
@@ -888,6 +1107,178 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
           max: max,
           divisions: 10,
           onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  /// 최종 계산 Preview 섹션 / Final calculation preview section
+  Widget _buildFinalPreview(ThemeData theme) {
+    // 필수 필드가 모두 입력되었는지 확인 / Check if all required fields are filled
+    if (_selectedPOI == null || _arrivalDateTime == null) {
+      return const SizedBox.shrink();
+    }
+
+    final prepTime = _getTotalPrepTime();
+    final finishTime = _getTotalFinishTime();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.preview,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '최종 계산 (Preview)',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 24),
+          _buildPreviewRow('📍', '목적지', _selectedPOI!.name),
+          const SizedBox(height: 8),
+          _buildPreviewRow(
+            '🕐',
+            '도착',
+            '${_arrivalDateTime!.hour}:${_arrivalDateTime!.minute.toString().padLeft(2, '0')}',
+          ),
+          const SizedBox(height: 8),
+          _buildPreviewRow('🚗', '이동', '경로 계산 필요 (저장 시 자동 계산)'),
+          const SizedBox(height: 8),
+          _buildPreviewRow('👔', '준비', '$prepTime분'),
+          const SizedBox(height: 8),
+          _buildPreviewRow('📝', '마무리', '$finishTime분'),
+          const SizedBox(height: 8),
+          _buildPreviewRow('📋', '버퍼', '${_earlyArrivalBuffer}분 + ${(_travelErrorRate * 100).toInt()}%'),
+          const Divider(height: 24),
+          Row(
+            children: [
+              Icon(
+                Icons.alarm,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '⏰ 출발 시간: 경로 계산 후 표시됩니다',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Preview row helper / Preview row helper
+  Widget _buildPreviewRow(String emoji, String label, String value) {
+    return Row(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 18)),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Chip-based 시간 항목 위젯 / Chip-based time items widget
+  Widget _buildTimeItemsChips(
+    ThemeData theme,
+    String title,
+    String description,
+    IconData icon,
+    List<TimeItem> items,
+    VoidCallback onAddPressed,
+    Function(int) onDeletePressed,
+  ) {
+    final totalMinutes = items.fold(0, (sum, item) => sum + item.minutes);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 20, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '총 $totalMinutes분',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ...items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return Chip(
+                label: Text('${item.name}: ${item.minutes}분'),
+                deleteIcon: const Icon(Icons.close, size: 18),
+                onDeleted: () => onDeletePressed(index),
+              );
+            }),
+            ActionChip(
+              avatar: const Icon(Icons.add, size: 18),
+              label: const Text('항목 추가'),
+              onPressed: onAddPressed,
+            ),
+          ],
         ),
       ],
     );

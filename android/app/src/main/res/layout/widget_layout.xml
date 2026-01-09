@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GoNow 위젯 메인 레이아웃 / GoNow Widget Main Layout
+
+  위치 / Location: android/app/src/main/res/layout/widget_layout.xml
+
+  설명 / Description:
+  - CircularTimerWidget과 동일한 디자인
+  - 투명 배경
+  - 원형 프로그레스와 중앙 텍스트
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/transparent">
+
+    <!-- 원형 프로그레스 -->
+    <ImageView
+        android:id="@+id/circular_progress"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_gravity="center"
+        android:scaleType="fitCenter" />
+
+    <!-- 중앙 텍스트 컨테이너 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- 주 타이머 텍스트 (64sp) -->
+        <TextView
+            android:id="@+id/time_remaining_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="54분 후 출발"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:textColor="#1E1E1E"
+            android:gravity="center"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- 부제목 텍스트 (28sp) -->
+        <TextView
+            android:id="@+id/arrival_time_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="19:50 도착"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#757575"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</FrameLayout>

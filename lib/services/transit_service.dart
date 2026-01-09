@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'cache_service.dart';
 
-/// Naver Transit API를 사용한 대중교통 경로 탐색 서비스 / Public Transit Route Service
+/// TMAP Public Transit API를 사용한 대중교통 경로 탐색 서비스 / Public Transit Route Service
 ///
 /// **기능 / Features**:
-/// - Naver Transit API 연동 (버스/지하철 통합)
-/// - 실시간 대중교통 경로 탐색
+/// - TMAP Public Transit API 연동 (버스/지하철 통합)
+/// - 실시간 대중교통 경로 탐색 (GTFS 기반)
 /// - 환승 정보 파싱
 /// - 에러 핸들링 및 폴백 로직
 /// - 경로 캐싱 (5분 유효)
@@ -39,27 +39,27 @@ class TransitService {
       return;
     }
 
-    final clientId = dotenv.env['NAVER_CLIENT_ID'];
-    final clientSecret = dotenv.env['NAVER_CLIENT_SECRET'];
+    final appKey = dotenv.env['TMAP_APP_KEY'];
 
-    if (clientId == null || clientSecret == null) {
-      throw Exception('Naver API keys not configured in .env file');
+    if (appKey == null) {
+      throw Exception('TMAP API key not configured in .env file');
     }
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://naveropenapi.apigw.ntruss.com',
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        baseUrl: 'https://apis.openapi.sk.com',
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
         headers: {
-          'X-NCP-APIGW-API-KEY-ID': clientId,
-          'X-NCP-APIGW-API-KEY': clientSecret,
+          'Content-Type': 'application/json',
+          'accept': 'application/json',
+          'appKey': appKey,
         },
       ),
     );
 
     _isInitialized = true;
-    print('TransitService: Initialized successfully');
+    print('TransitService: Initialized successfully with TMAP Public Transit API');
   }
 
   /// 대중교통 경로 탐색 및 소요 시간 계산 / Calculate public transit route
@@ -100,52 +100,97 @@ class TransitService {
     // 캐시 조회 / Check cache
     if (useCache) {
       final cachedResult = _cache.get(cacheKey);
-      if (cachedResult != null) {
+      if (cachedResult != null && cachedResult.durationMinutes > 0) {
+        // 유효한 캐시만 사용 (durationMinutes > 0)
         print('TransitService: Using cached route (key: $cacheKey)');
         return [cachedResult];
+      } else if (cachedResult != null && cachedResult.durationMinutes == 0) {
+        // 잘못된 캐시 제거
+        print('TransitService: Removing invalid cache (durationMinutes = 0)');
+        _cache.invalidate(cacheKey);
       }
     }
 
     try {
-      // Naver Transit API 호출
-      // https://api.ncloud-docs.com/docs/ai-naver-mapstransit
-      final response = await _dio.get(
-        '/map-direction/v1/transit',
-        queryParameters: {
-          'start': '$originLng,$originLat', // 네이버는 lng,lat 순서
-          'goal': '$destLng,$destLat',
+      // TMAP Public Transit API 호출
+      // https://openapi.sk.com/products/tmap/detail
+      final response = await _dio.post(
+        '/transit/routes',
+        data: {
+          'startX': originLng.toString(), // 출발지 경도
+          'startY': originLat.toString(), // 출발지 위도
+          'endX': destLng.toString(), // 목적지 경도
+          'endY': destLat.toString(), // 목적지 위도
+          'lang': 0, // 0: 한국어, 1: 영어
+          'format': 'json', // 응답 형식
+          'count': 5, // 최대 경로 개수
         },
       );
 
       // 응답 파싱 / Parse response
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final code = data['code'] as int;
 
-        // Naver API 응답 검증
-        if (code != 0) {
+        // 디버깅: API 응답 로그
+        print('✅ TransitService: API response received');
+        print('📊 Response keys: ${data.keys.toList()}');
+
+        // TMAP API 응답 검증
+        if (data['metaData'] == null || data['metaData']['plan'] == null) {
+          print('❌ TransitService: No route found in response');
           throw DioException(
             requestOptions: response.requestOptions,
-            error: 'Naver API Error: ${data['message']}',
+            error: 'TMAP API Error: No route found',
             type: DioExceptionType.badResponse,
           );
         }
 
-        // traoptimal (최적 경로) 목록 파싱
-        final routes = data['route']['traoptimal'] as List<dynamic>;
+        final plan = data['metaData']['plan'];
+        final itineraries = plan['itineraries'] as List<dynamic>;
 
-        final results = routes.map((route) {
-          final summary = route['summary'];
-          final subPaths = route['subPath'] as List<dynamic>;
-
-          return TransitResult(
-            durationMinutes: (summary['duration'] / 60).ceil(), // 초 → 분
-            distanceKm: (summary['distance'] / 1000).toDouble(), // 미터 → km
-            busTransitCount: summary['busTransitCount'] ?? 0,
-            subwayTransitCount: summary['subwayTransitCount'] ?? 0,
-            totalFare: summary['payment'] ?? 0,
-            subPaths: _parseSubPaths(subPaths),
+        if (itineraries.isEmpty) {
+          print('❌ TransitService: No itineraries found');
+          throw DioException(
+            requestOptions: response.requestOptions,
+            error: 'TMAP API Error: No itineraries found',
+            type: DioExceptionType.badResponse,
           );
+        }
+
+        print('🚌 TransitService: Found ${itineraries.length} routes');
+
+        final results = itineraries.map((itinerary) {
+          final legs = itinerary['legs'] as List<dynamic>;
+
+          // 총 소요 시간 및 거리 계산
+          int totalDuration = 0;
+          double totalDistance = 0.0;
+          int busCount = 0;
+          int subwayCount = 0;
+          int totalFare = itinerary['fare']?['regular']?['totalFare'] ?? 0;
+
+          for (final leg in legs) {
+            // TMAP API는 'sectionTime' 필드 사용 (초 단위)
+            totalDuration += (leg['sectionTime'] ?? 0) as int;
+            totalDistance += ((leg['distance'] ?? 0) as num).toDouble();
+
+            final mode = leg['mode'] as String?;
+            if (mode == 'BUS') busCount++;
+            if (mode == 'SUBWAY') subwayCount++;
+          }
+
+          final result = TransitResult(
+            durationMinutes: (totalDuration / 60).ceil(), // 초 → 분
+            distanceKm: (totalDistance / 1000).toDouble(), // 미터 → km
+            busTransitCount: busCount > 0 ? busCount - 1 : 0, // 환승 횟수 계산
+            subwayTransitCount: subwayCount > 0 ? subwayCount - 1 : 0,
+            totalFare: totalFare,
+            subPaths: _parseSubPaths(legs),
+          );
+
+          print('🚇 Route: ${result.durationMinutes}분, 환승 ${result.totalTransitCount}회, ${result.totalFare}원');
+
+          return result;
         }).toList();
 
         // 첫 번째 경로를 캐시에 저장 / Save first route to cache (5분 유효)
@@ -175,37 +220,38 @@ class TransitService {
     }
   }
 
-  /// 세부 경로 파싱 (버스, 지하철, 도보)
-  List<SubPath> _parseSubPaths(List<dynamic> subPaths) {
-    return subPaths.map((subPath) {
-      final trafficType = subPath['trafficType'] as int;
+  /// 세부 경로 파싱 (버스, 지하철, 도보) - TMAP legs 형식
+  List<SubPath> _parseSubPaths(List<dynamic> legs) {
+    return legs.map((leg) {
+      final mode = leg['mode'] as String?;
+      final transitType = _parseTransitMode(mode);
 
       return SubPath(
-        trafficType: _parseTrafficType(trafficType),
-        durationMinutes: ((subPath['sectionTime'] ?? 0) / 60).ceil(),
-        distanceKm: ((subPath['distance'] ?? 0) / 1000).toDouble(),
+        trafficType: transitType,
+        durationMinutes: ((leg['sectionTime'] ?? 0) / 60).ceil(), // 초 → 분
+        distanceKm: ((leg['distance'] ?? 0) / 1000).toDouble(), // 미터 → km
 
         // 버스 정보
-        busNo: subPath['lane']?[0]?['busNo'],
-        startStationName: subPath['startName'],
-        endStationName: subPath['endName'],
-        stationCount: subPath['stationCount'] ?? 0,
+        busNo: leg['route'],
+        startStationName: leg['start']?['name'],
+        endStationName: leg['end']?['name'],
+        stationCount: leg['passStopList']?['stations']?.length ?? 0,
 
         // 지하철 정보
-        subwayLine: subPath['lane']?[0]?['name'],
-        subwayColor: subPath['lane']?[0]?['color'],
+        subwayLine: leg['route'], // TMAP에서는 route에 노선명 포함
+        subwayColor: leg['routeColor'], // TMAP API routeColor 필드 사용
       );
     }).toList();
   }
 
-  /// 교통 수단 타입 파싱
-  TransitType _parseTrafficType(int type) {
-    switch (type) {
-      case 1:
+  /// 교통 수단 타입 파싱 - TMAP mode 형식
+  TransitType _parseTransitMode(String? mode) {
+    switch (mode?.toUpperCase()) {
+      case 'SUBWAY':
         return TransitType.subway; // 지하철
-      case 2:
+      case 'BUS':
         return TransitType.bus; // 버스
-      case 3:
+      case 'WALK':
         return TransitType.walk; // 도보
       default:
         return TransitType.walk;
@@ -379,6 +425,32 @@ class TransitResult {
   /// 총 환승 횟수
   int get totalTransitCount => busTransitCount + subwayTransitCount;
 
+  /// JSON으로 변환 / Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'durationMinutes': durationMinutes,
+      'distanceKm': distanceKm,
+      'busTransitCount': busTransitCount,
+      'subwayTransitCount': subwayTransitCount,
+      'totalFare': totalFare,
+      'subPaths': subPaths.map((subPath) => subPath.toJson()).toList(),
+    };
+  }
+
+  /// JSON에서 생성 / Create from JSON
+  factory TransitResult.fromJson(Map<String, dynamic> json) {
+    return TransitResult(
+      durationMinutes: json['durationMinutes'] as int,
+      distanceKm: (json['distanceKm'] as num).toDouble(),
+      busTransitCount: json['busTransitCount'] as int,
+      subwayTransitCount: json['subwayTransitCount'] as int,
+      totalFare: json['totalFare'] as int,
+      subPaths: (json['subPaths'] as List<dynamic>)
+          .map((item) => SubPath.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
   @override
   String toString() {
     return 'TransitResult(duration: ${durationMinutes}분, distance: ${distanceKm.toStringAsFixed(1)}km, '
@@ -437,6 +509,50 @@ class SubPath {
         return '$subwayLine ($stationCount역, ${durationMinutes}분)';
       case TransitType.walk:
         return '도보 (${distanceKm.toStringAsFixed(1)}km, ${durationMinutes}분)';
+    }
+  }
+
+  /// JSON으로 변환 / Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'trafficType': trafficType.toString().split('.').last,
+      'durationMinutes': durationMinutes,
+      'distanceKm': distanceKm,
+      'startStationName': startStationName,
+      'endStationName': endStationName,
+      'stationCount': stationCount,
+      'busNo': busNo,
+      'subwayLine': subwayLine,
+      'subwayColor': subwayColor,
+    };
+  }
+
+  /// JSON에서 생성 / Create from JSON
+  factory SubPath.fromJson(Map<String, dynamic> json) {
+    return SubPath(
+      trafficType: _transitTypeFromString(json['trafficType'] as String),
+      durationMinutes: json['durationMinutes'] as int,
+      distanceKm: (json['distanceKm'] as num).toDouble(),
+      startStationName: json['startStationName'] as String?,
+      endStationName: json['endStationName'] as String?,
+      stationCount: json['stationCount'] as int? ?? 0,
+      busNo: json['busNo'] as String?,
+      subwayLine: json['subwayLine'] as String?,
+      subwayColor: json['subwayColor'] as String?,
+    );
+  }
+
+  /// 문자열을 TransitType으로 변환 / Convert string to TransitType
+  static TransitType _transitTypeFromString(String type) {
+    switch (type) {
+      case 'subway':
+        return TransitType.subway;
+      case 'bus':
+        return TransitType.bus;
+      case 'walk':
+        return TransitType.walk;
+      default:
+        return TransitType.walk;
     }
   }
 }

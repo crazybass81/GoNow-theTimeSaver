@@ -35,6 +35,13 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
+  // Password strength indicators
+  bool _hasMinLength = false;
+  bool _hasUpperCase = false;
+  bool _hasLowerCase = false;
+  bool _hasNumber = false;
+  bool _hasSpecialChar = false;
+
   // Step 2: Name & Phone
   final _step2FormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -44,6 +51,24 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _agreeToTerms = false;
   bool _agreeToPrivacy = false;
   bool _agreeToMarketing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_checkPasswordRequirements);
+  }
+
+  /// 비밀번호 요구사항 체크 / Check password requirements
+  void _checkPasswordRequirements() {
+    final password = _passwordController.text;
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasUpperCase = password.contains(RegExp(r'[A-Z]'));
+      _hasLowerCase = password.contains(RegExp(r'[a-z]'));
+      _hasNumber = password.contains(RegExp(r'[0-9]'));
+      _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    });
+  }
 
   @override
   void dispose() {
@@ -326,14 +351,34 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 32),
 
-            // 이메일 입력
+            // 이메일 입력 (GitHub UI: 12px border radius)
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '이메일',
                 hintText: 'example@email.com',
-                prefixIcon: Icon(Icons.email_outlined),
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+                ),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -347,7 +392,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 비밀번호 입력
+            // 비밀번호 입력 (GitHub UI: 12px border radius)
             TextFormField(
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
@@ -367,20 +412,69 @@ class _SignupScreenState extends State<SignupScreen> {
                     });
                   },
                 ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+                ),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return '비밀번호를 입력해주세요';
                 }
-                if (value.length < 6) {
-                  return '비밀번호는 6자 이상이어야 합니다';
+                if (value.length < 8) {
+                  return '비밀번호는 8자 이상이어야 합니다';
                 }
                 return null;
               },
             ),
+
+            // 비밀번호 강도 표시 / Password strength indicator
+            if (_passwordController.text.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '비밀번호 요구사항',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildPasswordRequirement('8자 이상', _hasMinLength),
+                    _buildPasswordRequirement('영문 대문자 포함', _hasUpperCase),
+                    _buildPasswordRequirement('영문 소문자 포함', _hasLowerCase),
+                    _buildPasswordRequirement('숫자 포함', _hasNumber),
+                    _buildPasswordRequirement('특수문자 포함', _hasSpecialChar),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
 
-            // 비밀번호 확인
+            // 비밀번호 확인 (GitHub UI: 12px border radius)
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: !_isConfirmPasswordVisible,
@@ -399,6 +493,26 @@ class _SignupScreenState extends State<SignupScreen> {
                       _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
                     });
                   },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!, width: 2),
                 ),
               ),
               validator: (value) {
@@ -429,32 +543,77 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 24),
 
-            // 소셜 회원가입 버튼들
-            OutlinedButton.icon(
+            // 소셜 회원가입 버튼들 (GitHub UI 스타일 - 브랜드 컬러 filled buttons)
+            // Google 회원가입 (흰색 배경, 검은색 텍스트)
+            ElevatedButton(
               onPressed: _isLoading
                   ? null
                   : () => _handleSocialSignup('Google'),
-              icon: const Icon(Icons.g_mobiledata, size: 28),
-              label: const Text('Google로 시작하기'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
+                minimumSize: const Size(double.infinity, 50),
+                side: BorderSide(color: Colors.grey[300]!, width: 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.g_mobiledata, size: 28, color: Colors.black87),
+                  SizedBox(width: 12),
+                  Text('Google로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
+            // Apple 회원가입 (검은색 배경, 흰색 텍스트)
+            ElevatedButton(
               onPressed: _isLoading
                   ? null
                   : () => _handleSocialSignup('Apple'),
-              icon: const Icon(Icons.apple, size: 24),
-              label: const Text('Apple로 시작하기'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.apple, size: 24, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('Apple로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
+            // Kakao 회원가입 (카카오 옐로우 배경, 검은색 텍스트)
+            ElevatedButton(
               onPressed: _isLoading
                   ? null
                   : () => _handleSocialSignup('Kakao'),
-              icon: const Icon(Icons.chat_bubble, size: 24),
-              label: const Text('Kakao로 시작하기'),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFFEE500)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFEE500), // 카카오 브랜드 컬러
                 foregroundColor: const Color(0xFF3C1E1E),
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.chat_bubble, size: 24, color: Color(0xFF3C1E1E)),
+                  SizedBox(width: 12),
+                  Text('Kakao로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                ],
               ),
             ),
           ],
@@ -485,14 +644,34 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 32),
 
-            // 이름 입력
+            // 이름 입력 (GitHub UI: 12px border radius)
             TextFormField(
               controller: _nameController,
               keyboardType: TextInputType.name,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '이름',
                 hintText: '홍길동',
-                prefixIcon: Icon(Icons.person_outline),
+                prefixIcon: const Icon(Icons.person_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+                ),
               ),
               validator: (value) {
                 // 선택사항이므로 비어있어도 OK
@@ -501,14 +680,34 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 전화번호 입력
+            // 전화번호 입력 (GitHub UI: 12px border radius)
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '전화번호',
                 hintText: '010-1234-5678',
-                prefixIcon: Icon(Icons.phone_outlined),
+                prefixIcon: const Icon(Icons.phone_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+                ),
               ),
               validator: (value) {
                 // 선택사항이므로 비어있어도 OK
@@ -682,6 +881,30 @@ class _SignupScreenState extends State<SignupScreen> {
             subtitle: const Text('이벤트, 혜택 정보를 받아보실 수 있습니다'),
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 비밀번호 요구사항 개별 항목 위젯 / Password requirement item widget
+  Widget _buildPasswordRequirement(String text, bool isMet) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.cancel,
+            size: 16,
+            color: isMet ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: isMet ? Colors.green[700] : Colors.red[600],
+            ),
           ),
         ],
       ),

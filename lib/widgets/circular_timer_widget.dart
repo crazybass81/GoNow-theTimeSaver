@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../utils/app_theme.dart';
+import '../utils/app_colors.dart';
 
 /// 원형 타이머 위젯 / Circular Timer Widget
 ///
@@ -63,7 +64,8 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget> {
   /// 남은 시간 업데이트 / Update remaining time
   void _updateRemainingTime() {
     final now = DateTime.now();
-    _remainingTime = widget.departureTime.difference(now);
+    // Supabase에서 UTC로 반환되므로 로컬 시간으로 변환 / Convert from UTC (Supabase) to local time
+    _remainingTime = widget.departureTime.toLocal().difference(now);
 
     if (_remainingTime.isNegative) {
       _remainingTime = Duration.zero;
@@ -77,7 +79,8 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget> {
   /// 프로그레스 값 계산 (0.0 ~ 1.0) / Calculate progress value
   double _calculateProgress() {
     final now = DateTime.now();
-    final totalDuration = widget.departureTime.difference(
+    // Supabase에서 UTC로 반환되므로 로컬 시간으로 변환 / Convert from UTC (Supabase) to local time
+    final totalDuration = widget.departureTime.toLocal().difference(
       now.subtract(_remainingTime),
     );
 
@@ -102,15 +105,17 @@ class _CircularTimerWidgetState extends State<CircularTimerWidget> {
 
   /// 도착 시간 텍스트 / Get arrival time text
   String _getArrivalTimeText() {
-    return '${widget.targetTime.hour}:${widget.targetTime.minute.toString().padLeft(2, '0')} 도착';
+    // Supabase에서 UTC로 반환되므로 로컬 시간으로 변환 / Convert from UTC (Supabase) to local time
+    final localTargetTime = widget.targetTime.toLocal();
+    return '${localTargetTime.hour}:${localTargetTime.minute.toString().padLeft(2, '0')} 도착';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // 참조 저장소 패턴: 단순 색상 (grey[200] 배경, blue[600] 진행)
-    final backgroundColor = Colors.grey[200]!;
-    final progressColor = Colors.blue[600]!;
+    final backgroundColor = AppColors.divider;
+    final progressColor = AppColors.primary;
 
     return Container(
       // BoxShadow 깊이 효과 (참조 패턴)

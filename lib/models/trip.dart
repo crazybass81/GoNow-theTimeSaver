@@ -1,3 +1,5 @@
+import '../services/transit_service.dart';
+
 /// 일정 모델 / Trip Model
 ///
 /// **Supabase 테이블**: schedules
@@ -268,6 +270,23 @@ class Trip {
   /// 활성 일정 여부 / Check if active
   bool isActive() {
     return !isCompleted && !isCancelled;
+  }
+
+  /// 대중교통 상세 경로 추출 / Extract transit route details
+  ///
+  /// **Context**: routeData에 저장된 TransitResult를 파싱
+  /// **Returns**: TransitResult 객체, 없으면 null
+  TransitResult? get transitDetails {
+    if (routeData == null || transportMode != 'transit') {
+      return null;
+    }
+
+    try {
+      return TransitResult.fromJson(routeData!);
+    } catch (e) {
+      print('⚠️ Failed to parse transit route data: $e');
+      return null;
+    }
   }
 
   @override

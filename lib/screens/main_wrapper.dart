@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/app_colors.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'calendar/calendar_screen.dart';
+import 'settings/settings_screen.dart';
 
-/// 메인 래퍼 - PageView 기반 네비게이션 / Main Wrapper - PageView-based Navigation
+/// 메인 래퍼 - GitHub 패턴 완전 복제 / Main Wrapper - Complete GitHub pattern clone
 ///
-/// **기능 / Features**:
-/// - PageView 스와이프 네비게이션 (Dashboard ↔ Calendar)
-/// - SharedPreferences로 현재 페이지 상태 유지
-/// - 커스텀 하단 인디케이터 (300ms easeInOut 애니메이션)
-/// - 페이지 변경 시 자동 저장
-///
-/// **Context**: 앱 메인 엔트리 포인트 - 참조: https://github.com/khyapple/go_now/master/lib/screens/main_wrapper.dart
+/// **GitHub Reference**: https://github.com/khyapple/go_now/blob/master/lib/screens/main_wrapper.dart
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
 
@@ -20,15 +16,36 @@ class MainWrapper extends StatefulWidget {
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-  late PageController _pageController;
+  PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _isLoading = true;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _loadLastPage();
+    _loadCurrentPage();
+  }
+
+  Future<void> _loadCurrentPage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPage = prefs.getInt('currentPage') ?? 0;
+
+    if (savedPage != 0 && _pageController.hasClients) {
+      _pageController.jumpToPage(savedPage);
+    } else if (savedPage != 0) {
+      // PageController가 아직 연결되지 않았으면 새로운 controller 생성
+      _pageController = PageController(initialPage: savedPage);
+    }
+
+    setState(() {
+      _currentPage = savedPage;
+      _isInitialized = true;
+    });
+  }
+
+  Future<void> _saveCurrentPage(int page) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('currentPage', page);
   }
 
   @override
@@ -37,182 +54,101 @@ class _MainWrapperState extends State<MainWrapper> {
     super.dispose();
   }
 
-  /// SharedPreferences에서 마지막 페이지 로드 / Load last page from SharedPreferences
-  Future<void> _loadLastPage() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastPage = prefs.getInt('current_page') ?? 0;
-
-      // 유효한 페이지 범위 확인
-      if (lastPage >= 0 && lastPage < 2) {
-        setState(() {
-          _currentPage = lastPage;
-          _isLoading = false;
-        });
-
-        // PageController는 build 후에만 사용 가능
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_pageController.hasClients) {
-            _pageController.jumpToPage(_currentPage);
-          }
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading last page: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  /// 페이지 변경 시 SharedPreferences에 저장 / Save page change to SharedPreferences
-  Future<void> _onPageChanged(int page) async {
-    setState(() {
-      _currentPage = page;
-    });
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('current_page', page);
-    } catch (e) {
-      debugPrint('Error saving current page: $e');
-    }
-  }
-
-  /// 하단 인디케이터 탭 시 페이지 이동 / Navigate to page on indicator tap
-  void _onIndicatorTap(int page) {
-    _pageController.animateToPage(
-      page,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
-      body: Column(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          'Go Now',
+          style: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings_outlined, color: AppColors.primaryText),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Stack(
         children: [
-          // PageView (Dashboard + Calendar)
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: _onPageChanged,
-              children: const [
-                DashboardScreen(),
-                CalendarScreen(),
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+              _saveCurrentPage(index);
+            },
+            children: const [
+              DashboardScreen(),
+              CalendarScreen(),
+            ],
+          ),
+          // 페이지 인디케이터 (GitHub pattern)
+          Positioned(
+            bottom: 32,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildPageIndicator(0, '홈'),
+                const SizedBox(width: 12),
+                _buildPageIndicator(1, '캘린더'),
               ],
             ),
           ),
-
-          // 커스텀 하단 인디케이터
-          _buildBottomIndicator(),
         ],
       ),
     );
   }
 
-  /// 커스텀 하단 인디케이터 (참조 패턴) / Custom bottom indicator
-  Widget _buildBottomIndicator() {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Dashboard 인디케이터
-            _buildIndicatorItem(
-              index: 0,
-              icon: Icons.home,
-              label: 'Dashboard',
-              isActive: _currentPage == 0,
-            ),
-
-            // Calendar 인디케이터
-            _buildIndicatorItem(
-              index: 1,
-              icon: Icons.calendar_month,
-              label: 'Calendar',
-              isActive: _currentPage == 1,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 인디케이터 아이템 / Indicator item
-  Widget _buildIndicatorItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required bool isActive,
-  }) {
-    final theme = Theme.of(context);
-
+  Widget _buildPageIndicator(int index, String label) {
+    final isActive = _currentPage == index;
     return GestureDetector(
-      onTap: () => _onIndicatorTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: isActive ? 20 : 12,
-          vertical: 8,
-        ),
+      onTap: () {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        setState(() {
+          _currentPage = index;
+        });
+        _saveCurrentPage(index);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive
-              ? theme.colorScheme.primaryContainer
-              : Colors.transparent,
+          color: isActive ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: isActive
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            // 활성 상태일 때만 라벨 표시
-            if (isActive) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            ],
           ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? Colors.white : AppColors.primaryText,
+            fontSize: 14,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
     );
