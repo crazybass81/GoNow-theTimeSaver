@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../main_wrapper.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 /// 로그인 화면 / Login Screen
 ///
@@ -279,9 +280,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // TODO: 비밀번호 찾기 화면으로 이동
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('비밀번호 찾기 (구현 예정)')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen(),
+                          ),
                         );
                       },
                       child: Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:provider/provider.dart';
 import '../schedule/schedule_detail_screen.dart';
+import '../schedule/schedule_edit_screen.dart';
 import '../../providers/trip_provider.dart';
 import '../../models/trip.dart';
 import '../../utils/app_colors.dart';
@@ -337,12 +338,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
-              // GitHub pattern: 일정이 있으면 모달 표시
+              // GitHub pattern: 일정이 있으면 모달 표시, 없으면 일정 추가 화면으로 이동
               final events = _getEventsForDay(selectedDay);
               if (events.isNotEmpty) {
                 _showEventModal(context, selectedDay);
+              } else {
+                // 일정이 없는 날짜 선택 시 → ScheduleEditScreen으로 이동 (선택한 날짜를 기본값으로)
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ScheduleEditScreen(
+                      initialDate: selectedDay,
+                    ),
+                  ),
+                );
               }
-              // TODO: 일정 추가 화면 구현 필요 (schedule_edit_screen.dart)
             },
             onFormatChanged: (format) {
               setState(() {

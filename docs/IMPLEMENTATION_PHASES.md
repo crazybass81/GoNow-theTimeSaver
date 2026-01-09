@@ -3,14 +3,21 @@
 > **MVP 개발 Phase 1~5 상세 구현 가이드**
 
 **최종 업데이트**: 2026-01-09
-**문서 버전**: 2.4
+**문서 버전**: 2.5
 **프로젝트 상태**: Phase 4 완료 (100%), Phase 5 준비 중
 
-**주요 변경사항 v2.4** (2026-01-09):
-- ✅ **Phase 4 완료 (Task 4.1-4.9 모두 완료)**
+**주요 변경사항 v2.5** (2026-01-09 Evening):
+- ✅ **Phase 4 완료 (Task 4.1-4.11 모두 완료)**
+  - Task 4.11: Calendar 일정 추가 기능 (빈 날짜 클릭 → ScheduleEditScreen)
+  - Task 4.10: Loading Screen 생성 (Provider 기반 인증 & 데이터 프리로드)
   - Task 4.9: Settings Screen Modal Update (UI 패턴 일관성 100% 달성)
   - Task 4.8: Legal Screens & Splash Screen 구현
-  - Priority & Medium 작업 완료 (Settings 아이콘, Shadow, Spacing)
+- ✅ **새 기능 추가**
+  - Loading Screen: 인증 상태 확인, 에러 처리, 재시도 UI
+  - Calendar: 빈 날짜 클릭 시 자동 일정 추가 (initialDate 전달)
+  - Code Quality: flutter analyze 크리티컬 에러 모두 해결
+
+**주요 변경사항 v2.4** (2026-01-09 Afternoon):
 - ✅ **UI 개선 완료**
   - ListTile → Modal 패턴 일관성 100%
   - TMAP API 호환 이동 수단 (대중교통, 자가용, 도보)
@@ -871,7 +878,9 @@ flutter create --org com.gonow .
 | **GitHub UI 패턴 일치율** | ✅ 완료 | ~95% 달성 (14개 기본 + 6개 추가) |
 | **Legal Screens** | ✅ 완료 | Terms, Privacy Policy (앱스토어 필수) |
 | **Splash Screen** | ✅ 완료 | FadeTransition, 브랜딩 경험 |
-| **Loading Screen** | ✅ 완료 | AuthGate Provider 기반 (이미 구현됨) |
+| **Task 4.9: Settings Modal** | ✅ 완료 | ListTile → Modal 패턴 일관성 100% |
+| **Task 4.10: Loading Screen** | ✅ 완료 | Provider 인증, 데이터 프리로드, 에러 처리 |
+| **Task 4.11: Calendar 추가 기능** | ✅ 완료 | 빈 날짜 클릭 → 일정 자동 추가 |
 | Performance Tests | ⏳ 대기 | 배터리, 메모리 최적화 |
 | Alpha Testing | ⏳ 대기 | 사용자 피드백 |
 
@@ -1256,6 +1265,109 @@ final travelDurationMinutes = routeResult.durationMinutes; // ✅ Actual data
 - Updated `lib/main.dart` (splash home, /auth route)
 
 **완료 기준**: ✅ Legal screens + Splash screen 구현 완료, 컴파일 오류 없음, 앱스토어 심사 준비 완료
+
+---
+
+### Task 4.9: Settings Screen Modal Update (Day 20 - 2026-01-09 Afternoon) ✅
+
+**목표**: Settings 화면 UI 패턴 일관성 100% 달성
+
+**배경**: 앱 설정 섹션이 ListTile + 인라인 컨트롤로 구성되어 다른 섹션(알림, 계정)의 Modal 패턴과 불일치. TMAP API 호환 이동 수단만 포함하도록 수정.
+
+#### 주요 작업
+
+**4.9.1 Transport Mode Modal 구현** ✅
+- ✅ **Modal 패턴 전환**: ListTile → Modal bottom sheet
+- ✅ **TMAP API 호환 수단**: 대중교통, 자가용, 도보만 포함
+- ✅ **RadioListTile 선택**: 한 번에 하나만 선택
+- ✅ **아이콘 + 한글 레이블**: directions_transit, directions_car, directions_walk
+
+**4.9.2 Buffer Time Modal 구현** ✅
+- ✅ **4개 버퍼 시간 통합**: 외출 준비, 도착 버퍼, 오차율, 마무리 시간
+- ✅ **스크롤 가능한 전체 화면 모달**: Column with SingleChildScrollView
+- ✅ **저장/취소 기능**: AppBar actions + Navigator.pop()
+- ✅ **실시간 슬라이더**: setState() 기반 동적 업데이트
+
+**4.9.3 UI 일관성 달성** ✅
+- ✅ **패턴 통일**: 알림 설정, 계정 관리, 앱 설정, 앱 정보 섹션 모두 동일 패턴
+- ✅ **코드 정리**: 230 lines 제거, 215 lines 추가 (더 간결)
+- ✅ **빌드 성공**: 132.7초, 56.5MB APK
+
+**산출물**:
+- Updated `lib/screens/settings/settings_screen.dart` (917 lines)
+- Created `test/screens/settings/settings_screen_test.dart` (227 lines)
+
+**완료 기준**: ✅ UI 패턴 일관성 100%, TMAP API 호환, flutter analyze 통과
+
+---
+
+### Task 4.10: Loading Screen 생성 (Day 20 - 2026-01-09 Evening) ✅
+
+**목표**: Provider 기반 전용 로딩 화면 구현
+
+**배경**: Splash Screen 이후 인증 상태 확인 및 데이터 프리로드를 위한 전용 화면 필요. 기존 AuthGate의 간단한 CircularProgressIndicator를 대체하여 더 나은 사용자 경험 제공.
+
+#### 주요 작업
+
+**4.10.1 LoadingScreen 구현** ✅
+- ✅ **인증 상태 확인**: AuthProvider의 currentUser로 인증 여부 판단
+- ✅ **데이터 프리로드**: TripProvider.loadTrips()로 사용자 일정 사전 로드
+- ✅ **에러 처리**: try-catch로 에러 캐치, 재시도 UI 제공
+- ✅ **Graceful Degradation**: 에러 발생 시 로그인 화면으로 이동 옵션
+- ✅ **로딩 UI**: CircularProgressIndicator + 상태 메시지
+
+**4.10.2 Navigation 플로우** ✅
+- ✅ **Splash → Loading → MainWrapper/Login**:
+  - 인증 성공 + 데이터 로드 → MainWrapper
+  - 미인증 → LoginScreen
+  - 에러 → 재시도 또는 LoginScreen
+- ✅ **상태 메시지 동적 변경**:
+  - "인증 상태 확인 중..."
+  - "일정 데이터를 불러오는 중..."
+  - "데이터 로딩 실패"
+
+**4.10.3 Code Quality** ✅
+- ✅ **flutter analyze**: 크리티컬 에러 모두 해결
+- ✅ **Provider 패턴**: context.read<> 사용
+- ✅ **Mounted 체크**: 비동기 작업 후 mounted 확인
+- ✅ **Design System**: AppColors, AppTextStyles, UIConstants 적용
+
+**산출물**:
+- Created `lib/screens/splash/loading_screen.dart` (244 lines)
+
+**완료 기준**: ✅ 인증 확인 + 데이터 로드 완료, 에러 처리 구현, 컴파일 오류 없음
+
+---
+
+### Task 4.11: Calendar 일정 추가 기능 (Day 20 - 2026-01-09 Evening) ✅
+
+**목표**: 캘린더에서 빈 날짜 클릭 시 자동으로 일정 추가 화면으로 이동
+
+**배경**: 현재 캘린더에서 빈 날짜를 클릭하면 아무 동작도 하지 않음. 사용자가 해당 날짜에 일정을 추가하려면 별도로 일정 추가 버튼을 눌러야 하는 불편함 존재.
+
+#### 주요 작업
+
+**4.11.1 ScheduleEditScreen 업데이트** ✅
+- ✅ **initialDate 파라미터 추가**: 캘린더에서 선택한 날짜 전달
+- ✅ **기본 도착 시간 설정**: 선택 날짜 오전 9시로 자동 설정
+- ✅ **_loadInitialData() 메서드**: Edit mode와 새 일정 모드 통합 처리
+
+**4.11.2 CalendarScreen 업데이트** ✅
+- ✅ **onDaySelected 로직 개선**:
+  - 일정 있음 → 모달 표시 (기존 동작 유지)
+  - 일정 없음 → ScheduleEditScreen(initialDate: selectedDay) 이동
+- ✅ **Import 추가**: ScheduleEditScreen import
+
+**4.11.3 User Experience** ✅
+- ✅ **자연스러운 플로우**: 빈 날짜 탭 → 바로 일정 추가 화면
+- ✅ **날짜 자동 입력**: 선택한 날짜가 이미 입력되어 있음
+- ✅ **시간 기본값**: 오전 9시 (합리적인 일정 시간)
+
+**산출물**:
+- Updated `lib/screens/schedule/schedule_edit_screen.dart`
+- Updated `lib/screens/calendar/calendar_screen.dart`
+
+**완료 기준**: ✅ 빈 날짜 클릭 → 일정 추가 화면 이동, 날짜 자동 설정, 컴파일 오류 없음
 
 ---
 

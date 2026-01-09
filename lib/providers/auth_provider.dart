@@ -257,6 +257,49 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 비밀번호 변경 / Change password
+  ///
+  /// **Context**: 비밀번호 변경 화면에서 호출
+  ///
+  /// @param currentPassword - 현재 비밀번호 / Current password
+  /// @param newPassword - 새 비밀번호 / New password
+  /// @returns 성공 여부 / Success status
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      // 1. 현재 비밀번호로 재인증 / Reauthenticate with current password
+      final email = _currentUser?.email;
+      if (email == null) {
+        _errorMessage = '로그인이 필요합니다';
+        notifyListeners();
+        return false;
+      }
+
+      await _supabase.auth.signInWithPassword(
+        email: email,
+        password: currentPassword,
+      );
+
+      // 2. 새 비밀번호로 업데이트 / Update to new password
+      final response = await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+
+      if (response.user != null) {
+        _currentUser = response.user;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = _getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// 에러 메시지 변환 / Convert error message
   ///
   /// **Context**: Supabase 에러를 사용자 친화적 메시지로 변환

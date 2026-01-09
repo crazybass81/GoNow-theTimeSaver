@@ -31,7 +31,18 @@
 | [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md) | Naver → TMAP API 마이그레이션 | ⚠️ 중요 |
 
 ### 🎯 최근 완료 작업 (2026-01-08~09)
-- ✅ **Settings Screen Modal Update**: Task 4.9 완료
+- ✅ **Loading Screen & Calendar 기능**: Task 4.10 & 4.11 완료 (2026-01-09 Evening)
+  - **Task 4.10: Loading Screen 생성**:
+    - Provider 기반 인증 상태 확인 및 TripProvider 데이터 프리로드
+    - 에러 처리 및 재시도 UI, Graceful degradation 지원
+    - lib/screens/splash/loading_screen.dart (244 lines, 신규)
+  - **Task 4.11: Calendar 일정 추가 기능**:
+    - 빈 날짜 클릭 시 ScheduleEditScreen 자동 이동
+    - 선택 날짜를 initialDate로 전달, 기본 도착 시간(오전 9시) 자동 설정
+    - lib/screens/calendar/calendar_screen.dart (updated)
+    - lib/screens/schedule/schedule_edit_screen.dart (updated)
+  - **Code Quality**: flutter analyze 크리티컬 에러 모두 해결
+- ✅ **Settings Screen Modal Update**: Task 4.9 완료 (2026-01-09 Afternoon)
   - **UI 패턴 일관성 개선**:
     - 앱 설정 섹션을 ListTile → Modal 패턴으로 변경
     - 다른 설정 섹션과 100% 일관성 달성
@@ -43,7 +54,7 @@
     - 저장/취소 기능, 스크롤 가능한 전체 화면 모달
   - **코드 정리**: 230 lines 제거, 215 lines 추가 (더 간결)
   - **빌드 성공**: 132.7초, 56.5MB APK
-- ✅ **Legal Screens & Splash Screen**: Task 4.8 완료
+- ✅ **Legal Screens & Splash Screen**: Task 4.8 완료 (2026-01-08)
   - **Legal Screens 구현 (필수)**:
     - TermsScreen: 이용약관 (178 lines, 8개 조항)
     - PrivacyPolicyScreen: 개인정보 처리방침 (242 lines, 9개 섹션)

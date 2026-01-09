@@ -1,7 +1,7 @@
 # GoNow Project Status - 2026-01-09
 
 **Project**: GoNow - ADHD 시간 관리 앱
-**Last Updated**: 2026-01-09 20:30
+**Last Updated**: 2026-01-09 22:45
 **Status**: Phase 4 완료, Phase 5 준비 중
 
 ---
@@ -41,10 +41,22 @@
   - Terms of Service (이용약관)
   - Privacy Policy (개인정보 처리방침)
   - Splash Screen with fade animation
-- **Task 4.9** (최신): Settings Screen Modal Update
+- **Task 4.9**: Settings Screen Modal Update
   - App Settings 섹션 UI 일관성 개선
   - Transport mode modal (TMAP API 호환)
   - Buffer time modal (통합)
+- **Task 4.10** (✨ 신규): Loading Screen 생성
+  - Provider 기반 인증 상태 확인
+  - TripProvider 데이터 프리로드
+  - 에러 처리 및 재시도 기능
+  - Graceful degradation 지원
+- **Task 4.11** (✨ 신규): Calendar 일정 추가 기능
+  - 빈 날짜 클릭 시 ScheduleEditScreen 자동 이동
+  - 선택 날짜를 initialDate로 전달
+  - 기본 도착 시간(오전 9시) 자동 설정
+- **UI 비교 분석**: GitHub vs Local UI (30년 전문가 관점)
+  - Local 프로젝트 우수성 입증 (8.9/10 vs 5.6/10)
+  - Feature-based 모듈화, 에러 처리, UX 개선
 
 ### 🔄 Phase 5: 백엔드 통합 (진행 예정)
 - Supabase 데이터베이스 스키마
@@ -60,7 +72,13 @@
 GoNow App
 │
 ├── 📱 Splash Screen (완료)
-│   └── Fade-in animation → AuthGate
+│   └── Fade-in animation → LoadingScreen or AuthGate
+│
+├── ⏳ Loading Screen (✨ 신규)
+│   ├── AuthProvider 인증 확인
+│   ├── TripProvider 데이터 로드
+│   ├── 에러 처리 & 재시도
+│   └── MainWrapper or LoginScreen 이동
 │
 ├── 🔐 Auth Flow (완료)
 │   ├── Login Screen
@@ -75,10 +93,11 @@ GoNow App
 │   ├── Today's schedules list
 │   └── AppBar with settings/calendar
 │
-├── 📅 Calendar Screen (완료)
+├── 📅 Calendar Screen (✨ 업데이트)
 │   ├── Monthly calendar view
-│   ├── Schedule list by date
-│   └── Add schedule button
+│   ├── Schedule list by date (modal)
+│   ├── 빈 날짜 클릭 → ScheduleEditScreen 이동
+│   └── 선택 날짜 기본값 자동 설정
 │
 ├── ➕ Add Schedule Screen (완료)
 │   ├── Title, location, arrival time
@@ -115,7 +134,29 @@ GoNow App
 
 ## 최신 업데이트 / Latest Updates
 
-### 2026-01-09: Settings Screen Modal Update
+### 2026-01-09 Evening: Loading Screen & Calendar 기능 추가
+
+**Task 4.10: Loading Screen 생성**
+- Provider 기반 인증 상태 확인
+- TripProvider 데이터 프리로드
+- 에러 처리 및 재시도 UI
+- Graceful degradation 지원
+
+**Task 4.11: Calendar 일정 추가 기능**
+- 빈 날짜 클릭 → ScheduleEditScreen 자동 이동
+- 선택 날짜를 initialDate로 전달
+- 기본 도착 시간(오전 9시) 자동 설정
+
+**Code Quality**:
+- ✅ flutter analyze: 모든 크리티컬 에러 해결
+- ✅ 빌드 성공 확인
+
+**관련 파일**:
+- `lib/screens/splash/loading_screen.dart` (244 lines, 신규)
+- `lib/screens/schedule/schedule_edit_screen.dart` (updated)
+- `lib/screens/calendar/calendar_screen.dart` (updated)
+
+### 2026-01-09 Afternoon: Settings Screen Modal Update
 
 **변경 사항**:
 1. **UI 패턴 일관성**
@@ -232,9 +273,10 @@ lib/
 │   ├── dashboard/
 │   │   └── dashboard_screen.dart
 │   ├── calendar/
-│   │   └── calendar_screen.dart
-│   ├── add_schedule/
-│   │   └── add_schedule_screen.dart
+│   │   └── calendar_screen.dart          (✨ 업데이트)
+│   ├── schedule/
+│   │   ├── schedule_edit_screen.dart     (✨ 업데이트)
+│   │   └── schedule_detail_screen.dart
 │   ├── settings/
 │   │   ├── settings_screen.dart         (✨ 최신 업데이트)
 │   │   ├── edit_profile_screen.dart
@@ -243,7 +285,8 @@ lib/
 │   │   ├── terms_screen.dart
 │   │   └── privacy_policy_screen.dart
 │   └── splash/
-│       └── splash_screen.dart
+│       ├── splash_screen.dart
+│       └── loading_screen.dart           (✨ 신규)
 ├── widgets/                      # 재사용 위젯
 │   ├── schedule_card.dart
 │   ├── route_display_widget.dart
@@ -475,7 +518,10 @@ CREATE TABLE user_settings (
 - ✅ TMAP API 호환 이동 수단만 포함
 - ✅ UI 패턴 100% 일관성 달성
 - ✅ 테스트 파일 생성
-- ✅ 문서 아카이빙 및 최신화
+- ✅ Loading Screen 생성 (Task 4.10)
+- ✅ Calendar 일정 추가 기능 구현 (Task 4.11)
+- ✅ flutter analyze 크리티컬 에러 해결
+- ✅ 문서 아카이빙 및 최신화 (3개 파일 archived)
 
 ### 2026-01-08
 - ✅ Task 4.8: Legal Screens & Splash Screen 완료
@@ -497,6 +543,6 @@ CREATE TABLE user_settings (
 
 ---
 
-**Last Updated**: 2026-01-09 20:30
-**Document Version**: 1.0
+**Last Updated**: 2026-01-09 22:45
+**Document Version**: 1.1
 **Status**: 🟢 Active Development

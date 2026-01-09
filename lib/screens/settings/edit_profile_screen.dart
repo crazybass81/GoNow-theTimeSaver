@@ -188,11 +188,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final authProvider = context.read<AuthProvider>();
 
-      // TODO: Supabase에 프로필 업데이트 API 호출
-      // await authProvider.updateProfile(
-      //   name: _nameController.text.trim(),
-      //   phone: _phoneController.text.trim(),
-      // );
+      final success = await authProvider.updateProfile(
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+
+      if (!success) {
+        throw Exception(authProvider.errorMessage ?? '프로필 업데이트에 실패했습니다');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -291,11 +291,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     try {
       final authProvider = context.read<AuthProvider>();
 
-      // TODO: Supabase 비밀번호 변경 API 호출
-      // await authProvider.changePassword(
-      //   currentPassword: _currentPasswordController.text,
-      //   newPassword: _newPasswordController.text,
-      // );
+      final success = await authProvider.changePassword(
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
+      );
+
+      if (!success) {
+        throw Exception(authProvider.errorMessage ?? '비밀번호 변경에 실패했습니다');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

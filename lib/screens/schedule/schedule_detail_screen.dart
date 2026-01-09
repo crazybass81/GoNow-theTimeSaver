@@ -5,7 +5,7 @@ import '../../models/trip.dart';
 import '../../providers/trip_provider.dart';
 import '../../services/transit_service.dart';
 import '../../utils/app_colors.dart';
-import 'add_schedule_screen_new.dart';
+import 'schedule_edit_screen.dart';
 
 /// 스케줄 상세 화면 - GitHub 패턴 완전 복제 / Schedule Detail Screen - Complete GitHub pattern clone
 ///
@@ -767,7 +767,7 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddScheduleScreenNew(
+        builder: (context) => ScheduleEditScreen(
           tripToEdit: currentTrip,
           isDuplicate: true,
         ),
@@ -786,7 +786,7 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddScheduleScreenNew(
+        builder: (context) => ScheduleEditScreen(
           tripToEdit: currentTrip,
           isDuplicate: false,
         ),

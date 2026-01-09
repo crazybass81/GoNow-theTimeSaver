@@ -28,23 +28,26 @@ class TimeItem {
 /// - DropdownButton으로 교통수단 선택
 /// - 읽기 전용 필드 탭하여 피커 표시
 /// - Edit Mode: 기존 일정 수정 지원
+/// - Calendar 통합: 선택한 날짜를 기본값으로 설정
 ///
-/// **Context**: 대시보드 FAB에서 이동 또는 ScheduleDetailScreen에서 수정/복제 - 참조: https://github.com/khyapple/go_now/master/lib/screens/schedule_edit_screen.dart
-class AddScheduleScreenNew extends StatefulWidget {
+/// **Context**: 대시보드 FAB에서 이동 또는 ScheduleDetailScreen에서 수정/복제 또는 Calendar에서 날짜 선택 - 참조: https://github.com/khyapple/go_now/master/lib/screens/schedule_edit_screen.dart
+class ScheduleEditScreen extends StatefulWidget {
   final Trip? tripToEdit; // 수정할 일정 (null이면 새로 추가)
   final bool isDuplicate; // 복제 모드 여부
+  final DateTime? initialDate; // Calendar에서 선택한 날짜 (새 일정 추가 시)
 
-  const AddScheduleScreenNew({
+  const ScheduleEditScreen({
     super.key,
     this.tripToEdit,
     this.isDuplicate = false,
+    this.initialDate,
   });
 
   @override
-  State<AddScheduleScreenNew> createState() => _AddScheduleScreenNewState();
+  State<ScheduleEditScreen> createState() => _ScheduleEditScreenState();
 }
 
-class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
+class _ScheduleEditScreenState extends State<ScheduleEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _destinationController = TextEditingController();
@@ -77,11 +80,11 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
   void initState() {
     super.initState();
     _getCurrentLocation();
-    _loadTripDataIfEditing();
+    _loadInitialData();
   }
 
-  /// Edit mode일 경우 기존 일정 데이터 로드 / Load existing trip data if in edit mode
-  void _loadTripDataIfEditing() {
+  /// Edit mode일 경우 기존 일정 데이터 로드 또는 Calendar 선택 날짜 설정 / Load existing trip data or set initial date from Calendar
+  void _loadInitialData() {
     if (widget.tripToEdit != null) {
       final trip = widget.tripToEdit!;
 
@@ -118,6 +121,16 @@ class _AddScheduleScreenNewState extends State<AddScheduleScreenNew> {
         lat: trip.destinationLat,
         lng: trip.destinationLng,
         category: '',
+      );
+    } else if (widget.initialDate != null) {
+      // Calendar에서 선택한 날짜를 기본 도착 시간으로 설정 / Set selected date from Calendar as default arrival time
+      // 기본 시간: 오전 9시 / Default time: 9:00 AM
+      _arrivalDateTime = DateTime(
+        widget.initialDate!.year,
+        widget.initialDate!.month,
+        widget.initialDate!.day,
+        9, // 오전 9시
+        0,
       );
     }
   }

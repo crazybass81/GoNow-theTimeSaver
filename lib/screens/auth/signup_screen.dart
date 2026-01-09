@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../legal/terms_screen.dart';
+import '../legal/privacy_policy_screen.dart';
 
 /// 회원가입 화면 / Signup Screen
 ///
@@ -818,9 +820,11 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             subtitle: TextButton(
               onPressed: () {
-                // TODO: 이용약관 상세 보기
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('이용약관 상세 보기 (구현 예정)')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TermsScreen(),
+                  ),
                 );
               },
               child: const Text('내용 보기'),
@@ -849,9 +853,11 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             subtitle: TextButton(
               onPressed: () {
-                // TODO: 개인정보 처리방침 상세 보기
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('개인정보 처리방침 상세 보기 (구현 예정)')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacyPolicyScreen(),
+                  ),
                 );
               },
               child: const Text('내용 보기'),
