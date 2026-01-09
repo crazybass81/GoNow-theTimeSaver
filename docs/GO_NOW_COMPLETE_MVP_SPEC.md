@@ -3755,7 +3755,66 @@ MaterialApp(
 
 ---
 
-#### 2. 대시보드 Collapsible 컴포넌트 구현
+#### 2. GitHub UI 코드 일치화 - Legal Screens & Splash Screen (Task 4.8)
+**날짜**: 2026-01-09
+**담당**: 개발자 2
+**완료**: ✅ Legal screens + Splash screen 구현, 앱스토어 심사 준비 완료
+
+**4.8.1 Legal Screens 구현 (필수)**:
+- ✅ **TermsScreen**: 이용약관 화면
+  - `lib/screens/legal/terms_screen.dart` 생성 (178 lines)
+  - 8개 조항 + 부칙 포함 (목적, 정의, 효력 및 변경, 서비스 제공, 이용자 의무, 저작권, 개인정보 보호, 면책사항)
+  - GitHubUI constants 적용 (radiusCard 12px, spacingScreen 20px, spacingCardInternal 16px, spacingSectionGap 32px)
+  - AppTextStyles 적용 (referenceTitle, referenceBody)
+  - Bilingual JSDoc 문서화
+  - 앱스토어 심사 필수 요구사항
+
+- ✅ **PrivacyPolicyScreen**: 개인정보 처리방침
+  - `lib/screens/legal/privacy_policy_screen.dart` 생성 (242 lines)
+  - 9개 섹션 (개인정보 수집/이용 목적, 수집 항목, 보유 기간, 제3자 제공, 처리 위탁, 정보주체 권리, 파기, 보안 대책, 보호책임자)
+  - Info header (blue[50]) + 시행일 (orange[50])
+  - 개인정보보호법 준수 (수집·보유·파기 규정 명시)
+  - 연락처: privacy@gonow.app
+
+- ✅ **SettingsScreen 통합**:
+  - Terms, Privacy Policy 네비게이션 추가
+  - TODO SnackBar → 실제 Navigator.push() 전환
+
+**4.8.2 Splash Screen 구현 (선택)**:
+- ✅ **SplashScreen**: 앱 시작 브랜딩 화면
+  - `lib/screens/splash/splash_screen.dart` 생성 (120 lines)
+  - FadeTransition 애니메이션 (1.5초 페이드인, Curves.easeIn)
+  - 2.5초 후 AuthGate로 자동 전환
+  - GoNow 로고 + "Time Saver" 부제목
+  - GitHubUI constants 적용 (radiusDialog 24px, spacingSectionGap 32px)
+  - Primary color 배경 + white 로고 아이콘 (schedule)
+
+- ✅ **main.dart 업데이트**:
+  - SplashScreen을 home으로 설정
+  - `/auth` 라우트 추가 (AuthGate)
+  - 앱 시작 플로우: Splash (2.5s) → AuthGate → Login/MainWrapper
+
+**4.8.3 Loading Screen 확인 (선택)**:
+- ✅ **AuthGate 기존 구현**: `AuthStatus.authenticating` 시 `CircularProgressIndicator` 표시 (Provider 기반)
+
+**코드 품질**:
+- ✅ **flutter analyze**: 0 errors, 0 warnings
+- ✅ **Deprecated warnings 수정**: `withOpacity()` → `withValues(alpha:)`
+- ✅ **GitHubUI pattern**: 모든 spacing, radius 값 centralized
+- ✅ **Feature-based 구조**: `lib/screens/legal/`, `lib/screens/splash/`
+
+**산출물**:
+- `lib/screens/legal/terms_screen.dart` (178 lines)
+- `lib/screens/legal/privacy_policy_screen.dart` (242 lines)
+- `lib/screens/splash/splash_screen.dart` (120 lines)
+- Updated `lib/screens/settings/settings_screen.dart`
+- Updated `lib/main.dart`
+
+**가치**: 앱스토어 심사 필수 요구사항 충족 + 브랜딩 경험 제공
+
+---
+
+#### 3. 대시보드 Collapsible 컴포넌트 구현
 **날짜**: 2026-01-08
 **담당**: 개발자 2
 **완료**: ✅ GitHub 스타일 접었다 펼치는 UI

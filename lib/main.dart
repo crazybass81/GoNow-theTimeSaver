@@ -20,6 +20,7 @@ import 'services/polling_service.dart';
 import 'services/real_time_updater.dart';
 
 // Screens
+import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_wrapper.dart';
 
@@ -73,7 +74,10 @@ class MyApp extends StatelessWidget {
         title: 'GoNow',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const AuthGate(),
+        home: const SplashScreen(),
+        routes: {
+          '/auth': (context) => const AuthGate(),
+        },
       ),
     );
   }

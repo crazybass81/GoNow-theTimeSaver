@@ -3,8 +3,8 @@
 > ADHD 사용자를 위한 역산 스케줄링 기반 시간 관리 앱
 
 **최종 업데이트**: 2026-01-09
-**문서 버전**: 3.3
-**프로젝트 상태**: MVP v1.0 (Phase 4 진행 중 - ~95% 완료)
+**문서 버전**: 3.5
+**프로젝트 상태**: MVP v1.0 (Phase 4 진행 중 - ~96% 완료)
 
 ---
 
@@ -31,6 +31,17 @@
 | [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md) | Naver → TMAP API 마이그레이션 | ⚠️ 중요 |
 
 ### 🎯 최근 완료 작업 (2026-01-08~09)
+- ✅ **GitHub UI 코드 일치화 - Legal Screens & Splash Screen**: Task 4.8 완료
+  - **Legal Screens 구현 (필수)**:
+    - TermsScreen: 이용약관 (178 lines, 8개 조항)
+    - PrivacyPolicyScreen: 개인정보 처리방침 (242 lines, 9개 섹션)
+    - 앱스토어 심사 필수 요구사항 충족 (개인정보보호법 준수)
+  - **Splash Screen 구현 (선택)**:
+    - 브랜딩 경험 제공 (FadeTransition 1.5s, 2.5s 후 전환)
+    - GitHubUI constants 적용 (radiusDialog, spacingSectionGap)
+    - main.dart 업데이트 (splash home, /auth route)
+  - **Loading Screen 확인**: AuthGate Provider 기반 (이미 구현됨)
+  - **코드 품질**: 0 errors, 0 warnings, deprecated 수정 완료
 - ✅ **GitHub 저장소 UI 비교 분석 완료**: [상세 보고서](../claudedocs/GITHUB_VS_LOCAL_UI_COMPARISON.md)
   - **아키텍처 비교**: GitHub(Flat 13개) vs Local(Feature-based 9개 + 5 widgets)
   - **UI 패턴 일치율**: ~95% 달성 (Border 100%, Spacing 95%, Shadow 100%)

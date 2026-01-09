@@ -867,6 +867,9 @@ flutter create --org com.gonow .
 | 실제 경로 계산 저장 | ✅ 완료 | 하드코딩 → 실제 API 데이터 |
 | **GitHub UI Priority/Medium** | ✅ 완료 | Settings 아이콘 배경, Shadow 통일, Spacing 중앙화 |
 | **GitHub UI 패턴 일치율** | ✅ 완료 | ~95% 달성 (14개 기본 + 6개 추가) |
+| **Legal Screens** | ✅ 완료 | Terms, Privacy Policy (앱스토어 필수) |
+| **Splash Screen** | ✅ 완료 | FadeTransition, 브랜딩 경험 |
+| **Loading Screen** | ✅ 완료 | AuthGate Provider 기반 (이미 구현됨) |
 | Performance Tests | ⏳ 대기 | 배터리, 메모리 최적화 |
 | Alpha Testing | ⏳ 대기 | 사용자 피드백 |
 
@@ -1187,6 +1190,70 @@ final travelDurationMinutes = routeResult.durationMinutes; // ✅ Actual data
   - 긴급 수정 vs Phase 2 이관 결정
 
 **완료 기준**: 피드백 10개 이상 수집, 최종 개선 계획 확정
+
+---
+
+### Task 4.8: GitHub UI 코드 일치화 - Legal Screens & Splash Screen (Day 20 - 2026-01-09) ✅
+
+**목표**: GitHub repository와 코드 레벨 일치화 작업 완료
+
+**배경**: GitHub repository (khyapple/go_now)와 비교 분석 후, 누락된 화면들을 Local 프로젝트에 추가하고 GitHubUI 패턴 적용.
+
+#### 주요 작업
+
+**4.8.1 Legal Screens 구현 (필수)** ✅
+- ✅ **TermsScreen**: 이용약관 화면
+  - `lib/screens/legal/terms_screen.dart` 생성 (178 lines)
+  - 8개 조항 + 부칙 포함
+  - GitHubUI constants 적용 (radiusCard, spacingScreen, spacingCardInternal, spacingSectionGap)
+  - AppTextStyles 적용 (referenceTitle, referenceBody)
+  - Bilingual JSDoc 문서화
+  - 앱스토어 심사 필수 요구사항
+- ✅ **PrivacyPolicyScreen**: 개인정보 처리방침
+  - `lib/screens/legal/privacy_policy_screen.dart` 생성 (242 lines)
+  - 9개 섹션 (수집 목적, 항목, 보유 기간, 제3자 제공, 위탁, 권리, 파기, 보안, 책임자)
+  - Info header (blue[50]) + 시행일 (orange[50])
+  - 개인정보보호법 준수
+  - 연락처: privacy@gonow.app
+- ✅ **SettingsScreen 통합**:
+  - Terms, Privacy Policy 네비게이션 추가
+  - TODO SnackBar → 실제 Navigator.push() 전환
+
+**4.8.2 Splash Screen 구현 (선택)** ✅
+- ✅ **SplashScreen**: 앱 시작 브랜딩 화면
+  - `lib/screens/splash/splash_screen.dart` 생성 (120 lines)
+  - FadeTransition 애니메이션 (1.5초 페이드인, Curves.easeIn)
+  - 2.5초 후 AuthGate로 전환
+  - GoNow 로고 + "Time Saver" 부제목
+  - GitHubUI constants 적용 (radiusDialog, spacingSectionGap)
+  - Primary color 배경 + white 로고 아이콘 (schedule)
+- ✅ **main.dart 업데이트**:
+  - SplashScreen을 home으로 설정
+  - `/auth` 라우트 추가 (AuthGate)
+  - 앱 시작 플로우: Splash (2.5s) → AuthGate → Login/MainWrapper
+
+**4.8.3 Loading Screen 확인 (선택)** ✅
+- ✅ **AuthGate 기존 구현 확인**:
+  - `AuthStatus.authenticating` 상태 시 `CircularProgressIndicator` 표시
+  - Provider 기반 로딩 상태 관리
+  - 별도 화면 추가 불필요 (이미 구현됨)
+
+#### 코드 품질
+
+- ✅ **flutter analyze**: 0 errors, 0 warnings
+- ✅ **Deprecated warnings 수정**: `withOpacity()` → `withValues(alpha:)`
+- ✅ **GitHubUI pattern 적용**: 모든 spacing, radius 값 centralized
+- ✅ **Bilingual JSDoc**: 한글/English 문서화 완료
+- ✅ **Feature-based 구조**: `lib/screens/legal/`, `lib/screens/splash/`
+
+**산출물**:
+- `lib/screens/legal/terms_screen.dart` (178 lines)
+- `lib/screens/legal/privacy_policy_screen.dart` (242 lines)
+- `lib/screens/splash/splash_screen.dart` (120 lines)
+- Updated `lib/screens/settings/settings_screen.dart` (navigation)
+- Updated `lib/main.dart` (splash home, /auth route)
+
+**완료 기준**: ✅ Legal screens + Splash screen 구현 완료, 컴파일 오류 없음, 앱스토어 심사 준비 완료
 
 ---
 

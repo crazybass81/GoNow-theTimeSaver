@@ -5,6 +5,8 @@ import '../../utils/app_colors.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/app_text_styles.dart';
 import '../auth/login_screen.dart';
+import '../legal/terms_screen.dart';
+import '../legal/privacy_policy_screen.dart';
 
 /// 설정 화면 - GitHub 패턴 완전 복제 / Settings Screen - Complete GitHub pattern clone
 ///
@@ -624,9 +626,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: '서비스 이용약관 보기',
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () {
-            // TODO: 이용약관 화면
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('이용약관 (구현 예정)')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TermsScreen(),
+              ),
             );
           },
         ),
@@ -640,9 +644,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: '개인정보 처리방침 보기',
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () {
-            // TODO: 개인정보 처리방침 화면
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('개인정보 처리방침 (구현 예정)')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PrivacyPolicyScreen(),
+              ),
             );
           },
         ),
