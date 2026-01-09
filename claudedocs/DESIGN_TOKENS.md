@@ -1,12 +1,12 @@
 # GoNow Design Tokens Documentation
 
-**Last Updated**: 2026-01-08
+**Last Updated**: 2026-01-09
 **Status**: Production
-**GitHub Pattern Compliance**: 100%
+**Design System Compliance**: 100%
 
 ## Overview
 
-This document describes the complete design token system for GoNow, following GitHub UI patterns from the reference repository.
+This document describes the complete design token system for GoNow, defining colors, typography, spacing, and layout constants for consistent UI implementation.
 
 ---
 
@@ -14,8 +14,8 @@ This document describes the complete design token system for GoNow, following Gi
 
 ### Primary Colors
 
-| Token | Value | Usage | GitHub Reference |
-|-------|-------|-------|------------------|
+| Token | Value | Usage | Material Design Source |
+|-------|-------|-------|------------------------|
 | `AppColors.primary` | `#1E88E5` | Main brand color, CTAs, links | `Colors.blue[600]` |
 | `AppColors.primaryDark` | `#1976D2` | Hover states, emphasis | `Colors.blue[700]` |
 | `AppColors.primaryLight` | `#BBDEFB` | Backgrounds, subtle highlights | `Colors.blue[100]` |
@@ -23,8 +23,8 @@ This document describes the complete design token system for GoNow, following Gi
 
 ### Neutral Colors
 
-| Token | Value | Usage | GitHub Reference |
-|-------|-------|-------|------------------|
+| Token | Value | Usage | Material Design Source |
+|-------|-------|-------|------------------------|
 | `AppColors.background` | `#FAFAFA` | Screen backgrounds | `Colors.grey[50]` |
 | `AppColors.cardBackground` | `#FFFFFF` | Card backgrounds | `Colors.white` |
 | `AppColors.primaryText` | `#424242` | Headings, important text | `Colors.grey[800]` |
@@ -34,8 +34,8 @@ This document describes the complete design token system for GoNow, following Gi
 
 ### Status Colors
 
-| Token | Value | Usage | GitHub Reference |
-|-------|-------|-------|------------------|
+| Token | Value | Usage | Material Design Source |
+|-------|-------|-------|------------------------|
 | `AppColors.success` | `#4CAF50` | Success messages | Standard green |
 | `AppColors.error` | `#F44336` | Error messages, delete | `Colors.red[600]` |
 | `AppColors.errorDark` | `#B71C1C` | Critical errors | `Colors.red[900]` |
@@ -101,47 +101,47 @@ This document describes the complete design token system for GoNow, following Gi
 
 ---
 
-## Layout System (`/lib/utils/github_ui_constants.dart`)
+## Layout System (`/lib/utils/ui_constants.dart`)
 
 ### Border Radius
 
-| Token | Value | Usage | GitHub Pattern |
+| Token | Value | Usage | Design Pattern |
 |-------|-------|-------|----------------|
-| `GitHubUI.radiusCard` | 12px | Cards, containers | Standard card radius |
-| `GitHubUI.radiusDialog` | 24px | Modal dialogs | Dialog radius |
-| `GitHubUI.radiusButton` | 12px | Buttons | Interactive elements |
-| `GitHubUI.radiusInput` | 12px | Input fields | Form controls |
-| `GitHubUI.radiusSnackbar` | 10px | Toast messages | Notifications |
-| `GitHubUI.radiusEventPill` | 3px | Calendar events | Event badges |
-| `GitHubUI.radiusSmall` | 8px | Small elements | Time badges, icons |
+| `UIConstants.radiusCard` | 12px | Cards, containers | Standard card radius |
+| `UIConstants.radiusDialog` | 24px | Modal dialogs | Dialog radius |
+| `UIConstants.radiusButton` | 12px | Buttons | Interactive elements |
+| `UIConstants.radiusInput` | 12px | Input fields | Form controls |
+| `UIConstants.radiusSnackbar` | 10px | Toast messages | Notifications |
+| `UIConstants.radiusEventPill` | 3px | Calendar events | Event badges |
+| `UIConstants.radiusSmall` | 8px | Small elements | Time badges, icons |
 
 ### Spacing
 
-| Token | Value | Usage | GitHub Pattern |
+| Token | Value | Usage | Design Pattern |
 |-------|-------|-------|----------------|
-| `GitHubUI.spacingScreen` | 20px | Screen outer padding | Screen-level spacing |
-| `GitHubUI.spacingCardInternal` | 16px | Card inner padding | Card content padding |
-| `GitHubUI.spacingCardGap` | 12px | Between cards | Element gaps |
-| `GitHubUI.spacingHorizontal` | 12px | Row spacing | Horizontal gaps |
-| `GitHubUI.spacingVertical` | 12px | Column spacing | Vertical gaps |
-| `GitHubUI.spacingSettings` | 18px | Settings cards | Settings-specific |
-| `GitHubUI.spacingSectionGap` | 32px | Between major sections | Section separation |
+| `UIConstants.spacingScreen` | 20px | Screen outer padding | Screen-level spacing |
+| `UIConstants.spacingCardInternal` | 16px | Card inner padding | Card content padding |
+| `UIConstants.spacingCardGap` | 12px | Between cards | Element gaps |
+| `UIConstants.spacingHorizontal` | 12px | Row spacing | Horizontal gaps |
+| `UIConstants.spacingVertical` | 12px | Column spacing | Vertical gaps |
+| `UIConstants.spacingSettings` | 18px | Settings cards | Settings-specific |
+| `UIConstants.spacingSectionGap` | 32px | Between major sections | Section separation |
 
 ### Shadows
 
 | Token | Configuration | Usage |
 |-------|--------------|-------|
-| `GitHubUI.cardShadow` | `opacity: 0.05, blur: 10px, offset: (0,2)` | All cards and containers |
+| `UIConstants.cardShadow` | `opacity: 0.05, blur: 10px, offset: (0,2)` | All cards and containers |
 
-**Note**: All shadows have been unified to use `cardShadow` for consistency (Medium 2 task completed).
+**Note**: All shadows have been unified to use `cardShadow` for consistency.
 
 ### Icon Sizing
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `GitHubUI.iconSize` | 24px | Standard icons |
-| `GitHubUI.iconSizeSmall` | 16px | Small icons |
-| `GitHubUI.iconContainerSize` | 48px | Icon containers |
+| `UIConstants.iconSize` | 24px | Standard icons |
+| `UIConstants.iconSizeSmall` | 16px | Small icons |
+| `UIConstants.iconContainerSize` | 48px | Icon containers |
 
 ---
 
@@ -151,24 +151,24 @@ This document describes the complete design token system for GoNow, following Gi
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `GitHubUI.calendarRowHeight` | 140px | Week row height |
-| `GitHubUI.calendarDayHeaderHeight` | 40px | Weekday labels |
-| `GitHubUI.calendarMaxEventsPerCell` | 4 | Max events before "+N more" |
+| `UIConstants.calendarRowHeight` | 140px | Week row height |
+| `UIConstants.calendarDayHeaderHeight` | 40px | Weekday labels |
+| `UIConstants.calendarMaxEventsPerCell` | 4 | Max events before "+N more" |
 
 ### Color Picker
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `GitHubUI.colorPickerCircleSize` | 50px | Color swatch size |
-| `GitHubUI.colorPickerSpacing` | 12px | Between swatches |
-| `GitHubUI.colorPickerSelectedBorder` | 3px | Selected border width |
+| `UIConstants.colorPickerCircleSize` | 50px | Color swatch size |
+| `UIConstants.colorPickerSpacing` | 12px | Between swatches |
+| `UIConstants.colorPickerSelectedBorder` | 3px | Selected border width |
 
 ### Buttons
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `GitHubUI.buttonPaddingVertical` | 16px | Vertical padding |
-| `GitHubUI.buttonPaddingHorizontal` | 24px | Horizontal padding |
+| `UIConstants.buttonPaddingVertical` | 16px | Vertical padding |
+| `UIConstants.buttonPaddingHorizontal` | 24px | Horizontal padding |
 
 ---
 
@@ -180,10 +180,10 @@ This document describes the complete design token system for GoNow, following Gi
 Container(
   decoration: BoxDecoration(
     color: AppColors.cardBackground,
-    borderRadius: BorderRadius.circular(GitHubUI.radiusCard),
-    boxShadow: [GitHubUI.cardShadow],
+    borderRadius: BorderRadius.circular(UIConstants.radiusCard),
+    boxShadow: [UIConstants.cardShadow],
   ),
-  padding: EdgeInsets.all(GitHubUI.spacingCardInternal),
+  padding: EdgeInsets.all(UIConstants.spacingCardInternal),
   child: Text(
     'Card Title',
     style: AppTextStyles.cardTitle,
@@ -222,11 +222,11 @@ Container(
 
 ```dart
 Padding(
-  padding: EdgeInsets.all(GitHubUI.spacingScreen),
+  padding: EdgeInsets.all(UIConstants.spacingScreen),
   child: Column(
     children: [
       Card(...),
-      SizedBox(height: GitHubUI.spacingCardGap),
+      SizedBox(height: UIConstants.spacingCardGap),
       Card(...),
     ],
   ),
@@ -268,15 +268,15 @@ Padding(
 | `fontSize: 64` | `AppTextStyles.timeDisplay` |
 | `fontSize: 40` | `AppTextStyles.dateHeader` |
 
-### From Magic Numbers to GitHubUI
+### From Magic Numbers to UIConstants
 
 | Old | New |
 |-----|-----|
-| `BorderRadius.circular(12)` | `BorderRadius.circular(GitHubUI.radiusCard)` |
-| `BorderRadius.circular(24)` | `BorderRadius.circular(GitHubUI.radiusDialog)` |
-| `EdgeInsets.all(20)` | `EdgeInsets.all(GitHubUI.spacingScreen)` |
-| `EdgeInsets.all(16)` | `EdgeInsets.all(GitHubUI.spacingCardInternal)` |
-| `SizedBox(height: 12)` | `SizedBox(height: GitHubUI.spacingCardGap)` |
+| `BorderRadius.circular(12)` | `BorderRadius.circular(UIConstants.radiusCard)` |
+| `BorderRadius.circular(24)` | `BorderRadius.circular(UIConstants.radiusDialog)` |
+| `EdgeInsets.all(20)` | `EdgeInsets.all(UIConstants.spacingScreen)` |
+| `EdgeInsets.all(16)` | `EdgeInsets.all(UIConstants.spacingCardInternal)` |
+| `SizedBox(height: 12)` | `SizedBox(height: UIConstants.spacingCardGap)` |
 
 ---
 
@@ -292,13 +292,13 @@ Padding(
    - Consistent text styling
    - Reduces inline fontSize usage
 
-3. **GitHubUI**: Layout and spacing constants
+3. **UIConstants**: Layout and spacing constants
    - Spacing, radius, shadows, icons
-   - GitHub pattern documentation
+   - Consistent UI pattern implementation
 
-### Intentional Deviations
+### Design System Compliance
 
-None. This implementation follows GitHub patterns 100%.
+This implementation follows Material Design principles with GoNow-specific adaptations for optimal user experience.
 
 ### Brand Colors (Intentional)
 
@@ -306,7 +306,7 @@ Kakao login button uses official brand colors:
 - Kakao Yellow: `#FEE500`
 - Kakao Text: `#3C1E1E`
 
-These are intentional and should not be changed to AppColors.
+These are intentional brand colors and should not be changed to AppColors.
 
 ---
 
@@ -316,15 +316,15 @@ These are intentional and should not be changed to AppColors.
 
 - ✅ All `Colors.xxx[shade]` references replaced with AppColors
 - ✅ All inline `fontSize` values replaced with AppTextStyles
-- ✅ All cards use 12px borderRadius (GitHubUI.radiusCard)
-- ✅ All dialogs use 24px borderRadius (GitHubUI.radiusDialog)
-- ✅ All cards use standard shadow (GitHubUI.cardShadow) - **Medium 2 completed**
-- ✅ All spacing follows 12px/16px/20px/32px system - **Medium 3 completed**
-- ✅ Primary color is #1E88E5 (GitHub pattern)
+- ✅ All cards use 12px borderRadius (UIConstants.radiusCard)
+- ✅ All dialogs use 24px borderRadius (UIConstants.radiusDialog)
+- ✅ All cards use standard shadow (UIConstants.cardShadow)
+- ✅ All spacing follows 12px/16px/20px/32px system
+- ✅ Primary color is #1E88E5 (Material Design blue[600])
 - ✅ No hardcoded Color(0x...) values except brand colors
-- ✅ Settings icons have 48x48px blue[50] containers - **Priority 2-1 completed**
-- ✅ Shadow patterns unified (opacity 0.05, blur 10px) - **Medium 2 completed**
-- ✅ 14 spacing values centralized to GitHubUI constants - **Medium 3 completed**
+- ✅ Settings icons have 48x48px blue[50] containers
+- ✅ Shadow patterns unified (opacity 0.05, blur 10px)
+- ✅ 14 spacing values centralized to UIConstants
 
 ### Files Modified
 
@@ -346,9 +346,9 @@ These are intentional and should not be changed to AppColors.
 - `lib/screens/schedule/add_schedule_screen_new.dart` (1 Color(0x) → AppColors)
 
 **Design System Integration**:
-- `lib/utils/github_ui_constants.dart` (Colors.xxx → AppColors integration)
+- `lib/utils/ui_constants.dart` (Colors.xxx → AppColors integration)
 
-**Total**: 83 Colors.xxx references eliminated, 39 fontSize values centralized, 14 spacing values centralized (Medium 3)
+**Total**: 83 Colors.xxx references eliminated, 39 fontSize values centralized, 14 spacing values centralized
 
 ---
 
@@ -358,7 +358,7 @@ These are intentional and should not be changed to AppColors.
 
 1. Add to `app_colors.dart` with documentation
 2. Use descriptive name (e.g., `primaryDark`, not `blue700`)
-3. Include hex value and GitHub reference in comment
+3. Include hex value and Material Design source in comment
 
 ### Adding New Text Styles
 
@@ -368,12 +368,12 @@ These are intentional and should not be changed to AppColors.
 
 ### Adding New Layout Constants
 
-1. Add to `github_ui_constants.dart`
-2. Include GitHub pattern reference
+1. Add to `ui_constants.dart`
+2. Include design pattern reference
 3. Provide usage examples in docstring
 
 ---
 
 **Generated with Claude Code**
 **Design System Version**: 2.0
-**GitHub Pattern Compliance**: 100%
+**Last Updated**: 2026-01-09

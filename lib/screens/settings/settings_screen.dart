@@ -4,9 +4,12 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/app_text_styles.dart';
+import '../../utils/ui_constants.dart';
 import '../auth/login_screen.dart';
 import '../legal/terms_screen.dart';
 import '../legal/privacy_policy_screen.dart';
+import 'edit_profile_screen.dart';
+import 'change_password_screen.dart';
 
 /// 설정 화면 - GitHub 패턴 완전 복제 / Settings Screen - Complete GitHub pattern clone
 ///
@@ -69,26 +72,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // GitHub UI 순서: Notifications → Transport → Buffer Time → Account → App Info
+            // GitHub UI 순서: Notifications → Account → App Settings → App Info → Logout
 
-            // 알림 설정 (1순위)
+            // 1. 알림 설정
             _buildNotificationSection(theme),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
+            SizedBox(height: UIConstants.spacingSectionGap),
 
-            // 기본 이동 수단 (2순위)
-            _buildTransportSection(theme),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
-
-            // 기본 버퍼 시간 설정 (3순위)
-            _buildBufferTimeSection(theme),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
-
-            // 계정 관리 (4순위)
+            // 2. 계정 관리
             _buildAccountSection(theme, authProvider),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
+            SizedBox(height: UIConstants.spacingSectionGap),
 
-            // 앱 정보 (5순위)
+            // 3. 앱 설정 (이동수단 + 버퍼시간)
+            _buildAppSettingsSection(theme),
+            SizedBox(height: UIConstants.spacingSectionGap),
+
+            // 4. 앱 정보
             _buildAppInfoSection(theme),
+            SizedBox(height: UIConstants.spacingSectionGap),
+
+            // 5. 로그아웃
+            _buildLogoutSection(theme, authProvider),
             const SizedBox(height: 40), // Extra bottom padding
           ],
         ),
@@ -96,163 +99,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 기본 버퍼 시간 설정 섹션 / Default buffer time settings section
-  Widget _buildBufferTimeSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // GitHub pattern: Section header with bold font
-        Text(
-          '기본 버퍼 시간 설정 (4가지)',
-          style: AppTextStyles.sectionTitle.copyWith(
-            color: Colors.black87,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 6), // GitHub pattern: 6px spacing
-        Text(
-          '새 일정 추가 시 기본값으로 사용됩니다',
-          style: AppTextStyles.formLabel.copyWith(
-            color: AppColors.secondaryText,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: GitHubUI.spacingScreen),
-
-        // 외출 준비 시간
-        _buildBufferSlider(
-          theme: theme,
-          icon: Icons.house_outlined,
-          title: '1️⃣ 외출 준비 시간',
-          description: '옷 입기, 짐 챙기기 등',
-          value: _defaultPreparationTime.toDouble(),
-          min: 0,
-          max: 60,
-          divisions: 12,
-          unit: '분',
-          onChanged: (value) {
-            setState(() => _defaultPreparationTime = value.toInt());
-          },
-        ),
-        const SizedBox(height: GitHubUI.spacingCardInternal),
-
-        // 일찍 도착 버퍼
-        _buildBufferSlider(
-          theme: theme,
-          icon: Icons.schedule,
-          title: '2️⃣ 일찍 도착 버퍼',
-          description: '약속 시간 전 여유롭게 도착',
-          value: _defaultEarlyArrivalBuffer.toDouble(),
-          min: 0,
-          max: 30,
-          divisions: 6,
-          unit: '분',
-          onChanged: (value) {
-            setState(() => _defaultEarlyArrivalBuffer = value.toInt());
-          },
-        ),
-        const SizedBox(height: GitHubUI.spacingCardInternal),
-
-        // 이동 오차율
-        _buildBufferSlider(
-          theme: theme,
-          icon: Icons.trending_up,
-          title: '3️⃣ 이동 오차율',
-          description: '교통 예측 불확실성, 신호 대기',
-          value: _defaultTravelErrorRate,
-          min: 0,
-          max: 0.5,
-          divisions: 10,
-          unit: '%',
-          isPercentage: true,
-          onChanged: (value) {
-            setState(() => _defaultTravelErrorRate = value);
-          },
-        ),
-        const SizedBox(height: GitHubUI.spacingCardInternal),
-
-        // 일정 마무리 시간
-        _buildBufferSlider(
-          theme: theme,
-          icon: Icons.check_circle_outline,
-          title: '4️⃣ 일정 마무리 시간',
-          description: '이전 일정 정리 후 출발',
-          value: _defaultFinishUpTime.toDouble(),
-          min: 0,
-          max: 30,
-          divisions: 6,
-          unit: '분',
-          onChanged: (value) {
-            setState(() => _defaultFinishUpTime = value.toInt());
-          },
-        ),
-      ],
-    );
-  }
-
-  /// 기본 이동 수단 섹션 / Default transport mode section (GitHub UI: 2순위)
-  Widget _buildTransportSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // GitHub pattern: Section header with bold font
-        Text(
-          '기본 이동 수단',
-          style: AppTextStyles.sectionTitle.copyWith(
-            color: Colors.black87,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 6), // GitHub pattern: 6px spacing
-        Text(
-          '새 일정 추가 시 기본값으로 사용됩니다',
-          style: AppTextStyles.formLabel.copyWith(
-            color: AppColors.secondaryText,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: GitHubUI.spacingScreen),
-
-        // Transport mode selection card
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12), // GitHub pattern: 12px for cards
-            border: Border.all(color: AppColors.divider, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildTransportModeButton(
-                  theme: theme,
-                  mode: 'transit',
-                  icon: Icons.directions_transit,
-                  label: '대중교통',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTransportModeButton(
-                  theme: theme,
-                  mode: 'car',
-                  icon: Icons.directions_car,
-                  label: '자가용',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   /// 버퍼 시간 슬라이더 위젯 / Buffer time slider widget - GitHub pattern
   Widget _buildBufferSlider({
@@ -330,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: GitHubUI.spacingCardGap),
+          SizedBox(height: UIConstants.spacingCardGap),
           Slider(
             value: value,
             min: min,
@@ -345,51 +191,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 이동 수단 선택 버튼 / Transport mode selection button - GitHub pattern
-  Widget _buildTransportModeButton({
-    required ThemeData theme,
-    required String mode,
-    required IconData icon,
-    required String label,
-  }) {
-    final isSelected = _defaultTransportMode == mode;
-
-    return InkWell(
-      onTap: () {
-        setState(() => _defaultTransportMode = mode);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLighter : AppColors.background, // GitHub pattern: subtle bg
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary! : AppColors.disabled,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? AppColors.primary : AppColors.secondaryText,
-              size: 32,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: AppTextStyles.formLabel.copyWith(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.primaryDark : AppColors.primaryText,
-                height: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   /// 알림 설정 섹션 / Notification settings section - GitHub pattern
   Widget _buildNotificationSection(ThemeData theme) {
@@ -403,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             height: 1.3,
           ),
         ),
-        const SizedBox(height: GitHubUI.spacingScreen),
+        SizedBox(height: UIConstants.spacingScreen),
 
         // 알림 활성화
         _buildSettingTile(
@@ -461,12 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: '알림 소리',
           subtitle: _notificationSound,
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () {
-            // TODO: 알림 소리 선택 모달
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('알림 소리 선택 (구현 예정)')),
-            );
-          },
+          onTap: () => _showNotificationSoundModal(context),
         ),
       ],
     );
@@ -487,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             height: 1.3,
           ),
         ),
-        const SizedBox(height: GitHubUI.spacingScreen),
+        SizedBox(height: UIConstants.spacingScreen),
 
         // 프로필 정보 - GitHub pattern: white card
         Container(
@@ -547,7 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        const SizedBox(height: GitHubUI.spacingCardInternal),
+        SizedBox(height: UIConstants.spacingCardInternal),
 
         // 프로필 수정
         _buildSettingTile(
@@ -557,9 +353,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: '이름, 전화번호 변경',
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () {
-            // TODO: 프로필 수정 화면
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('프로필 수정 (구현 예정)')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EditProfileScreen(),
+              ),
             );
           },
         ),
@@ -573,22 +371,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: '보안을 위해 주기적으로 변경하세요',
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () {
-            // TODO: 비밀번호 변경 화면
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('비밀번호 변경 (구현 예정)')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ChangePasswordScreen(),
+              ),
             );
           },
-        ),
-        const Divider(height: 1),
-
-        // 로그아웃
-        _buildSettingTile(
-          theme: theme,
-          icon: Icons.logout,
-          title: '로그아웃',
-          subtitle: '계정에서 로그아웃합니다',
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () => _handleLogout(authProvider),
         ),
       ],
     );
@@ -606,7 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             height: 1.3,
           ),
         ),
-        const SizedBox(height: GitHubUI.spacingScreen),
+        SizedBox(height: UIConstants.spacingScreen),
 
         // 버전 정보
         _buildSettingTile(
@@ -670,6 +459,133 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  /// 앱 설정 섹션 / App settings section - GitHub pattern
+  /// 이동수단 + 버퍼시간을 묶음 / Groups transport mode + buffer time
+  Widget _buildAppSettingsSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '앱 설정',
+          style: AppTextStyles.sectionTitle.copyWith(
+            color: Colors.black87,
+            height: 1.3,
+          ),
+        ),
+        SizedBox(height: UIConstants.spacingScreen),
+
+        // 기본 이동 수단 - ListTile that opens modal
+        _buildSettingTile(
+          theme: theme,
+          icon: Icons.directions_transit,
+          title: '기본 이동 수단',
+          subtitle: _getTransportModeLabel(_defaultTransportMode),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showTransportModeModal(context),
+        ),
+        const Divider(height: 1),
+
+        // 기본 버퍼 시간 설정 - ListTile that opens modal
+        _buildSettingTile(
+          theme: theme,
+          icon: Icons.schedule,
+          title: '기본 버퍼 시간 설정',
+          subtitle: '외출 준비, 도착 버퍼, 오차율, 마무리',
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: () => _showBufferTimeModal(context),
+        ),
+      ],
+    );
+  }
+
+  /// 이동 수단 코드를 한글 레이블로 변환 / Convert transport mode code to Korean label
+  /// TMAP API 지원 수단만 포함 / Only includes TMAP API supported modes
+  String _getTransportModeLabel(String mode) {
+    switch (mode) {
+      case 'transit':
+        return '대중교통';
+      case 'car':
+        return '자가용';
+      case 'walk':
+        return '도보';
+      default:
+        return '대중교통'; // 기본값 / Default value (fallback to transit)
+    }
+  }
+
+  /// 로그아웃 섹션 / Logout section - GitHub pattern
+  Widget _buildLogoutSection(ThemeData theme, AuthProvider authProvider) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => _handleLogout(authProvider),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.logout,
+                  color: Colors.red.shade700,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '로그아웃',
+                      style: AppTextStyles.badgeTimeLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '계정에서 로그아웃합니다',
+                      style: AppTextStyles.formLabel.copyWith(
+                        color: AppColors.secondaryText,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: AppColors.secondaryText,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -750,5 +666,266 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       }
     }
+  }
+
+  /// 알림 소리 선택 모달 / Notification sound selection modal
+  Future<void> _showNotificationSoundModal(BuildContext context) async {
+    final soundOptions = ['기본', '벨소리', '알람', '무음'];
+
+    await showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(UIConstants.radiusDialog),
+        ),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(UIConstants.spacingScreen),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '알림 소리',
+              style: AppTextStyles.sectionTitle.copyWith(
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: UIConstants.spacingScreen),
+            ...soundOptions.map((sound) => RadioListTile<String>(
+                  title: Text(
+                    sound,
+                    style: AppTextStyles.referenceBody.copyWith(
+                      color: Colors.black87,
+                    ),
+                  ),
+                  value: sound,
+                  groupValue: _notificationSound,
+                  activeColor: AppColors.primary,
+                  onChanged: (value) {
+                    setState(() => _notificationSound = value!);
+                    Navigator.pop(context);
+                  },
+                )),
+            SizedBox(height: UIConstants.spacingCardGap),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 이동 수단 선택 모달 / Transport mode selection modal
+  /// TMAP API 지원 수단만 포함 / Only includes TMAP API supported modes
+  Future<void> _showTransportModeModal(BuildContext context) async {
+    // TMAP API 지원 이동 수단 옵션 / TMAP API supported transport mode options
+    final transportModes = [
+      {'value': 'transit', 'icon': Icons.directions_transit, 'label': '대중교통'},
+      {'value': 'car', 'icon': Icons.directions_car, 'label': '자가용'},
+      {'value': 'walk', 'icon': Icons.directions_walk, 'label': '도보'},
+    ];
+
+    await showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(UIConstants.radiusDialog),
+        ),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(UIConstants.spacingScreen),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '기본 이동 수단',
+              style: AppTextStyles.sectionTitle.copyWith(
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: UIConstants.spacingScreen),
+            // 이동 수단 옵션 동적 생성 / Dynamically generate transport mode options
+            ...transportModes.map((mode) => RadioListTile<String>(
+                  title: Row(
+                    children: [
+                      Icon(mode['icon'] as IconData, color: AppColors.primary),
+                      const SizedBox(width: 12),
+                      Text(
+                        mode['label'] as String,
+                        style: AppTextStyles.referenceBody.copyWith(
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  value: mode['value'] as String,
+                  groupValue: _defaultTransportMode,
+                  activeColor: AppColors.primary,
+                  onChanged: (value) {
+                    setState(() => _defaultTransportMode = value!);
+                    Navigator.pop(context);
+                  },
+                )),
+            SizedBox(height: UIConstants.spacingCardGap),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 버퍼 시간 설정 모달 / Buffer time settings modal
+  Future<void> _showBufferTimeModal(BuildContext context) async {
+    // 임시 변수로 저장하여 취소 시 원복 가능
+    int tempPreparationTime = _defaultPreparationTime;
+    int tempEarlyArrivalBuffer = _defaultEarlyArrivalBuffer;
+    double tempTravelErrorRate = _defaultTravelErrorRate;
+    int tempFinishUpTime = _defaultFinishUpTime;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(UIConstants.radiusDialog),
+        ),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: EdgeInsets.all(UIConstants.spacingScreen),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 헤더
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '기본 버퍼 시간 설정',
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      color: Colors.black87,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              SizedBox(height: UIConstants.spacingScreen),
+
+              // 스크롤 가능한 콘텐츠
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // 1. 외출 준비 시간
+                      _buildBufferSlider(
+                        theme: Theme.of(context),
+                        icon: Icons.house_outlined,
+                        title: '1️⃣ 외출 준비 시간',
+                        description: '옷 입기, 짐 챙기기 등',
+                        value: tempPreparationTime.toDouble(),
+                        min: 0,
+                        max: 60,
+                        divisions: 12,
+                        unit: '분',
+                        onChanged: (value) {
+                          setModalState(() => tempPreparationTime = value.toInt());
+                        },
+                      ),
+                      SizedBox(height: UIConstants.spacingCardInternal),
+
+                      // 2. 일찍 도착 버퍼
+                      _buildBufferSlider(
+                        theme: Theme.of(context),
+                        icon: Icons.schedule,
+                        title: '2️⃣ 일찍 도착 버퍼',
+                        description: '약속 시간 전 여유롭게 도착',
+                        value: tempEarlyArrivalBuffer.toDouble(),
+                        min: 0,
+                        max: 30,
+                        divisions: 6,
+                        unit: '분',
+                        onChanged: (value) {
+                          setModalState(() => tempEarlyArrivalBuffer = value.toInt());
+                        },
+                      ),
+                      SizedBox(height: UIConstants.spacingCardInternal),
+
+                      // 3. 이동 오차율
+                      _buildBufferSlider(
+                        theme: Theme.of(context),
+                        icon: Icons.trending_up,
+                        title: '3️⃣ 이동 오차율',
+                        description: '교통 예측 불확실성, 신호 대기',
+                        value: tempTravelErrorRate,
+                        min: 0,
+                        max: 0.5,
+                        divisions: 10,
+                        unit: '%',
+                        isPercentage: true,
+                        onChanged: (value) {
+                          setModalState(() => tempTravelErrorRate = value);
+                        },
+                      ),
+                      SizedBox(height: UIConstants.spacingCardInternal),
+
+                      // 4. 일정 마무리 시간
+                      _buildBufferSlider(
+                        theme: Theme.of(context),
+                        icon: Icons.check_circle_outline,
+                        title: '4️⃣ 일정 마무리 시간',
+                        description: '이전 일정 정리 후 출발',
+                        value: tempFinishUpTime.toDouble(),
+                        min: 0,
+                        max: 30,
+                        divisions: 6,
+                        unit: '분',
+                        onChanged: (value) {
+                          setModalState(() => tempFinishUpTime = value.toInt());
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: UIConstants.spacingScreen),
+
+              // 저장 버튼
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _defaultPreparationTime = tempPreparationTime;
+                      _defaultEarlyArrivalBuffer = tempEarlyArrivalBuffer;
+                      _defaultTravelErrorRate = tempTravelErrorRate;
+                      _defaultFinishUpTime = tempFinishUpTime;
+                    });
+                    Navigator.pop(context);
+                  },
+                  style: UIConstants.primaryButtonStyle,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      '저장',
+                      style: AppTextStyles.referenceBody.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/app_text_styles.dart';
-import '../../utils/github_ui_constants.dart';
+import '../../utils/ui_constants.dart';
 
 /// 이용약관 화면 / Terms of Service Screen
 ///
@@ -34,7 +34,7 @@ class TermsScreen extends StatelessWidget {
         centerTitle: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(GitHubUI.spacingScreen),
+        padding: const EdgeInsets.all(UIConstants.spacingScreen),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -106,14 +106,14 @@ class TermsScreen extends StatelessWidget {
                   '3. 회사는 TMAP API 등 제3자 서비스의 장애로 인한 손해에 대하여 책임을 지지 않습니다.\n'
                   '4. 회사는 이용자가 서비스를 이용하여 기대하는 효과를 얻지 못한 것에 대하여 책임을 지지 않습니다.',
             ),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
+            const SizedBox(height: UIConstants.spacingSectionGap),
             // 부칙 (Supplementary Provision) - GitHub 패턴
             Container(
-              padding: const EdgeInsets.all(GitHubUI.spacingCardInternal),
+              padding: const EdgeInsets.all(UIConstants.spacingCardInternal),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
                 borderRadius:
-                    BorderRadius.circular(GitHubUI.radiusCard),
+                    BorderRadius.circular(UIConstants.radiusCard),
                 border: Border.all(
                   color: Colors.blue[200]!,
                   width: 1,

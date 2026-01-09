@@ -3,8 +3,8 @@
 > ADHD 사용자를 위한 역산 스케줄링 기반 시간 관리 앱
 
 **최종 업데이트**: 2026-01-09
-**문서 버전**: 3.5
-**프로젝트 상태**: MVP v1.0 (Phase 4 진행 중 - ~96% 완료)
+**문서 버전**: 3.6
+**프로젝트 상태**: MVP v1.0 (Phase 4 완료, Phase 5 준비 중)
 
 ---
 
@@ -20,9 +20,9 @@
 ### 📋 구현 가이드 / Implementation Guides
 | 문서 | 설명 | 상태 |
 |------|------|------|
-| [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) | Phase 1~5 구현 상세 | Phase 4 진행 중 (~95%) |
+| [IMPLEMENTATION_PHASES.md](./IMPLEMENTATION_PHASES.md) | Phase 1~5 구현 상세 | Phase 4 완료 (100%) |
 | [TESTING_GUIDE.md](./TESTING_GUIDE.md) | 전체 테스트 전략 및 체크리스트 | ✅ 완료 |
-| [PHASE_4_INTEGRATION_TEST_PLAN.md](./PHASE_4_INTEGRATION_TEST_PLAN.md) | Phase 4 통합 테스트 계획 | 작성 완료 |
+| [PHASE_4_INTEGRATION_TEST_PLAN.md](./PHASE_4_INTEGRATION_TEST_PLAN.md) | Phase 4 통합 테스트 계획 | ✅ 완료 |
 
 ### 🔄 최신 업데이트 (2026-01-09)
 | 문서 | 설명 | 중요도 |
@@ -31,14 +31,26 @@
 | [TMAP_API_MIGRATION.md](./TMAP_API_MIGRATION.md) | Naver → TMAP API 마이그레이션 | ⚠️ 중요 |
 
 ### 🎯 최근 완료 작업 (2026-01-08~09)
-- ✅ **GitHub UI 코드 일치화 - Legal Screens & Splash Screen**: Task 4.8 완료
+- ✅ **Settings Screen Modal Update**: Task 4.9 완료
+  - **UI 패턴 일관성 개선**:
+    - 앱 설정 섹션을 ListTile → Modal 패턴으로 변경
+    - 다른 설정 섹션과 100% 일관성 달성
+  - **Transport Mode Modal**:
+    - TMAP API 지원 수단만 포함 (대중교통, 자가용, 도보)
+    - RadioListTile 선택 방식, 아이콘 + 한글 레이블
+  - **Buffer Time Modal**:
+    - 4개 버퍼 시간 설정 통합 (외출 준비, 도착 버퍼, 오차율, 마무리)
+    - 저장/취소 기능, 스크롤 가능한 전체 화면 모달
+  - **코드 정리**: 230 lines 제거, 215 lines 추가 (더 간결)
+  - **빌드 성공**: 132.7초, 56.5MB APK
+- ✅ **Legal Screens & Splash Screen**: Task 4.8 완료
   - **Legal Screens 구현 (필수)**:
     - TermsScreen: 이용약관 (178 lines, 8개 조항)
     - PrivacyPolicyScreen: 개인정보 처리방침 (242 lines, 9개 섹션)
     - 앱스토어 심사 필수 요구사항 충족 (개인정보보호법 준수)
   - **Splash Screen 구현 (선택)**:
     - 브랜딩 경험 제공 (FadeTransition 1.5s, 2.5s 후 전환)
-    - GitHubUI constants 적용 (radiusDialog, spacingSectionGap)
+    - UIConstants 적용 (radiusDialog, spacingSectionGap)
     - main.dart 업데이트 (splash home, /auth route)
   - **Loading Screen 확인**: AuthGate Provider 기반 (이미 구현됨)
   - **코드 품질**: 0 errors, 0 warnings, deprecated 수정 완료

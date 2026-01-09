@@ -3,16 +3,18 @@
 > **MVP 개발 Phase 1~5 상세 구현 가이드**
 
 **최종 업데이트**: 2026-01-09
-**문서 버전**: 2.3
-**프로젝트 상태**: Phase 4 진행 중 (~95% 완료)
+**문서 버전**: 2.4
+**프로젝트 상태**: Phase 4 완료 (100%), Phase 5 준비 중
 
-**주요 변경사항 v2.3** (2026-01-09):
-- ✅ **Phase 4 GitHub UI Priority & Medium 작업 완료**
-  - Priority 2-1: Settings 아이콘 배경 (48x48 blue[50]) - 9개 아이콘
-  - Medium 2: SettingsScreen shadow 패턴 통일 (3곳)
-  - Medium 3: Spacing 중앙화 (14개 값 → GitHubUI 상수)
-- ✅ **GitHub UI 패턴 ~95% 일치율 달성**
-  - 14개 기본 이슈 + 3개 Priority + 3개 Medium 완료
+**주요 변경사항 v2.4** (2026-01-09):
+- ✅ **Phase 4 완료 (Task 4.1-4.9 모두 완료)**
+  - Task 4.9: Settings Screen Modal Update (UI 패턴 일관성 100% 달성)
+  - Task 4.8: Legal Screens & Splash Screen 구현
+  - Priority & Medium 작업 완료 (Settings 아이콘, Shadow, Spacing)
+- ✅ **UI 개선 완료**
+  - ListTile → Modal 패턴 일관성 100%
+  - TMAP API 호환 이동 수단 (대중교통, 자가용, 도보)
+  - 버퍼 시간 설정 통합 모달 (4개 설정)
   - 실질적 준수 달성 (Flutter 플랫폼 한계 고려)
 - ✅ Phase 4 진행률: 90% → ~95% 업데이트
 

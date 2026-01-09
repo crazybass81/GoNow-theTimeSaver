@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../utils/app_colors.dart';
-import '../../utils/github_ui_constants.dart';
+import '../../utils/ui_constants.dart';
 
 /// 스플래시 화면 / Splash Screen
 ///
@@ -11,7 +11,7 @@ import '../../utils/github_ui_constants.dart';
 /// - 2.5초 후 AuthGate로 전환 / Transitions to AuthGate after 2.5 seconds
 ///
 /// **Context**: 앱 시작 시 표시되는 첫 화면 / First screen shown on app launch
-/// **Design**: GitHub UI pattern with GitHubUI constants
+/// **Design**: GitHub UI pattern with UIConstants constants
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -23,6 +23,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen>
     _animationController.forward();
 
     // 2.5초 후 다음 화면으로 전환 / Navigate to next screen after 2.5 seconds
-    Timer(const Duration(milliseconds: 2500), () {
+    _navigationTimer = Timer(const Duration(milliseconds: 2500), () {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/auth');
       }
@@ -56,6 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _navigationTimer?.cancel();
     super.dispose();
   }
 
@@ -75,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 120,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(GitHubUI.radiusDialog),
+                  borderRadius: BorderRadius.circular(UIConstants.radiusDialog),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -90,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                   color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: GitHubUI.spacingSectionGap),
+              const SizedBox(height: UIConstants.spacingSectionGap),
               // 앱 이름 / App name
               const Text(
                 'GoNow',

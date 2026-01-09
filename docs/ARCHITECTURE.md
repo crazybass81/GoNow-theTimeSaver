@@ -1,8 +1,8 @@
 # GoNow 시스템 아키텍처
 
 **최종 업데이트**: 2026-01-09
-**문서 버전**: 2.1
-**시스템 버전**: MVP v1.0 (Phase 4 진행 중 - ~95%)
+**문서 버전**: 2.2
+**시스템 버전**: MVP v1.0 (Phase 4 완료, Phase 5 준비 중)
 
 ---
 
@@ -769,8 +769,8 @@ supabase
 
 | Phase | 기능 | 기술 스택 | 상태 |
 |-------|------|----------|------|
-| **Phase 4** | 통합 테스트 & QA | Unit Tests, Integration Tests, UI Refinement | ✅ 진행 중 (~95%) |
-| **Phase 5** | 스토어 출시 | App Store, Play Store | ⏳ 예정 |
+| **Phase 4** | 통합 테스트 & QA | Unit Tests, Integration Tests, UI Refinement | ✅ 완료 (100%) |
+| **Phase 5** | 백엔드 통합 | Supabase, API Integration | 🔄 준비 중 |
 | **Phase 6** | 게임화 (Streak, 배지) | Firebase Analytics | ⏳ 예정 |
 | **Phase 7** | 지오펜싱 | Geolocation API | ⏳ 예정 |
 | **Phase 8** | 소셜 기능 (친구, 랭킹) | Supabase + GraphQL | ⏳ 예정 |

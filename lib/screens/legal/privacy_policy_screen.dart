@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/app_text_styles.dart';
-import '../../utils/github_ui_constants.dart';
+import '../../utils/ui_constants.dart';
 
 /// 개인정보 처리방침 화면 / Privacy Policy Screen
 ///
@@ -34,17 +34,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
         centerTitle: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(GitHubUI.spacingScreen),
+        padding: const EdgeInsets.all(UIConstants.spacingScreen),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 헤더 안내문
             Container(
-              padding: const EdgeInsets.all(GitHubUI.spacingCardInternal),
+              padding: const EdgeInsets.all(UIConstants.spacingCardInternal),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
                 borderRadius:
-                    BorderRadius.circular(GitHubUI.radiusCard),
+                    BorderRadius.circular(UIConstants.radiusCard),
                 border: Border.all(
                   color: Colors.blue[200]!,
                   width: 1,
@@ -70,7 +70,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
+            const SizedBox(height: UIConstants.spacingSectionGap),
             _buildSection(
               title: '1. 개인정보의 수집 및 이용 목적',
               content:
@@ -172,14 +172,14 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   '   대검찰청 사이버수사과: (국번없이) 1301\n'
                   '   경찰청 사이버안전국: (국번없이) 182',
             ),
-            const SizedBox(height: GitHubUI.spacingSectionGap),
+            const SizedBox(height: UIConstants.spacingSectionGap),
             // 시행일 - GitHub 패턴
             Container(
-              padding: const EdgeInsets.all(GitHubUI.spacingCardInternal),
+              padding: const EdgeInsets.all(UIConstants.spacingCardInternal),
               decoration: BoxDecoration(
                 color: Colors.orange[50],
                 borderRadius:
-                    BorderRadius.circular(GitHubUI.radiusCard),
+                    BorderRadius.circular(UIConstants.radiusCard),
                 border: Border.all(
                   color: Colors.orange[200]!,
                   width: 1,
